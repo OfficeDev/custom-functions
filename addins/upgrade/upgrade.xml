@@ -10,8 +10,8 @@
 	<DefaultLocale>en-US</DefaultLocale>
 	<DisplayName DefaultValue="Custom Functions Upgrade Test" />
 	<Description DefaultValue="Custom Functions Upgrade Test" />
-	<SupportUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade" />
 	<IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_32.png" />
+	<SupportUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade" />
 	<Hosts>
 		<Host Name="Workbook" />
 	</Hosts>
