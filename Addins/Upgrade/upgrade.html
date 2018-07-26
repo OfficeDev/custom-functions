@@ -1,0 +1,17 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+		<meta http-equiv="Expires" content="0" />
+		<title>Custom Functions Upgrade Test</title>
+		<script src="http://unpkg.com/@microsoft/office-js@custom-functions-preview/dist/office.debug.js" type="text/javascript"></script>
+		<script src="upgrade.js" type="text/javascript"></script>
+		<script>
+			Office.Preview.startCustomFunctions();
+			window.Promise = Office.Promise;
+		</script>
+	</head>
+	<body>
+	</body>
+</html>

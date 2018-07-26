@@ -1,0 +1,29 @@
+﻿{
+	"functions": [
+		{
+			"name": "VERSION_SYNC", 
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+			],
+			"options": {
+				"sync": true
+			}
+		},
+
+		{
+			"name": "VERSION_ASYNC", 
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+			],
+			"options": {
+				"sync": false
+			}
+		}
+	]
+}
