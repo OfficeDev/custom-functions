@@ -1,7 +1,7 @@
 ﻿{
 	"functions": [
 		{
-			"name": "VERSION_SYNC", 
+			"name": "VERSION_SYNC",
 			"result": {
 				"type": "string",
 				"dimensionality": "scalar"
@@ -14,12 +14,30 @@
 		},
 
 		{
-			"name": "VERSION_ASYNC", 
+			"name": "VERSION_ASYNC",
 			"result": {
 				"type": "string",
 				"dimensionality": "scalar"
 			},
 			"parameters": [
+			],
+			"options": {
+				"sync": false
+			}
+		},
+
+		{
+			"name": "SLEEP",
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "ms",
+					"type": "number",
+					"dimensionality": "scalar"
+				}
 			],
 			"options": {
 				"sync": false
