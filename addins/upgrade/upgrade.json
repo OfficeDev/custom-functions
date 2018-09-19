@@ -1,6 +1,7 @@
 ﻿{
 	"functions": [
 		{
+			"id": "VERSION_SYNC",
 			"name": "VERSION_SYNC",
 			"result": {
 				"type": "string",
@@ -14,6 +15,7 @@
 		},
 
 		{
+			"id": "VERSION_ASYNC",
 			"name": "VERSION_ASYNC",
 			"result": {
 				"type": "string",
@@ -27,6 +29,7 @@
 		},
 
 		{
+			"id": "SLEEP",
 			"name": "SLEEP",
 			"result": {
 				"type": "string",
