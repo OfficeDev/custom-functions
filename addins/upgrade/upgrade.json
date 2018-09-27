@@ -29,8 +29,55 @@
 		},
 
 		{
-			"id": "SLEEP",
-			"name": "SLEEP",
+			"id": "VERSION_DELAYED",
+			"name": "VERSION_DELAYED",
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "ms",
+					"type": "number",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": false
+			}
+		},
+
+		{
+			"id": "CONST_SYNC",
+			"name": "CONST_SYNC",
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+			],
+			"options": {
+				"sync": true
+			}
+		},
+
+		{
+			"id": "CONST_ASYNC",
+			"name": "CONST_ASYNC",
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+			],
+			"options": {
+				"sync": false
+			}
+		},
+
+		{
+			"id": "CONST_DELAYED",
+			"name": "CONST_DELAYED",
 			"result": {
 				"type": "string",
 				"dimensionality": "scalar"
@@ -46,5 +93,6 @@
 				"sync": false
 			}
 		}
+
 	]
 }

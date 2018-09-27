@@ -1,20 +1,28 @@
 ﻿/// <reference path="../Office.Runtime.js" />
 /// <reference path="../Excel.js" />
 
-function version() {
+function getVersion() {
 	return "18.7.24.2";
 }
 
-function sleep(ms) {
+function getConst() {
+	return 42;
+}
+
+function _delay(func, ms) {
 	return new Promise(function(resolve) {
 		setTimeout(function() {
-			resolve(version());
+			resolve(func());
 		}, ms);
 	});
 }
 
 CustomFunctionMappings = {
-	VERSION_SYNC: version,
-	VERSION_ASYNC: version,
-	SLEEP: sleep
+	VERSION_SYNC: getVersion,
+	VERSION_ASYNC: getVersion,
+	VERSION_DELAYED: function(ms) { return _delay(getVersion, ms); },
+
+	CONST_SYNC: getConst,
+	CONST_ASYNC: getConst,
+	CONST_DELAYED: function(ms) { return _delay(getConst, ms); }
 };
