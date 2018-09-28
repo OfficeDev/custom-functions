@@ -92,6 +92,41 @@
 			"options": {
 				"sync": false
 			}
+		},
+
+		{
+			"id": "STREAM_SEQUENCE",
+			"name": "STREAM_SEQUENCE",
+			"result": {
+				"type": "any",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "init",
+					"type": "number",
+					"dimensionality": "scalar"
+				},
+				{
+					"name": "step",
+					"type": "number",
+					"dimensionality": "scalar"
+				},
+				{
+					"name": "count",
+					"type": "number",
+					"dimensionality": "scalar"
+				},
+				{
+					"name": "ms",
+					"type": "number",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": false,
+				"stream": true
+			}
 		}
 
 	]
