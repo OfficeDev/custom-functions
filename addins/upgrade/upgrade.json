@@ -1,7 +1,7 @@
 ﻿{
 	"functions": [
 		{
-			"id": "VERSION_SYNC",
+			"id": "VersionSync",
 			"name": "VERSION_SYNC",
 			"result": {
 				"type": "string",
@@ -15,7 +15,7 @@
 		},
 
 		{
-			"id": "VERSION_ASYNC",
+			"id": "VersionAsync",
 			"name": "VERSION_ASYNC",
 			"result": {
 				"type": "string",
@@ -29,7 +29,7 @@
 		},
 
 		{
-			"id": "VERSION_DELAYED",
+			"id": "VersionDelayed",
 			"name": "VERSION_DELAYED",
 			"result": {
 				"type": "string",
@@ -48,7 +48,7 @@
 		},
 
 		{
-			"id": "CONST_SYNC",
+			"id": "ConstSync",
 			"name": "CONST_SYNC",
 			"result": {
 				"type": "string",
@@ -62,7 +62,7 @@
 		},
 
 		{
-			"id": "CONST_ASYNC",
+			"id": "ConstAsync",
 			"name": "CONST_ASYNC",
 			"result": {
 				"type": "string",
@@ -76,7 +76,7 @@
 		},
 
 		{
-			"id": "CONST_DELAYED",
+			"id": "ConstDelayed",
 			"name": "CONST_DELAYED",
 			"result": {
 				"type": "string",
@@ -95,7 +95,7 @@
 		},
 
 		{
-			"id": "STREAM_SEQUENCE",
+			"id": "StreamSequence",
 			"name": "STREAM_SEQUENCE",
 			"result": {
 				"type": "any",
