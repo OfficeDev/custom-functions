@@ -27,13 +27,13 @@ function delay(func, ms) {
 }
 
 CustomFunctionMappings = {
-	VERSION_SYNC: getVersion,
-	VERSION_ASYNC: getVersion,
-	VERSION_DELAYED: function(ms) { return delay(getVersion, ms); },
+	VersionSync: getVersion,
+	VersionAsync: getVersion,
+	VersionDelayed: function(ms) { return delay(getVersion, ms); },
 
-	CONST_SYNC: getConst,
-	CONST_ASYNC: getConst,
-	CONST_DELAYED: function(ms) { return delay(getConst, ms); },
+	ConstSync: getConst,
+	ConstAsync: getConst,
+	ConstDelayed: function(ms) { return delay(getConst, ms); },
 
-	STREAM_SEQUENCE: streamSequence
+	StreamSequence: streamSequence
 };
