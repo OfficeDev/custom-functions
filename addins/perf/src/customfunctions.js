@@ -79,15 +79,15 @@ function nestedLoopJS(n) {
     }
     return sum;
 }
-CustomFunctionMappings.mortgagePaymentJS = mortgagePaymentJS;
-CustomFunctionMappings.syncMortgagePaymentJS = mortgagePaymentJS;
-CustomFunctionMappings.findNthPrimeJS = findNthPrimeJS;
-CustomFunctionMappings.syncFindNthPrimeJS = findNthPrimeJS;
-CustomFunctionMappings.bubbleSortJS = bubbleSortJS;
-CustomFunctionMappings.syncBubbleSortJS = bubbleSortJS;
-CustomFunctionMappings.addRangeJS = addRangeJS;
-CustomFunctionMappings.syncAddRangeJS = addRangeJS;
-CustomFunctionMappings.addStringRangeJS = addStringRangeJS;
-CustomFunctionMappings.syncAddStringRangeJS = addStringRangeJS;
-CustomFunctionMappings.nestedLoopJS = nestedLoopJS;
-CustomFunctionMappings.syncNestedLoopJS = nestedLoopJS;
+CustomFunctionMappings.MORTGAGEPAYMENTJS = mortgagePaymentJS;
+CustomFunctionMappings.SYNCMORTGAGEPAYMENTJS = mortgagePaymentJS;
+CustomFunctionMappings.FINDNTHPRIMEJS = findNthPrimeJS;
+CustomFunctionMappings.SYNCFINDNTHPRIMEJS = findNthPrimeJS;
+CustomFunctionMappings.BUBBLESORTJS = bubbleSortJS;
+CustomFunctionMappings.SYNCBUBBLESORTJS = bubbleSortJS;
+CustomFunctionMappings.ADDRANGEJS = addRangeJS;
+CustomFunctionMappings.SYNCADDRANGEJS = addRangeJS;
+CustomFunctionMappings.ADDSTRINGRANGEJS = addStringRangeJS;
+CustomFunctionMappings.SYNCADDSTRINGRANGEJS = addStringRangeJS;
+CustomFunctionMappings.NESTEDLOOPJS = nestedLoopJS;
+CustomFunctionMappings.SYNCNESTEDLOOPJS = nestedLoopJS;

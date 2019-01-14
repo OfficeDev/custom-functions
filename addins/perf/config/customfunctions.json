@@ -1,8 +1,8 @@
 {
 	"functions": [
 		{
-			"id": "mortgagePaymentJS",
-			"name": "mortgagePaymentJS",
+			"id": "MORTGAGEPAYMENTJS",
+			"name": "MORTGAGEPAYMENTJS",
 			"description": "Computes the mortgage payment",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -35,8 +35,8 @@
 			}
 		},
 		{
-			"id": "syncMortgagePaymentJS",
-			"name": "syncMortgagePaymentJS",
+			"id": "SYNCMORTGAGEPAYMENTJS",
+			"name": "SYNCMORTGAGEPAYMENTJS",
 			"description": "Computes the mortgage payment",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -69,8 +69,8 @@
 			}
 		},
 		{
-			"id": "findNthPrimeJS",
-			"name": "findNthPrimeJS",
+			"id": "FINDNTHPRIMEJS",
+			"name": "FINDNTHPRIMEJS",
 			"description": "Finds the nth prime",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -91,8 +91,8 @@
 			}
 		},
 		{
-			"id": "syncFindNthPrimeJS",
-			"name": "syncFindNthPrimeJS",
+			"id": "SYNCFINDNTHPRIMEJS",
+			"name": "SYNCFINDNTHPRIMEJS",
 			"description": "Finds the nth prime",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -113,8 +113,8 @@
 			}
 		},
 		{
-			"id": "bubbleSortJS",
-			"name": "bubbleSortJS",
+			"id": "BUBBLESORTJS",
+			"name": "BUBBLESORTJS",
 			"description": "Finds how many swaps will be performed to sort the input numbers",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -135,8 +135,8 @@
 			}
 		},
 		{
-			"id": "syncBubbleSortJS",
-			"name": "syncBubbleSortJS",
+			"id": "SYNCBUBBLESORTJS",
+			"name": "SYNCBUBBLESORTJS",
 			"description": "Finds how many swaps will be performed to sort the input numbers",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -157,8 +157,8 @@
 			}
 		},
 		{
-			"id": "addRangeJS",
-			"name": "addRangeJS",
+			"id": "ADDRANGEJS",
+			"name": "ADDRANGEJS",
 			"description": "Adds all the number in the range",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -178,8 +178,8 @@
 			}
 		},
 		{
-			"id": "syncAddRangeJS",
-			"name": "syncAddRangeJS",
+			"id": "SYNCADDRANGEJS",
+			"name": "SYNCADDRANGEJS",
 			"description": "Adds all the number in the range",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -199,8 +199,8 @@
 			}
 		},
 		{
-			"id": "addStringRangeJS",
-			"name": "addStringRangeJS",
+			"id": "ADDSTRINGRANGEJS",
+			"name": "ADDSTRINGRANGEJS",
 			"description": "Adds all strings length in the range",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -220,8 +220,8 @@
 			}
 		},
 		{
-			"id": "syncAddStringRangeJS",
-			"name": "syncAddStringRangeJS",
+			"id": "SYNCADDSTRINGRANGEJS",
+			"name": "SYNCADDSTRINGRANGEJS",
 			"description": "Adds all strings length in the range",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -241,8 +241,8 @@
 			}
 		},
 		{
-			"id": "nestedLoopJS",
-			"name": "nestedLoopJS",
+			"id": "NESTEDLOOPJS",
+			"name": "NESTEDLOOPJS",
 			"description": "Get double loop count based on the input",
 			"helpUrl": "http://dev.office.com",
 			"result": {
@@ -262,8 +262,8 @@
 			}
 		},
 		{
-			"id": "syncNestedLoopJS",
-			"name": "syncNestedLoopJS",
+			"id": "SYNCNESTEDLOOPJS",
+			"name": "SYNCNESTEDLOOPJS",
 			"description": "Get double loop count based on the input",
 			"helpUrl": "http://dev.office.com",
 			"result": {

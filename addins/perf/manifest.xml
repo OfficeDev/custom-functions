@@ -16,12 +16,10 @@
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
   <IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/perf/assets/icon-80.png"/>
 
-  <SupportUrl DefaultValue="http://www.contoso.com"/>
+  <SupportUrl DefaultValue="https://officedev.github.io/custom-functions/addins/perf"/>
   <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
   <AppDomains>
-    <AppDomain>https://ylu0826.github.io</AppDomain>
-    <AppDomain>https://api.iextrading.com</AppDomain>
-    <AppDomain>https://excelcf-demo-api.azurewebsites.net</AppDomain>
+    <AppDomain>https://officedev.github.io</AppDomain>
   </AppDomains>
 
   <!--End Basic Settings. -->
@@ -50,15 +48,15 @@
         <AllFormFactors>
            <ExtensionPoint xsi:type="CustomFunctions">
             <Script>
-              <SourceLocation resid="OEP.CustomFunctions.Script" />
+              <SourceLocation resid="CustomFunctions.Script" />
             </Script>
             <Page>
-              <SourceLocation resid="OEP.CustomFunctions.Page"/>
+              <SourceLocation resid="CustomFunctions.Page"/>
             </Page>
             <Metadata>
-              <SourceLocation resid="OEP.CustomFunctions.Json" />
+              <SourceLocation resid="CustomFunctions.Json" />
             </Metadata>
-            <Namespace resid="OEP.CustomFunctions.NameSpace" />
+            <Namespace resid="CustomFunctions.NameSpace" />
           </ExtensionPoint>
         </AllFormFactors>
         
@@ -67,54 +65,54 @@
           <!--"This code enables a customizable message to be displayed when the add-in is loaded successfully upon individual install."-->
           <GetStarted>
             <!-- Title of the Getting Started callout. The resid attribute points to a ShortString resource -->
-            <Title resid="OEP.GetStarted.Title"/>
+            <Title resid="GetStarted.Title"/>
 
             <!-- Description of the Getting Started callout. resid points to a LongString resource -->
-            <Description resid="OEP.GetStarted.Description"/>
+            <Description resid="GetStarted.Description"/>
 
             <!-- Points to a URL resource which details how the add-in should be used. -->
-            <LearnMoreUrl resid="OEP.GetStarted.LearnMoreUrl"/>
+            <LearnMoreUrl resid="GetStarted.LearnMoreUrl"/>
           </GetStarted>
            <!-- Function file is a HTML page that includes the JavaScript where functions for ExecuteAction will be called. 
             Think of the FunctionFile as the code behind ExecuteFunction. -->
-          <FunctionFile resid="OEP.DesktopFunctionFile.Url" />
+          <FunctionFile resid="DesktopFunctionFile.Url" />
 
           <!-- PrimaryCommandSurface is the main Office Ribbon. -->
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <!-- Use OfficeTab to extend an existing Tab. Use CustomTab to create a new tab. -->
             <OfficeTab id="TabHome">
               <!-- Ensure you provide a unique id for the group. Recommendation for any IDs is to namespace using your company name. -->
-              <Group id="OEP.Group1">
+              <Group id="Group1">
                 <!-- Label for your group. resid must point to a ShortString resource. -->
-                <Label resid="OEP.Group1Label" />
+                <Label resid="Group1Label" />
                 <!-- Icons. Required sizes 16,32,80, optional 20, 24, 40, 48, 64. Strongly recommended to provide all sizes for great UX. -->
                 <!-- Use PNG icons. All URLs on the resources section must use HTTPS. -->
                 <Icon>
-                  <bt:Image size="16" resid="OEP.tpicon_16x16" />
-                  <bt:Image size="32" resid="OEP.tpicon_32x32" />
-                  <bt:Image size="80" resid="OEP.tpicon_80x80" />
+                  <bt:Image size="16" resid="tpicon_16x16" />
+                  <bt:Image size="32" resid="tpicon_32x32" />
+                  <bt:Image size="80" resid="tpicon_80x80" />
                 </Icon>
 
                 <!-- Control. It can be of type "Button" or "Menu". -->
-                <Control xsi:type="Button" id="OEP.TaskpaneButton">
-                  <Label resid="OEP.TaskpaneButton.Label" />
+                <Control xsi:type="Button" id="TaskpaneButton">
+                  <Label resid="TaskpaneButton.Label" />
                   <Supertip>
                     <!-- ToolTip title. resid must point to a ShortString resource. -->
-                    <Title resid="OEP.TaskpaneButton.Label" />
+                    <Title resid="TaskpaneButton.Label" />
                     <!-- ToolTip description. resid must point to a LongString resource. -->
-                    <Description resid="OEP.TaskpaneButton.Tooltip" />
+                    <Description resid="TaskpaneButton.Tooltip" />
                   </Supertip>
                   <Icon>
-                    <bt:Image size="16" resid="OEP.tpicon_16x16" />
-                    <bt:Image size="32" resid="OEP.tpicon_32x32" />
-                    <bt:Image size="80" resid="OEP.tpicon_80x80" />
+                    <bt:Image size="16" resid="tpicon_16x16" />
+                    <bt:Image size="32" resid="tpicon_32x32" />
+                    <bt:Image size="80" resid="tpicon_80x80" />
                   </Icon>
 
                   <!-- This is what happens when the command is triggered (E.g. click on the Ribbon). Supported actions are ExecuteFunction or ShowTaskpane. -->
                   <Action xsi:type="ShowTaskpane">
                     <TaskpaneId>Office.AutoShowTaskpaneWithDocument</TaskpaneId>
                     <!-- Provide a url resource id for the location that will be displayed on the task pane. -->
-                    <SourceLocation resid="OEP.Taskpane.Url" />
+                    <SourceLocation resid="Taskpane.Url" />
                   </Action>
                 </Control>
               </Group>
@@ -127,29 +125,29 @@
     <!-- You can use resources across hosts and form factors. -->
    <Resources>
       <bt:Images>
-        <bt:Image id="OEP.tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/image/Button16x16.png"/>
-        <bt:Image id="OEP.tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/image/Button32x32.png"/>
-        <bt:Image id="OEP.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/image/Button80x80.png"/>
+        <bt:Image id="tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/image/Button16x16.png"/>
+        <bt:Image id="tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/image/Button32x32.png"/>
+        <bt:Image id="tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/image/Button80x80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="OEP.CustomFunctions.Script" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/src/customfunctions.js" />
-        <bt:Url id="OEP.CustomFunctions.Page" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/customfunctions.html" />
-        <bt:Url id="OEP.CustomFunctions.Json" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/config/customfunctions.json" />
-        <bt:Url id="OEP.DesktopFunctionFile.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/src/customfunctionsPerfDriver.js" />
-        <bt:Url id="OEP.Taskpane.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/CFerf/customfunctionsPerfDriver.html" />
-        <bt:Url id="OEP.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
+        <bt:Url id="CustomFunctions.Script" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/src/customfunctions.js" />
+        <bt:Url id="CustomFunctions.Page" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/customfunctions.html" />
+        <bt:Url id="CustomFunctions.Json" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/config/customfunctions.json" />
+        <bt:Url id="DesktopFunctionFile.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/src/customfunctionsPerfDriver.js" />
+        <bt:Url id="Taskpane.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/perf/customfunctionsPerfDriver.html" />
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
       </bt:Urls>
       <!-- ShortStrings max characters==125. -->
       <bt:ShortStrings>
-        <bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Perf Page" />
-        <bt:String id="OEP.Group1Label" DefaultValue="Perf Add-in" />
-        <bt:String id="OEP.GetStarted.Title" DefaultValue="Get started with your Perf Add-in" />
-        <bt:String id="OEP.CustomFunctions.NameSpace" DefaultValue="MICROSOFT.OFFICE.TEST.PERF" />
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Perf Page" />
+        <bt:String id="Group1Label" DefaultValue="Perf Add-in" />
+        <bt:String id="GetStarted.Title" DefaultValue="Get started with your Perf Add-in" />
+        <bt:String id="CustomFunctions.NameSpace" DefaultValue="MICROSOFT.OFFICE.TEST.PERF" />
       </bt:ShortStrings>
       <!-- LongStrings max characters==250. -->
       <bt:LongStrings>
-        <bt:String id="OEP.TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
-        <bt:String id="OEP.GetStarted.Description" DefaultValue="Your sample add-in loaded succesfully. Go to the HOME tab and click the 'Show Taskpane' button to get started." />
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
+        <bt:String id="GetStarted.Description" DefaultValue="Your sample add-in loaded succesfully. Go to the HOME tab and click the 'Show Taskpane' button to get started." />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
