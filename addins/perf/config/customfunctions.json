@@ -1,0 +1,286 @@
+{
+	"functions": [
+		{
+			"id": "mortgagePaymentJS",
+			"name": "mortgagePaymentJS",
+			"description": "Computes the mortgage payment",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "principalAmount",
+					"description": "Number",
+					"type": "number",
+					"dimensionality": "scalar"
+				},
+				{
+					"name": "interestRate",
+					"description": "Number",
+					"type": "number",
+					"dimensionality": "scalar"
+				},
+				{
+					"name": "numberOfMonths",
+					"description": "Number",
+					"type": "number",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": false,
+				"stream": false
+			}
+		},
+		{
+			"id": "syncMortgagePaymentJS",
+			"name": "syncMortgagePaymentJS",
+			"description": "Computes the mortgage payment",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "principalAmount",
+					"description": "Number",
+					"type": "number",
+					"dimensionality": "scalar"
+				},
+				{
+					"name": "interestRate",
+					"description": "Number",
+					"type": "number",
+					"dimensionality": "scalar"
+				},
+				{
+					"name": "numberOfMonths",
+					"description": "Number",
+					"type": "number",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": true,
+				"stream": false
+			}
+		},
+		{
+			"id": "findNthPrimeJS",
+			"name": "findNthPrimeJS",
+			"description": "Finds the nth prime",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "n",
+					"description": "Nth prime",
+					"type": "number",
+					"dimensionality": "matrix"
+				}
+			],
+			"options": {
+				"sync": false,
+				"stream": false
+			}
+		},
+		{
+			"id": "syncFindNthPrimeJS",
+			"name": "syncFindNthPrimeJS",
+			"description": "Finds the nth prime",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "n",
+					"description": "Nth prime",
+					"type": "number",
+					"dimensionality": "matrix"
+				}
+			],
+			"options": {
+				"sync": true,
+				"stream": false
+			}
+		},
+		{
+			"id": "bubbleSortJS",
+			"name": "bubbleSortJS",
+			"description": "Finds how many swaps will be performed to sort the input numbers",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "numbers",
+					"description": "Numbers to perform bubble sort on",
+					"type": "number",
+					"dimensionality": "matrix"
+				}
+			],
+			"options": {
+				"sync": false,
+				"stream": false
+			}
+		},
+		{
+			"id": "syncBubbleSortJS",
+			"name": "syncBubbleSortJS",
+			"description": "Finds how many swaps will be performed to sort the input numbers",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "numbers",
+					"description": "Numbers to perform bubble sort on",
+					"type": "number",
+					"dimensionality": "matrix"
+				}
+			],
+			"options": {
+				"sync": true,
+				"stream": false
+			}
+		},
+		{
+			"id": "addRangeJS",
+			"name": "addRangeJS",
+			"description": "Adds all the number in the range",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number"
+			},
+			"parameters": [
+				{
+					"name": "range",
+					"description": "all the range",
+					"type": "number",
+					"dimensionality": "matrix"
+				}
+			],
+			"options": {
+				"sync": false,
+				"stream": false
+			}
+		},
+		{
+			"id": "syncAddRangeJS",
+			"name": "syncAddRangeJS",
+			"description": "Adds all the number in the range",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number"
+			},
+			"parameters": [
+				{
+					"name": "range",
+					"description": "all the range",
+					"type": "number",
+					"dimensionality": "matrix"
+				}
+			],
+			"options": {
+				"sync": true,
+				"stream": false
+			}
+		},
+		{
+			"id": "addStringRangeJS",
+			"name": "addStringRangeJS",
+			"description": "Adds all strings length in the range",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number"
+			},
+			"parameters": [
+				{
+					"name": "range",
+					"description": "all the range",
+					"type": "string",
+					"dimensionality": "matrix"
+				}
+			],
+			"options": {
+				"sync": false,
+				"stream": false
+			}
+		},
+		{
+			"id": "syncAddStringRangeJS",
+			"name": "syncAddStringRangeJS",
+			"description": "Adds all strings length in the range",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number"
+			},
+			"parameters": [
+				{
+					"name": "range",
+					"description": "all the range",
+					"type": "string",
+					"dimensionality": "matrix"
+				}
+			],
+			"options": {
+				"sync": true,
+				"stream": false
+			}
+		},
+		{
+			"id": "nestedLoopJS",
+			"name": "nestedLoopJS",
+			"description": "Get double loop count based on the input",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number"
+			},
+			"parameters": [
+				{
+					"name": "n",
+					"description": "loop count input",
+					"type": "number",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": false,
+				"stream": false
+			}
+		},
+		{
+			"id": "syncNestedLoopJS",
+			"name": "syncNestedLoopJS",
+			"description": "Get double loop count based on the input",
+			"helpUrl": "http://dev.office.com",
+			"result": {
+				"type": "number"
+			},
+			"parameters": [
+				{
+					"name": "n",
+					"description": "loop count input",
+					"type": "number",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": true,
+				"stream": false
+			}
+		}
+	]
+}
