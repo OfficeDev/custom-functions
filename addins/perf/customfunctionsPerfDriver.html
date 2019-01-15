@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Any changes on this file should be updated on HomeCDN.html as well-->
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+		<meta http-equiv="Expires" content="0" />
+		<title></title>
+
+		<!-- To enable offline debugging using a local reference to Office.js, use: -->
+		<script src="//ajax.aspnetcdn.com/ajax/4.0/1/MicrosoftAjax.js" type="text/javascript"></script>
+		<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+
+		<script src="customfunctionsPerfDriver.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			Office.initialize = function (reason) {
+				window.Promise = OfficeExtension.CoreUtility.Promise;
+			};
+		</script>
+
+		<style>
+			hr { 
+				display: block;
+				margin-top: 0.5em;
+				margin-bottom: 0.5em;
+				margin-left: auto;
+				margin-right: auto;
+				border-style: inset;
+				border-width: 1px;
+			}
+		</style>
+	</head>
+	<body>
+		<div>
+			<h2> Automated Mode</h2>
+			<p>This mode only works in the custom function perf document since it has dependencies on the sheets. Tests will be run based on the data from 'Input' sheet.</p>
+			<p>
+				<h3>Trigger Input Test Set (Aync Only)</h3>
+				<h4>Write results to: </h4>
+				<input type="radio" name="OutputSheet" value="Output_Before" checked />Output_Before<br />
+				<input type="radio" name="OutputSheet" value="Output_After" />Output_After<br />
+			</p>
+			<p>
+				<button id="BtnCustomFunctions_runAutomatedTests" type="button" onClick="customFunctions_runAutomatedTests()">Run all test based on 'Input' Sheet</button>
+			</p>
+			<p>
+				<h3>Trigger Test by TestID (Lab only) </h3>
+				<input type="checkbox" id="IsAsyncExecution" checked="checked" />Async Execution<br>
+				<input type="checkbox" id="IfExecuteStressTest" />Execute Stress Test<br>
+				Test ID: <input type="text" id="PerfTestId" oninput="customFunctions_runAutomatedTestByTestId(parseInt(document.getElementById('PerfTestId').value))"><br>
+			</p>
+		</div>
+		<hr>
+		<div>
+			<h2> Manual Mode (Async Only)</h2>
+			<p>This mode works in any document. Test will run based on the input data from the below form.</p>
+			<p>
+				<h4>Step 1 - Create test data (bubblesort only, onetime only)</h4>
+				<button type="button" onClick="customFunctions_createTestData()">Create Test Data</button> 
+			</p>
+			<p>
+				<h4>Step 2 - Update the settings as required</h4>
+				Number of functions: <input type="number" id="NumberOfFunctions" value="10" size="7"><br/>
+				Number of iterations: <input type="number" id="NumberOfIterations" value="3" size="4"> <br/>
+				Number of functions on each row: <input type="number" id="NumberOfFunctionsOnEachRow" value="25" size="2"> <br/>
+				Timeout (ms) for each iteration: <input type="number" id="Timeout" value="20000" size="6"> <br/>
+			</p>
+			<p>
+				<h4>Step 3 - Select function to run </h4>
+				<input type="radio" name="FunctionToRun" value="0" checked>Calculate Mortgage<br/>
+				Loan amount <input type="number" id="PrincipalAmount" value="100000" size="7">, interest rate <input type="number" id="InterestRate" value="3.5" size="4">, number of months <input type="text" id="NumberOfMonths" value="60" size="4"> <br/><br/>
+				<input type="radio" name="FunctionToRun" value="1">Bubble Sort of <input type="number" id="BubbleSortNumbers" value="1000" size="7"> numbers<br><br/>
+				<input type="radio" name="FunctionToRun" value="2">Find <input type="number" id="NthPrime" value="100" size="7">th Prime number<br>
+			</p>
+			<p>
+				<h4>Step 4 - Run the test </h4>
+				<button type="button" onClick="runTest()">Run</button> 
+			</p>
+			<hr>
+			<p>
+				<h4>Results:</h4>
+				<div id="log"></div>
+			</p>
+		</div>
+	</body>
+</html>
