@@ -33,7 +33,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var functionNamespace = "msft.perf.";
+var functionNamespace = "MICROSOFT.OFFICE.TEST.PERF.";
 function customFunctions_runAutomatedTests() {
     return __awaiter(this, void 0, void 0, function () {
         var _this = this;
