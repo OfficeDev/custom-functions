@@ -80,14 +80,14 @@ function customFunctions_runAutomatedTests() {
                             expectedTimeout = range.values[i][5];
                             functionParameters = '(' + range.values[i][6] + ')';
                             expectedEventCount = range.values[i][7] + 1;
-                            if (!(range.values[i][1] == "addRangeJS" || range.values[i][1] == "syncAddRangeJS")) return [3 /*break*/, 4];
+                            if (!(range.values[i][1] == "ADDRANGEJS" || range.values[i][1] == "SYNCADDRANGEJS")) return [3 /*break*/, 4];
                             addRangeInputParameter = range.values[i][6];
                             return [4 /*yield*/, createAddRangeInputData(ctx, addRangeInputParameter, true)];
                         case 3:
                             _a.sent();
                             _a.label = 4;
                         case 4:
-                            if (!(range.values[i][1] == "addStringRangeJS" || range.values[i][1] == "syncAddStringRangeJS")) return [3 /*break*/, 6];
+                            if (!(range.values[i][1] == "ADDSTRINGRANGEJS" || range.values[i][1] == "SYNCADDSTRINGRANGEJS")) return [3 /*break*/, 6];
                             addRangeInputParameter = range.values[i][6];
                             return [4 /*yield*/, createAddRangeInputData(ctx, addRangeInputParameter, false)];
                         case 5:
@@ -187,14 +187,14 @@ function customFunctions_runAutomatedTestByTestIdHelper(ctx, range, testId, isAs
                     functionParameters = '(' + range.values[testId][6] + ')';
                     expectedEventCount = range.values[testId][7] + 1;
                     logger.comment("Running test [id = " + functionId + ", function = " + functionName + functionParameters + " ]");
-                    if (!(range.values[testId][1] == "addRangeJS" || range.values[testId][1] == "syncAddRangeJS")) return [3 /*break*/, 2];
+                    if (!(range.values[testId][1] == "ADDRANGEJS" || range.values[testId][1] == "SYNCADDRANGEJS")) return [3 /*break*/, 2];
                     addRangeInputParameter = range.values[testId][6];
                     return [4 /*yield*/, createAddRangeInputData(ctx, addRangeInputParameter, true)];
                 case 1:
                     _a.sent();
                     _a.label = 2;
                 case 2:
-                    if (!(range.values[testId][1] == "addStringRangeJS" || range.values[testId][1] == "syncAddStringRangeJS")) return [3 /*break*/, 4];
+                    if (!(range.values[testId][1] == "ADDSTRINGRANGEJS" || range.values[testId][1] == "SYNCADDSTRINGRANGEJS")) return [3 /*break*/, 4];
                     addRangeInputParameter = range.values[testId][6];
                     return [4 /*yield*/, createAddRangeInputData(ctx, addRangeInputParameter, false)];
                 case 3:
@@ -307,17 +307,17 @@ function runTest() {
                     functionParameters = '';
                     switch (selectedFunction) {
                         case "1":
-                            functionName = functionNamespace + "bubbleSortJS";
+                            functionName = functionNamespace + "BUBBLESORTJS";
                             bubbleSortNumbers = document.getElementById('BubbleSortNumbers').value;
                             functionParameters = "(PerfData!A1:A" + bubbleSortNumbers + ")";
                             break;
                         case "2":
-                            functionName = functionNamespace + "findNthPrimeJS";
+                            functionName = functionNamespace + "FINDNTHPRIMEJS";
                             nthPrime = document.getElementById('NthPrime').value;
                             functionParameters = "(" + nthPrime + ")";
                             break;
                         default:
-                            functionName = functionNamespace + "mortgagePaymentJS";
+                            functionName = functionNamespace + "MORTGAGEPAYMENTJS";
                             principalAmount = document.getElementById('PrincipalAmount').value;
                             interestRate = document.getElementById('InterestRate').value;
                             numberOfMonths = document.getElementById('NumberOfMonths').value;
