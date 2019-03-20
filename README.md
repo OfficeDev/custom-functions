@@ -1,3 +1,13 @@
+---
+topic: sample
+products:
+- Office 365
+languages:
+- JavaScript
+extensions:
+  contentType: samples
+  createdDate: 7/25/2018 10:27:27 AM
+---
 
 # Contributing
 
