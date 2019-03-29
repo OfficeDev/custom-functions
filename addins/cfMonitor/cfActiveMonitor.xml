@@ -14,13 +14,13 @@
 
 	<!--Version. Updates from the store only get triggered if there is a version change. -->
 	<Version>1.0.0.4</Version>
-	<ProviderName>Microsoft Excel Custom Functions</ProviderName>
+	<ProviderName>Microsoft</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
 	<!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-	<DisplayName DefaultValue="cfActiveTester" />
-	<Description DefaultValue="cfActiveTester"/>
+	<DisplayName DefaultValue="Custom Function Active Monitor" />
+	<Description DefaultValue="Custom Function Active Monitor"/>
 	<!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
-	<IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/cftester/Images/Button32x32.png" />
+	<IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/cfMonitor/Images/Button32x32.png" />
 
 	<SupportUrl DefaultValue="https://officedev.github.io/custom-functions" />
 	<!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
@@ -34,7 +34,7 @@
 		<Host Name="Workbook" />
 	</Hosts>
 	<DefaultSettings>
-		<SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/cftester/cftester.html" />
+		<SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/cfMonitor/cfMonitor.html" />
 	</DefaultSettings>
 	<!-- End TaskPane Mode integration.  -->
 
@@ -128,23 +128,23 @@
 		<!-- You can use resources across hosts and form factors. -->
 		<Resources>
 			<bt:Images>
-				<bt:Image id="Contoso.tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/cftester/Images/Button16x16.png" />
-				<bt:Image id="Contoso.tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/cftester/Images/Button32x32.png" />
-				<bt:Image id="Contoso.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/cftester/Images/Button80x80.png" />
+				<bt:Image id="Contoso.tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/cfMonitor/Images/Button16x16.png" />
+				<bt:Image id="Contoso.tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/cfMonitor/Images/Button32x32.png" />
+				<bt:Image id="Contoso.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/cfMonitor/Images/Button80x80.png" />
 			</bt:Images>
 			<bt:Urls>
-				<bt:Url id="Contoso.Taskpane.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/cftester/cftester.html" />
+				<bt:Url id="Contoso.Taskpane.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/cfMonitor/cfMonitor.html" />
 				<bt:Url id="Contoso.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
 				<bt:Url id="JSON-URL" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade.json"/>
 				<bt:Url id="JS-URL" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade.js"/>
-				<bt:Url id="HTML-URL" DefaultValue="https://officedev.github.io/custom-functions/addins/cftester/cftesterudf.html"/>
+				<bt:Url id="HTML-URL" DefaultValue="https://officedev.github.io/custom-functions/addins/cfMonitor/cfMonitorUDF.html"/>
 			</bt:Urls>
 			<!-- ShortStrings max characters==125. -->
 			<bt:ShortStrings>
 				<bt:String id="Contoso.TaskpaneButton.Label" DefaultValue="Show test pane" />
 				<bt:String id="Contoso.Group1Label" DefaultValue="Commands Group" />
 				<bt:String id="Contoso.GetStarted.Title" DefaultValue="Get started with your testing add-in!" />
-				<bt:String id="namespace" DefaultValue="CFTester"/>
+				<bt:String id="namespace" DefaultValue="cfMonitor"/>
 			</bt:ShortStrings>
 			<!-- LongStrings max characters==250. -->
 			<bt:LongStrings>
