@@ -1,0 +1,331 @@
+﻿{
+  "functions": [
+    {
+      "id": "ADD42",
+      "name": "ADD42",
+      "description": "Adds 42 to the input numbers",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "num1",
+          "description": "First number",
+          "type": "number"
+        },
+        {
+          "name": "num2",
+          "description": "Second number",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "GET_DAY",
+      "name": "GET_DAY",
+      "description": "Gets the current day of the week",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "string"
+      }
+    },
+    {
+      "id": "IS_PRIME",
+      "name": "IS_PRIME",
+      "description": "Determines whether a number is prime",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "boolean"
+      },
+      "parameters": [
+        {
+          "name": "num",
+          "description": "Number to be evaluated",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "NTH_PRIME",
+      "name": "NTH_PRIME",
+      "description": "Determines the Nth prime number",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "n",
+          "description": "Index of the prime to find",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "ADD42_PROMISE",
+      "name": "ADD42_PROMISE",
+      "description": "Returns a promise that resolves the result after a delay",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "num1",
+          "description": "First number",
+          "type": "number"
+        },
+        {
+          "name": "num2",
+          "description": "Second number",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "SECOND_HIGHEST",
+      "name": "SECOND_HIGHEST",
+      "description": "Gets the second highest number from a range",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "range",
+          "description": "Input range",
+          "type": "number",
+          "dimensionality": "matrix"
+        }
+      ]
+    },
+    {
+      "id": "MAKE_ARRAY",
+      "name": "MAKE_ARRAY",
+      "description": "Creates a 2D array with numbers",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number",
+        "dimensionality": "matrix"
+      },
+      "parameters": [
+        {
+          "name": "rows",
+          "description": "Number of rows",
+          "type": "number"
+        },
+        {
+          "name": "columns",
+          "description": "Number of columns",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "CHECK_OPTIONAL_PARAM",
+      "name": "CHECK_OPTIONAL_PARAM",
+      "description": "Check whether an optional parameter is passed in or not",
+      "helpUrl": "http://dev.office.com",
+      "parameters": [
+        {
+          "name": "requiredParam",
+          "description": "Required parameter",
+          "type": "string"
+        },
+        {
+          "name": "optionalParam",
+          "description": "Optional parameter",
+          "type": "string",
+          "optional":  true
+        }
+      ]
+    },
+    {
+      "id": "RAND",
+      "name": "RAND",
+      "description": "Returns a random number between 0 and specified max limit",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "max",
+          "description": "Max limit",
+          "type": "number"
+        }
+      ],
+      "options": {
+        "volatile": true
+      }
+    },
+    {
+      "id": "INCREMENT_STREAM",
+      "name": "INCREMENT_STREAM",
+      "description": "Streams numbers, counting up from zero",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "increment",
+          "description": "Number to be added each time",
+          "type": "number"
+        }
+      ],
+      "options": {
+        "stream": true,
+        "cancelable": true
+      }
+    },
+    {
+      "id": "CELL_ADDRESS",
+      "name": "CELL_ADDRESS",
+      "description": "Gets the address of the current cell",
+      "helpUrl": "http://dev.office.com",
+      "options": {
+        "requiresAddress": true
+      }
+    },
+    {
+      "id": "SET_ASYNC_STORAGE",
+      "name": "SET_ASYNC_STORAGE",
+      "description": "Sets a key-value pair in AsyncStorage",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "string"
+      },
+      "parameters": [
+        {
+          "name": "key",
+          "description": "key",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "description": "value",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "GET_ASYNC_STORAGE",
+      "name": "GET_ASYNC_STORAGE",
+      "description": "Gets a value from AsyncStorage matching the provided key",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "string"
+      },
+      "parameters": [
+        {
+          "name": "key",
+          "description": "key",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "TRANSLATE",
+      "name": "TRANSLATE",
+      "description": "Translates the text to the desired locale",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "string"
+      },
+      "parameters": [
+        {
+          "name": "text",
+          "description": "text to localize",
+          "type": "string",
+          "dimensionality": "matrix"
+        },
+        {
+          "name": "locale",
+          "description": "locale code",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "STOCK_PRICE",
+      "name": "STOCK_PRICE",
+      "description": "Fetches current stock price",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "ticker",
+          "description": "Stock ticker name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "STOCK_PRICE_STREAM",
+      "name": "STOCK_PRICE_STREAM",
+      "description": "Streams real time stock price",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "ticker",
+          "description": "Stock ticker name",
+          "type": "string"
+        }
+      ],
+      "options": {
+        "stream": true
+      }
+    },
+    {
+      "id": "STOCK_PRICE_HISTORY",
+      "name": "STOCK_PRICE_HISTORY",
+      "description": "Fetches stock price history",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "dimensionality": "matrix"
+      },
+      "parameters": [
+        {
+          "name": "ticker",
+          "description": "Stock ticker name",
+          "type": "string"
+        },
+        {
+          "name": "days",
+          "description": "Number of days",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "DISPLAY_WEB_DIALOG",
+      "name": "DISPLAY_WEB_DIALOG",
+      "description": "Displays a web dialog",
+      "helpUrl": "http://dev.office.com"
+    },
+    {
+      "id": "BITCOIN_STREAM",
+      "name": "BITCOIN_STREAM",
+      "description": "Does some bit coin crunching",
+      "helpUrl": "http://dev.office.com",
+      "type": "string",
+      "parameters": [
+        {
+          "name": "increment",
+          "description": "the number to be added each time",
+          "type": "number"
+        }
+      ],
+      "options": {
+        "stream": true
+      }
+    }
+  ]
+}

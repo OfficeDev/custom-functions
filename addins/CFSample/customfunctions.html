@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+        <meta http-equiv="Expires" content="0" />
+        <title>Custom Functions</title>
+
+        <script src="https://appsforoffice.microsoft.com/lib/preview/hosted/custom-functions-runtime.debug.js" type="text/javascript"></script>
+
+        <script type="text/javascript">
+            // Private functions
+            function SendTokenToCustomFunction() {
+                var token = document.getElementById('tokenTextBox').value;
+                var tokenSendStatus = document.getElementById('tokenSendStatus');
+                var key = "token";
+
+                OfficeRuntime.AsyncStorage.setItem(key, token).then(function () {
+                    tokenSendStatus.value = "Success: Item with key '" + key + "' saved to AsyncStorage.";
+                }, function (error) {
+                    tokenSendStatus.value = "Error: Unable to save item with key '" + key + "' to AsyncStorage. " + error;
+                });
+            }
+
+            function ReceiveTokenFromCustomFunction() {
+                var key = "token";
+                var tokenSendStatus = document.getElementById('tokenSendStatus');
+
+                OfficeRuntime.AsyncStorage.getItem(key).then(function (result) {
+                    tokenSendStatus.value = "Success: Item with key '" + key + "' read from AsyncStorage.";
+                    document.getElementById('tokenTextBox2').value = result;
+                }, function (error) {
+                    tokenSendStatus.value = "Error: Unable to read item with key '" + key + "' from AsyncStorage. " + error;
+                });
+            }
+        </script>
+    </head>
+
+    <body>
+        Thanks for trying custom functions for Excel! You've installed the sample functions, which start with the prefix CFSAMPLE.
+        Try typing them into a cell (with or without this task pane - it isn't needed):
+        <ul>
+            <li><b>=CFSAMPLE.ADD42</b> adds 42 to two input numbers and returns a number. </li>
+            <li><b>=CFSAMPLE.GET_DAY</b> returns current day of the week as a string. </li>
+            <li><b>=CFSAMPLE.IS_PRIME</b> returns a boolean to denote whether a number is prime </li>
+
+            <li><b>=CFSAMPLE.NTH_PRIME</b> computation intensive function for large values on N. </li>
+            <li><b>=CFSAMPLE.ADD42_PROMISE</b> returns a Promise that resolves asynchronously. </li>
+
+            <li><b>=CFSAMPLE.SECOND_HIGHEST</b> takes a range as input. </li>
+            <li><b>=CFSAMPLE.MAKE_ARRAY</b> returns a range as output. </li>
+
+            <li><b>=CFSAMPLE.CHECK_OPTIONAL_PARAM</b> optional parameter sample. </li>
+            <li><b>=CFSAMPLE.RAND</b> volatile function. </li>
+            <li><b>=CFSAMPLE.INCREMENT_STREAM</b> streaming function. </li>
+            <li><b>=CFSAMPLE.CELL_ADDRESS</b> returns current cell reference. </li>
+
+            <li><b>=CFSAMPLE.SET_ASYNC_STORAGE</b> Write to asyncStorage. </li>
+            <li><b>=CFSAMPLE.GET_ASYNC_STORAGE</b> Read from asyncStorage. </li>
+
+            <li><b>=CFSAMPLE.TRANSLATE</b> Calls external web service using XMLHttpRequest API. </li>
+            <li><b>=CFSAMPLE.STOCK_PRICE</b> Calls external web service using XMLHttpRequest API. </li>
+            <li><b>=CFSAMPLE.STOCK_PRICE_STREAM</b> Calls XMLHttpRequest in a streaming function. </li>
+            <li><b>=CFSAMPLE.STOCK_PRICE_HISTORY</b> Calls external web service using fetch API. </li>
+
+            <li><b>=CFSAMPLE.DISPLAY_WEB_DIALOG</b> Shows web dialog using OfficeRuntime.displayWebDialog API. </li>
+            <li><b>=CFSAMPLE.BITCOIN_STREAM</b> Calls external web service using WebSocket API in a streaming function. </li>
+        </ul>
+
+        Send token to custom function (key = "token")
+        <div>
+            <input type="text" id="tokenTextBox" />
+            <button onclick="SendTokenToCustomFunction()">Send</button>
+        </div>
+    
+        Receive token from custom function (key = "token")
+        <div>
+            <input type="text" id="tokenTextBox2" />
+            <button onclick="ReceiveTokenFromCustomFunction()">Receive</button>
+        </div>
+    
+        <div id="tokenSendStatus" />
+    
+        For more information, see <a href=https://aka.ms/customfunctions>https://aka.ms/customfunctions</a>.
+    </body>
+</html>
