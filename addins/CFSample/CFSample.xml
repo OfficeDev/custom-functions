@@ -1,0 +1,167 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp 
+    xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+    xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+    xsi:type="TaskPaneApp">
+
+  <!-- Begin Basic Settings: Add-in metadata, used for all versions of Office unless override provided. -->
+
+  <!-- IMPORTANT! Id must be unique for your add-in, if you reuse this manifest ensure that you change this id to a new GUID. -->
+  <Id>f730adbc-e253-46f4-8985-b94bad0bf202</Id>
+
+  <!--Version. Updates from the store only get triggered if there is a version change. -->
+  <Version>1.0.0.3</Version>
+  <ProviderName>Microsoft</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
+  <DisplayName DefaultValue="CFSample"/>
+  <Description DefaultValue="CFSample"/>
+  <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
+  <IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"/>
+  <SupportUrl DefaultValue="http://www.contoso.com"/>
+  
+  <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
+  <AppDomains>
+    <AppDomain>https://officedev.github.io/custom-functions/addins/CFSample</AppDomain>
+    <AppDomain>https://api.iextrading.com</AppDomain>
+    <AppDomain>https://excelcf-demo-api.azurewebsites.net</AppDomain>
+  </AppDomains>
+
+  <!--End Basic Settings. -->
+  
+  <!--Begin TaskPane Mode integration. This section is used if there are no VersionOverrides or if the Office client version does not support add-in commands. -->
+  <Hosts>
+    <Host Name="Workbook"/>
+  </Hosts>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/customfunctions.html"/>
+  </DefaultSettings>
+  <!-- End TaskPane Mode integration.  -->
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <!-- Begin Add-in Commands Mode integration. -->
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    
+    <!-- The Hosts node is required. -->
+    <Hosts>
+      <!-- Each host can have a different set of commands. -->
+      <!-- Excel host is Workbook, Word host is Document, and PowerPoint host is Presentation. -->
+      <!-- Make sure the hosts you override match the hosts declared in the top section of the manifest. -->
+      <Host xsi:type="Workbook">
+        
+        <DesktopFormFactor>
+          <!--"This code enables a customizable message to be displayed when the add-in is loaded successfully upon individual install."-->
+          <GetStarted>
+            <!-- Title of the Getting Started callout. The resid attribute points to a ShortString resource -->
+            <Title resid="CFSample.GetStarted.Title"/>
+
+            <!-- Description of the Getting Started callout. resid points to a LongString resource -->
+            <Description resid="CFSample.GetStarted.Description"/>
+
+            <!-- Points to a URL resource which details how the add-in should be used. -->
+            <LearnMoreUrl resid="CFSample.GetStarted.LearnMoreUrl"/>
+          </GetStarted>
+          
+          <!-- PrimaryCommandSurface is the main Office Ribbon. -->
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <!-- Use OfficeTab to extend an existing Tab. Use CustomTab to create a new tab. -->
+            <OfficeTab id="TabHome">
+              <!-- Ensure you provide a unique id for the group. Recommendation for any IDs is to namespace using your company name. -->
+              <Group id="CFSample.Group1">
+                <!-- Label for your group. resid must point to a ShortString resource. -->
+                <Label resid="CFSample.Group1Label" />
+                <!-- Icons. Required sizes 16,32,80, optional 20, 24, 40, 48, 64. Strongly recommended to provide all sizes for great UX. -->
+                <!-- Use PNG icons. All URLs on the resources section must use HTTPS. -->
+                <Icon>
+                  <bt:Image size="16" resid="CFSample.tpicon_16x16" />
+                  <bt:Image size="32" resid="CFSample.tpicon_32x32" />
+                  <bt:Image size="80" resid="CFSample.tpicon_80x80" />
+                </Icon>
+
+                <!-- Control. It can be of type "Button" or "Menu". -->
+                <Control xsi:type="Button" id="CFSample.TaskpaneButton">
+                  <Label resid="CFSample.TaskpaneButton.Label" />
+                  <Supertip>
+                    <!-- ToolTip title. resid must point to a ShortString resource. -->
+                    <Title resid="CFSample.TaskpaneButton.Label" />
+                    <!-- ToolTip description. resid must point to a LongString resource. -->
+                    <Description resid="CFSample.TaskpaneButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="CFSample.tpicon_16x16" />
+                    <bt:Image size="32" resid="CFSample.tpicon_32x32" />
+                    <bt:Image size="80" resid="CFSample.tpicon_80x80" />
+                  </Icon>
+
+                  <!-- This is what happens when the command is triggered (E.g. click on the Ribbon). Supported actions are ExecuteFunction or ShowTaskpane. -->
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ButtonId1</TaskpaneId>
+                    <!-- Provide a URL resource id for the location that will be displayed on the task pane. -->
+                    <SourceLocation resid="CFSample.Taskpane.Url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+          
+        </DesktopFormFactor>
+        
+        <AllFormFactors>
+          <ExtensionPoint xsi:type="CustomFunctions">
+            <Script>
+              <SourceLocation resid="JS-URL"/>
+            </Script>
+            <Page>
+              <SourceLocation resid="HTML-URL"/>
+            </Page>
+            <Metadata>
+              <SourceLocation resid="JSON-URL"/>
+            </Metadata>
+            <Namespace resid="namespace"/>
+          </ExtensionPoint>
+        </AllFormFactors>
+        
+      </Host>
+    </Hosts>
+    
+    <!-- You can use resources across hosts and form factors. -->
+    <Resources>
+      
+      <bt:Images>
+        <bt:Image id="CFSample.tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button16x16.png" />
+        <bt:Image id="CFSample.tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png" />
+        <bt:Image id="CFSample.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button80x80.png" />
+      </bt:Images>
+      
+      <bt:Urls>
+        <bt:Url id="CFSample.Taskpane.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/customfunctions.html" />
+        <bt:Url id="CFSample.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
+        
+        <bt:Url id="JSON-URL" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/customfunctions.json" />
+        <bt:Url id="JS-URL" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/customfunctions.js" />
+        <bt:Url id="HTML-URL" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/customfunctions.html" />
+      </bt:Urls>
+      
+      <!-- ShortStrings max characters==125. -->
+      <bt:ShortStrings>
+        <bt:String id="CFSample.TaskpaneButton.Label" DefaultValue="Show CFSample Taskpane" />
+        <bt:String id="CFSample.Group1Label" DefaultValue="CFSample Group" />
+        <bt:String id="CFSample.GetStarted.Title" DefaultValue="Get started with your CFSample add-in!" />
+        
+        <bt:String id="namespace" DefaultValue="CFSAMPLE" />
+      </bt:ShortStrings>
+      
+      <!-- LongStrings max characters==250. -->
+      <bt:LongStrings>
+        <bt:String id="CFSample.TaskpaneButton.Tooltip" DefaultValue="Click to show CFSample taskpane" />
+        <bt:String id="CFSample.GetStarted.Description" DefaultValue="Your CFSample add-in loaded succesfully. Go to the HOME tab and click the 'Show Taskpane' button to get started." />
+      </bt:LongStrings>
+      
+    </Resources>
+  </VersionOverrides>
+  <!-- End Add-in Commands Mode integration. -->
+
+</OfficeApp>
