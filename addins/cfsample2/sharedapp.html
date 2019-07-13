@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+		<meta http-equiv="Expires" content="0" />
+		<title>Custom Functions Upgrade Test</title>
+		<script src="https://unpkg.com/@microsoft/office-js@1.1.26-custom.25/dist/office.debug.js" type="text/javascript"></script>
+		<script src="custom-functions.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var g_sharedAppData = {};
+			function appCmdUpdateSharedAppData(event) {
+				g_sharedAppData.value = 2019;
+				event.completed();
+			}
+
+			function BtnReadData() {
+				document.getElementById("TxtData").value = g_sharedAppData.value;
+			}
+			function BtnSetData() {
+				var value = document.getElementById("TxtData").value;
+				if (!value) {
+					value = 2019;
+				}
+
+				g_sharedAppData.value = value;
+			}
+		</script>
+	</head>
+	<body>
+		<div>
+			Data: <input id="TxtData" type="text" />
+		</div>
+		<div>
+			<button onclick="BtnReadData()">ReadData</button>
+			<button onclick="BtnSetData()">SetData</button>		
+		</div>
+	</body>
+</html>
