@@ -15,8 +15,14 @@
 			}
 
 			function BtnReadData() {
-				document.getElementById("TxtData").value = g_sharedAppData.value;
+				var txt = document.createTextNode(g_sharedAppData.value);
+				var span = document.getElementById("SpanData");
+				if (span.hasChildNodes()) {
+					span.removeChild(span.childNodes[0]);
+				}
+				span.appendChild(txt);
 			}
+
 			function BtnSetData() {
 				var value = document.getElementById("TxtData").value;
 				if (!value) {
@@ -29,11 +35,10 @@
 	</head>
 	<body>
 		<div>
-			Data: <input id="TxtData" type="text" />
+			<button onclick="BtnSetData()">SetData</button>: <input id="TxtData" type="text" />
 		</div>
 		<div>
-			<button onclick="BtnReadData()">ReadData</button>
-			<button onclick="BtnSetData()">SetData</button>		
+			<button onclick="BtnReadData()">ReadData</button>: <span id="SpanData"></span>
 		</div>
 	</body>
 </html>
