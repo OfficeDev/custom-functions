@@ -24,7 +24,7 @@
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
   <IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png" />
   <!--End Basic Settings. -->
-  
+  <SupportUrl DefaultValue="https://officedev.github.io/custom-functions" />
   <!--Begin TaskPane Mode integration. This section is used if there are no VersionOverrides or if the Office client version does not support add-in commands. -->
   <Hosts>
     <Host Name="Workbook" />
