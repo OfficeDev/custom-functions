@@ -127,6 +127,39 @@
 				"sync": false,
 				"stream": true
 			}
+		},
+
+		{
+			"id": "GETSHAREDVALUE",
+			"name": "GETSHAREDVALUE",
+			"result": {
+				"type": "any",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+			],
+			"options": {
+				"sync": false
+			}
+		},
+
+		{
+			"id": "SETSHAREDVALUE",
+			"name": "SETSHAREDVALUE",
+			"result": {
+				"type": "any",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "value",
+					"type": "any",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": false
+			}
 		}
 
 	]

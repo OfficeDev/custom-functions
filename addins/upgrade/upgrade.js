@@ -26,14 +26,33 @@ function delay(func, ms) {
 	});
 }
 
-CustomFunctionMappings = {
-	VERSIONSYNC: getVersion,
-	VERSIONASYNC: getVersion,
-	VERSIONDELAYED: function(ms) { return delay(getVersion, ms); },
+function getSharedValue() {
+	if (typeof(g_sharedState) === 'object') {
+		return g_sharedState.value;
+	}
 
-	CONSTSYNC: getConst,
-	CONSTASYNC: getConst,
-	CONSTDELAYED: function(ms) { return delay(getConst, ms); },
+	return null;
+}
 
-	STREAMSEQUENCE: streamSequence
-};
+function setSharedValue(value) {
+	if (typeof(g_sharedState) === 'object') {
+		g_sharedState.value = value;
+		return value;
+	}
+
+	return null;
+}
+
+
+CustomFunctions.associate('VERSIONSYNC', getVersion);
+CustomFunctions.associate('VERSIONASYNC', getVersion);
+CustomFunctions.associate('VERSIONDELAYED', function(ms) { return delay(getVersion, ms); });
+
+CustomFunctions.associate('CONSTSYNC', getConst);
+CustomFunctions.associate('CONSTASYNC', getConst);
+CustomFunctions.associate('CONSTDELAYED', function(ms) { return delay(getConst, ms); });
+
+CustomFunctions.associate('STREAMSEQUENCE', streamSequence);
+
+CustomFunctions.associate('GETSHAREDVALUE', getSharedValue);
+CustomFunctions.associate('SETSHAREDVALUE', setSharedValue);
