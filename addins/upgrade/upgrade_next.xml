@@ -5,11 +5,11 @@
  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
  xsi:type="TaskPaneApp">
 	<Id>f5900b5c-7095-42c4-9ecc-fee58e5fe6e2</Id>
-	<Version>18.7.24.2</Version>
+	<Version>18.7.24.3</Version>
 	<ProviderName>Microsoft</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
-	<DisplayName DefaultValue="Upgrade Test (Next)" />
-	<Description DefaultValue="Upgrade Test (Next)" />
+	<DisplayName DefaultValue="SharedApp Upgrade Test" />
+	<Description DefaultValue="SharedApp Upgrade Test" />
 	<IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_32.png" />
 	<SupportUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade" />
 
@@ -30,7 +30,7 @@
 		<Hosts>
 			<Host xsi:type="Workbook">
 				<Runtimes>
-					<Runtime resid ="OEP.CustomFunctions.Page" lifetime="long" />
+					<Runtime resid="OEP.CustomFunctions.Page" lifetime="long" />
 				</Runtimes>
 				<AllFormFactors>
 					<ExtensionPoint xsi:type="CustomFunctions">
@@ -63,7 +63,7 @@
 
 					<!-- Function file is a HTML page that includes the JavaScript where functions for ExecuteAction will be called. 
 						Think of the FunctionFile as the code behind ExecuteFunction. -->
-					<FunctionFile resid="OEP.DesktopFunctionFile.Url" />
+					<FunctionFile resid="OEP.CustomFunctions.Page" />
 
 					<!-- PrimaryCommandSurface is the main Office Ribbon. -->
 					<ExtensionPoint xsi:type="PrimaryCommandSurface">
@@ -119,7 +119,7 @@
 									<Action xsi:type="ShowTaskpane">
 										<TaskpaneId>Office.AutoShowTaskpaneWithDocument</TaskpaneId>
 										<!-- Provide a url resource id for the location that will be displayed on the task pane. -->
-										<SourceLocation resid="OEP.Taskpane.Url" />
+										<SourceLocation resid="OEP.CustomFunctions.Page" />
 									</Action>
 								</Control>
 							</Group>
@@ -139,16 +139,14 @@
 				<bt:Url id="OEP.CustomFunctions.Metadata" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade.json" />
 				<bt:Url id="OEP.CustomFunctions.Script" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade.js" />
 				<bt:Url id="OEP.CustomFunctions.Page" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_next.html?cfns=sharedapp" />
-				<bt:Url id="OEP.Taskpane.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_next.html?cfns=sharedapp" />
-				<bt:Url id="OEP.DesktopFunctionFile.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_next.html?cfns=sharedapp" />
 				<bt:Url id="OEP.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
 			</bt:Urls>
 			<bt:ShortStrings>
-				<bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Show Upgrade (Next) Taskpane" />
-				<bt:String id="OEP.TestFuncButton.Label" DefaultValue="Update Upgrade (Next) Value" />
+				<bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Show SharedApp Upgrade Taskpane" />
+				<bt:String id="OEP.TestFuncButton.Label" DefaultValue="Update SharedApp Upgrade Value" />
 				<bt:String id="OEP.Group1Label" DefaultValue="OEP Dev Team Apps" />
-				<bt:String id="OEP.GetStarted.Title" DefaultValue="Upgrade Test (Next) - zlatkom2" />
-				<bt:String id="OEP.CustomFunctions.Namespace" DefaultValue="MICROSOFT.OFFICE.TEST.UPGRADE.NEXT" />
+				<bt:String id="OEP.GetStarted.Title" DefaultValue="SharedApp Upgrade Test" />
+				<bt:String id="OEP.CustomFunctions.Namespace" DefaultValue="MICROSOFT.OFFICE.TEST.UPGRADE.SHAREDAPP" />
 			</bt:ShortStrings>
 			<bt:LongStrings>
 				<bt:String id="OEP.TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
