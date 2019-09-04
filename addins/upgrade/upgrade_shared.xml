@@ -144,7 +144,7 @@
 			<bt:ShortStrings>
 				<bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Show Taskpane" />
 				<bt:String id="OEP.TestFuncButton.Label" DefaultValue="Update Shared Value" />
-				<bt:String id="OEP.Group1Label" DefaultValue="OEP Dev Team Apps" />
+				<bt:String id="OEP.Group1Label" DefaultValue="Shared Runtime Upgrade Test" />
 				<bt:String id="OEP.GetStarted.Title" DefaultValue="Shared Runtime Upgrade Test" />
 				<bt:String id="OEP.CustomFunctions.Namespace" DefaultValue="MICROSOFT.OFFICE.TEST.UPGRADE.SHARED" />
 			</bt:ShortStrings>
