@@ -8,8 +8,8 @@
 	<Version>18.7.24.3</Version>
 	<ProviderName>Microsoft</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
-	<DisplayName DefaultValue="SharedApp Upgrade Test" />
-	<Description DefaultValue="SharedApp Upgrade Test" />
+	<DisplayName DefaultValue="Shared Runtime Upgrade Test" />
+	<Description DefaultValue="Shared Runtime Upgrade Test" />
 	<IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_32.png" />
 	<SupportUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade" />
 
@@ -21,7 +21,7 @@
 	</Hosts>
 
 	<DefaultSettings>
-		<SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_next.html"/>
+		<SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_shared.html"/>
 	</DefaultSettings>
 
 	<Permissions>ReadWriteDocument</Permissions>
@@ -138,15 +138,15 @@
 			<bt:Urls>
 				<bt:Url id="OEP.CustomFunctions.Metadata" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade.json" />
 				<bt:Url id="OEP.CustomFunctions.Script" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade.js" />
-				<bt:Url id="OEP.CustomFunctions.Page" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_next.html?cfns=sharedapp" />
+				<bt:Url id="OEP.CustomFunctions.Page" DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_shared.html?cfns=sharedapp" />
 				<bt:Url id="OEP.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
 			</bt:Urls>
 			<bt:ShortStrings>
-				<bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Show SharedApp Upgrade Taskpane" />
-				<bt:String id="OEP.TestFuncButton.Label" DefaultValue="Update SharedApp Upgrade Value" />
+				<bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Show Taskpane" />
+				<bt:String id="OEP.TestFuncButton.Label" DefaultValue="Update Shared Value" />
 				<bt:String id="OEP.Group1Label" DefaultValue="OEP Dev Team Apps" />
-				<bt:String id="OEP.GetStarted.Title" DefaultValue="SharedApp Upgrade Test" />
-				<bt:String id="OEP.CustomFunctions.Namespace" DefaultValue="MICROSOFT.OFFICE.TEST.UPGRADE.SHAREDAPP" />
+				<bt:String id="OEP.GetStarted.Title" DefaultValue="Shared Runtime Upgrade Test" />
+				<bt:String id="OEP.CustomFunctions.Namespace" DefaultValue="MICROSOFT.OFFICE.TEST.UPGRADE.SHARED" />
 			</bt:ShortStrings>
 			<bt:LongStrings>
 				<bt:String id="OEP.TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
