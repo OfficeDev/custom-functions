@@ -43,6 +43,15 @@ function setSharedValue(value) {
 	return null;
 }
 
+function getRuntimeState() {
+	let runtimeState = await OfficeRuntime.CurrentRuntime.getState();
+	return runtimeState;
+}
+
+function setRuntimeState(value) {
+	await OfficeRuntime.CurrentRuntime.setState(value);
+	return null;
+}
 
 CustomFunctions.associate('VERSIONSYNC', getVersion);
 CustomFunctions.associate('VERSIONASYNC', getVersion);
@@ -56,3 +65,6 @@ CustomFunctions.associate('STREAMSEQUENCE', streamSequence);
 
 CustomFunctions.associate('GETSHAREDVALUE', getSharedValue);
 CustomFunctions.associate('SETSHAREDVALUE', setSharedValue);
+
+CustomFunctions.associate('GETRUNTIMESTATE', getRuntimeState);
+CustomFunctions.associate('SETRUNTIMESTATE', setRuntimeState);
