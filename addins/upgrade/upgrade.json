@@ -160,6 +160,39 @@
 			"options": {
 				"sync": false
 			}
+        },
+        
+        {
+			"id": "GETRUNTIMESTATE",
+			"name": "GETRUNTIMESTATE",
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+			],
+			"options": {
+				"sync": false
+			}
+		},
+
+		{
+			"id": "SETRUNTIMESTATE",
+			"name": "SETRUNTIMESTATE",
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "value",
+					"type": "string",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": false
+			}
 		}
 
 	]
