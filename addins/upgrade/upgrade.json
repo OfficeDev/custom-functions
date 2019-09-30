@@ -160,9 +160,9 @@
 			"options": {
 				"sync": false
 			}
-        },
+		},
         
-        {
+		{
 			"id": "GETRUNTIMESTATE",
 			"name": "GETRUNTIMESTATE",
 			"result": {

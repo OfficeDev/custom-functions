@@ -44,12 +44,12 @@ function setSharedValue(value) {
 }
 
 function getRuntimeState() {
-    let runtimeState = await OfficeRuntime.CurrentRuntime.getState();
+	let runtimeState = await OfficeRuntime.CurrentRuntime.getState();
 	return runtimeState;
 }
 
 function setRuntimeState(value) {
-    await OfficeRuntime.CurrentRuntime.setState(value);
+	await OfficeRuntime.CurrentRuntime.setState(value);
 	return null;
 }
 
