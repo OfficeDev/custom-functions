@@ -63,3 +63,6 @@ CustomFunctions.associate('STREAMSEQUENCE', streamSequence);
 
 CustomFunctions.associate('GETSHAREDVALUE', getSharedValue);
 CustomFunctions.associate('SETSHAREDVALUE', setSharedValue);
+
+CustomFunctions.associate('GETRUNTIMESTATE', getRuntimeState);
+CustomFunctions.associate('SETRUNTIMESTATE', setRuntimeState);
