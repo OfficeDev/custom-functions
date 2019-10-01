@@ -44,11 +44,11 @@ function setSharedValue(value) {
 }
 
 function getRuntimeState() {
-	return OfficeRuntime.CurrentRuntime.getState();
+	return OfficeRuntime.currentRuntime.getState();
 }
 
 function setRuntimeState(value) {
-	return OfficeRuntime.CurrentRuntime.setState(value);
+	return OfficeRuntime.currentRuntime.setState(value);
 }
 
 CustomFunctions.associate('VERSIONSYNC', getVersion);
