@@ -5,19 +5,16 @@
  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
  xsi:type="TaskPaneApp">
 	<Id>f5900b5c-7095-42c4-9ecc-fee58e5fe6e2</Id>
-	<Version>18.7.24.3</Version>
+	<Version>18.7.24.4</Version>
 	<ProviderName>Microsoft</ProviderName>
 	<DefaultLocale>en-US</DefaultLocale>
-	<DisplayName DefaultValue="Shared Runtime Upgrade Test" />
-	<Description DefaultValue="Shared Runtime Upgrade Test" />
+	<DisplayName DefaultValue="Upgrade Shared Runtime" />
+	<Description DefaultValue="Upgrade Shared Runtime" />
 	<IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade/upgrade_32.png" />
 	<SupportUrl DefaultValue="https://officedev.github.io/custom-functions/addins/upgrade" />
 
 	<Hosts>
 		<Host Name="Workbook" />
-		<Host Name="Presentation" />
-		<Host Name="Notebook" />
-		<Host Name="Document" />
 	</Hosts>
 
 	<DefaultSettings>
@@ -143,9 +140,9 @@
 			</bt:Urls>
 			<bt:ShortStrings>
 				<bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Show Taskpane" />
-				<bt:String id="OEP.TestFuncButton.Label" DefaultValue="Update Shared Value" />
-				<bt:String id="OEP.Group1Label" DefaultValue="Shared Runtime Upgrade Test" />
-				<bt:String id="OEP.GetStarted.Title" DefaultValue="Shared Runtime Upgrade Test" />
+				<bt:String id="OEP.TestFuncButton.Label" DefaultValue="Set Shared Value" />
+				<bt:String id="OEP.Group1Label" DefaultValue="Upgrade Shared Runtime" />
+				<bt:String id="OEP.GetStarted.Title" DefaultValue="Upgrade Shared Runtime" />
 				<bt:String id="OEP.CustomFunctions.Namespace" DefaultValue="MICROSOFT.OFFICE.TEST.UPGRADE.SHARED" />
 			</bt:ShortStrings>
 			<bt:LongStrings>
