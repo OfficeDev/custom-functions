@@ -50,7 +50,39 @@
 			"name": "value"
 		  }
 		]
-	  }
+	  },
+	  {
+        "id": "SetRuntimeState",
+        "name": "SetRuntimeState",
+        "description": "Set Runtime state",
+        "parameters": [
+          {
+            "name": "state",
+			"type": "string"
+          }
+        ]
+      },
+      {
+        "id": "GetRuntimeState",
+        "name": "GetRuntimeState",
+        "description": "Get Runtime state"
+      },
+      {
+        "id": "SetStartupState",
+        "name": "SetStartupState",
+        "description": "Set Runtime startup state",
+        "parameters": [
+          {
+            "name": "state",
+			"type": "string"
+          }
+        ]
+      },
+      {
+        "id": "GetStartupState",
+        "name": "GetStartupState",
+        "description": "Get Runtime startup State"
+      }
 	]
   }
   

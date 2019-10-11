@@ -118,6 +118,44 @@
                     <FunctionName>appCmdUpdateSharedAppData</FunctionName>
                   </Action>
                 </Control>
+				
+		<Control xsi:type="Button" id="OEP.TestVisibleButton">
+                  <Label resid="OEP.TestVisibleButton.Label" />
+                  <Supertip>
+                    <!-- ToolTip title. resid must point to a ShortString resource. -->
+                    <Title resid="OEP.TestVisibleButton.Label" />
+                    <!-- ToolTip description. resid must point to a LongString resource. -->
+                    <Description resid="OEP.TestVisibleButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="OEP.tpicon_16x16" />
+                    <bt:Image size="32" resid="OEP.tpicon_32x32" />
+                    <bt:Image size="80" resid="OEP.tpicon_80x80" />
+                  </Icon>
+                  <!-- This is what happens when the command is triggered (E.g. click on the Ribbon). Supported actions are ExecuteFunction or ShowTaskpane. -->
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>appCmdSetStateVisible</FunctionName>
+                  </Action>
+                </Control>
+				
+		<Control xsi:type="Button" id="OEP.TestBackgroundButton">
+                  <Label resid="OEP.TestBackgroundButton.Label" />
+                  <Supertip>
+                    <!-- ToolTip title. resid must point to a ShortString resource. -->
+                    <Title resid="OEP.TestBackgroundButton.Label" />
+                    <!-- ToolTip description. resid must point to a LongString resource. -->
+                    <Description resid="OEP.TestBackgroundButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="OEP.tpicon_16x16" />
+                    <bt:Image size="32" resid="OEP.tpicon_32x32" />
+                    <bt:Image size="80" resid="OEP.tpicon_80x80" />
+                  </Icon>
+                  <!-- This is what happens when the command is triggered (E.g. click on the Ribbon). Supported actions are ExecuteFunction or ShowTaskpane. -->
+                  <Action xsi:type="ExecuteFunction">
+                    <FunctionName>appCmdSetStateBackground</FunctionName>
+                  </Action>
+                </Control>
 
                 <!-- Control. It can be of type "Button" or "Menu". -->
                 <Control xsi:type="Button" id="OEP.TaskpaneButton">
@@ -164,6 +202,8 @@
       <bt:ShortStrings>
         <bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Show Taskpane" />
         <bt:String id="OEP.TestFuncButton.Label" DefaultValue="Update Value" />
+        <bt:String id="OEP.TestVisibleButton.Label" DefaultValue="Set Visible state" />
+        <bt:String id="OEP.TestBackgroundButton.Label" DefaultValue="Set Bg State" />
         <bt:String id="OEP.Group1Label" DefaultValue="CFSample2" />
         <bt:String id="OEP.GetStarted.Title" DefaultValue="CFSample2" />
         <bt:String id="OEP.CustomFunctions.NameSpace" DefaultValue="CFSample2" />
@@ -173,6 +213,8 @@
         <bt:String id="OEP.TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane" />
         <bt:String id="OEP.GetStarted.Description" DefaultValue="Your sample add-in loaded succesfully. Go to the HOME tab and click the 'Show Taskpane' button to get started." />
         <bt:String id="OEP.TestFuncButton.Tooltip" DefaultValue="Test AppCmd button" />
+	<bt:String id="OEP.TestVisibleButton.Tooltip" DefaultValue="Test AppCmd Set Visible state button" />
+        <bt:String id="OEP.TestBackgroundButton.Tooltip" DefaultValue="Test AppCmd Set Background State button" />
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>

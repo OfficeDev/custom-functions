@@ -19,6 +19,36 @@
 		});
 }
 
+function SetRuntimeStateHelper(state) {
+	return promiseWorkaround(function () {
+		return OfficeRuntime.currentRuntime.setState(state)
+			.then(function () {
+				if (typeof(g_BgAppRuntimeState) === 'object') {
+					g_BgAppRuntimeState.value = state;
+				}
+				return state;
+			})
+			.catch(function (error) {
+				return error.code;
+			});
+	});
+}
+
+function SetStartupStateHelper(state) {
+	return promiseWorkaround(function () {
+		return OfficeRuntime.currentRuntime.setStartupState(state)
+			.then(function () {
+				if (typeof(g_BgAppRuntimeStartupState) === 'object') {
+					g_BgAppRuntimeStartupState.value = state;
+				}
+				return state;
+			})
+			.catch(function (error) {
+				return error.code;
+			});
+	});
+}
+
 CustomFunctions.associate('GetCFDataRangeValue', function(address){
 	return promiseWorkaround(function() {
 		var context = new Excel.RequestContext();
@@ -82,4 +112,44 @@ CustomFunctions.associate('SetValue', function(value) {
 	}
 
 	return null;
+});
+
+CustomFunctions.associate('GetRuntimeState', function() {
+	return promiseWorkaround(function () {
+		return OfficeRuntime.currentRuntime.getState()
+		.then(function (value) {
+			if (typeof(g_BgAppRuntimeState) === 'object') {
+				g_BgAppRuntimeState.value = value;
+			}
+			return value.toString();
+		})
+		.catch(function (error) {
+			return error.code;
+		});
+	});
+});
+
+CustomFunctions.associate('SetRuntimeState', function (state) {
+	return SetRuntimeStateHelper(state);
+});
+
+CustomFunctions.associate('GetStartupState', function() {
+	return promiseWorkaround(function () {
+		return OfficeRuntime.currentRuntime.getStartupState()
+		.then(function (value) {
+			if (typeof(g_BgAppRuntimeStartupState) === 'object') {
+				g_BgAppRuntimeStartupState.value = value;
+			}
+			return value.toString();
+		})
+		.catch(function (error) {
+			return error.code;
+		});
+	});
+});
+
+
+
+CustomFunctions.associate('SetStartupState', function (state) {
+	return SetStartupStateHelper(state);
 });
