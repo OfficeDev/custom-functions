@@ -7,9 +7,12 @@ languages:
 extensions:
   contentType: samples
   createdDate: 7/25/2018 10:27:27 AM
+description: "Custom Functions - Add-in Sample".
 ---
 
-# Contributing
+# Custom Functions - Add-in Sample
+
+## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
