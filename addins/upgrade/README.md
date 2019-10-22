@@ -13,5 +13,5 @@ The effect of that difference is that when the shared value in Upgrade App Comma
 
 Additionally, these add-ins have unusual versions, which makes them suitable for testing of the upgrade experience.
 
-# Maintainer
+# Maintainers
 [zlatko-michailov](https://github.com/zlatko-michailov)
