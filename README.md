@@ -7,7 +7,7 @@ languages:
 extensions:
   contentType: samples
   createdDate: 7/25/2018 10:27:27 AM
-description: "Custom Functions - Add-in Samples"
+description: "Custom Functions - Special Add-in Samples"
 ---
 
 # Note
