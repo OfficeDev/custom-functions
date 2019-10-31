@@ -1,5 +1,5 @@
 # Purpose
-This add-in is used to test an add-in uses a single, shared, runtime for its components. The add-in contains:
+This add-in is used to test a single, shared, runtime for its components. The add-in contains:
 - A ShowTaskpane button
 - A UI-less ribbon button handler
 
