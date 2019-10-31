@@ -28,17 +28,17 @@
 			}
 
 			function setStartupStateValueFromUI() {
-				const startupState = document.getElementById("setStartupStateValue").value;
+				var startupState = document.getElementById("setStartupStateValue").value;
 				OfficeRuntime.currentRuntime.setStartupState(startupState);
 			}
 
 			function getStartupStateValueIntoUI() {
-				const startupState = OfficeRuntime.currentRuntime.getStartupState();
+				var startupState = OfficeRuntime.currentRuntime.getStartupState();
 				document.getElementById("getCurrentStateValue").innerText = startupState;
 			}
 
 			function getCurrentStatValueIntoUI() {
-				const currentState = OfficeRuntime.currentRuntime.getState();
+				var currentState = OfficeRuntime.currentRuntime.getState();
 				document.getElementById("getCurrentStateValue").innerText = currentState;
 			}
 		</script>
@@ -49,7 +49,7 @@
 		&nbsp;
 		<input type="text" id="setValue" />
 		<br />
-	
+
 		<input type="button" id="getButton" value="Get Shared Value" onclick="javascript: getSharedValueIntoUI();" />
 		&nbsp;
 		<span id="getValue"></span>
