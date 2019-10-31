@@ -6,7 +6,7 @@
 		<meta http-equiv="Expires" content="0" />
 		<title>Upgrade Shared Runtime</title>
 
-		<script src="https://unpkg.com/@microsoft/office-js@1.1.33-custom.28/dist/office.debug.js" type="text/javascript"></script>
+		<script src="https://unpkg.com/@microsoft/office-js@1.1.33-custom.32/dist/office.debug.js" type="text/javascript"></script>
 		<script src="upgrade.js" type="text/javascript"></script>
 
 		<script type="text/javascript">
@@ -25,6 +25,21 @@
 
 			function getSharedValueIntoUI() {
 				document.getElementById("getValue").innerText = g_sharedState.value;
+            }
+            
+            function setStartupStateValueFromUI() {
+                const startupState = document.getElementById("setStartupStateValue").value;
+                OfficeRuntime.currentRuntime.setStartupState(startupState);
+			}
+
+			function getStartupStateValueIntoUI() {
+                const startupState = OfficeRuntime.currentRuntime.getStartupState();
+				document.getElementById("getCurrentStateValue").innerText = startupState;
+            }
+            
+            function getCurrentStatValueIntoUI() {
+				const currentState = OfficeRuntime.currentRuntime.getState();
+				document.getElementById("getCurrentStateValue").innerText = currentState;
 			}
 		</script>
 	</head>
@@ -38,7 +53,24 @@
 		<input type="button" id="getButton" value="Get Shared Value" onclick="javascript: getSharedValueIntoUI();" />
 		&nbsp;
 		<span id="getValue"></span>
-		<br />
+        <br />
+        <br />
+        
+        <input type="button" id="setStartupStateButton" value="Set Startup State" onclick="javascript: setStartupStateValueFromUI();" />
+		&nbsp;
+		<input type="text" id="setStartupStateValue" />
+        <br />
+        
+        <input type="button" id="getStartupStateButton" value="Get Startup State" onclick="javascript: getStartupStateValueIntoUI();" />
+		&nbsp;
+		<span id="getStartupStateValue"></span>
+        <br />
+        <br />
+
+        <input type="button" id="getCurrentStateButton" value="Get Current State" onclick="javascript: getCurrentStatValueIntoUI();" />
+		&nbsp;
+		<span id="getCurrentStateValue"></span>
+        <br />
 
 	</body>
 </html>

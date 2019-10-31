@@ -193,6 +193,39 @@
 			"options": {
 				"sync": false
 			}
+        },
+
+        {
+			"id": "GETSTARTUPSTATE",
+			"name": "GETSTARTUPSTATE",
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+			],
+			"options": {
+				"sync": false
+			}
+		},
+
+		{
+			"id": "SETSTARTUPSTATE",
+			"name": "SETSTARTUPSTATE",
+			"result": {
+				"type": "string",
+				"dimensionality": "scalar"
+			},
+			"parameters": [
+				{
+					"name": "value",
+					"type": "string",
+					"dimensionality": "scalar"
+				}
+			],
+			"options": {
+				"sync": false
+			}
 		}
 
 	]
