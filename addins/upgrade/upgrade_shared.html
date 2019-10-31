@@ -25,19 +25,19 @@
 
 			function getSharedValueIntoUI() {
 				document.getElementById("getValue").innerText = g_sharedState.value;
-            }
-            
-            function setStartupStateValueFromUI() {
-                const startupState = document.getElementById("setStartupStateValue").value;
-                OfficeRuntime.currentRuntime.setStartupState(startupState);
+			}
+
+			function setStartupStateValueFromUI() {
+				const startupState = document.getElementById("setStartupStateValue").value;
+				OfficeRuntime.currentRuntime.setStartupState(startupState);
 			}
 
 			function getStartupStateValueIntoUI() {
-                const startupState = OfficeRuntime.currentRuntime.getStartupState();
+				const startupState = OfficeRuntime.currentRuntime.getStartupState();
 				document.getElementById("getCurrentStateValue").innerText = startupState;
-            }
-            
-            function getCurrentStatValueIntoUI() {
+			}
+
+			function getCurrentStatValueIntoUI() {
 				const currentState = OfficeRuntime.currentRuntime.getState();
 				document.getElementById("getCurrentStateValue").innerText = currentState;
 			}
@@ -49,28 +49,28 @@
 		&nbsp;
 		<input type="text" id="setValue" />
 		<br />
-
+	
 		<input type="button" id="getButton" value="Get Shared Value" onclick="javascript: getSharedValueIntoUI();" />
 		&nbsp;
 		<span id="getValue"></span>
-        <br />
-        <br />
-        
-        <input type="button" id="setStartupStateButton" value="Set Startup State" onclick="javascript: setStartupStateValueFromUI();" />
+		<br />
+		<br />
+	
+		<input type="button" id="setStartupStateButton" value="Set Startup State" onclick="javascript: setStartupStateValueFromUI();" />
 		&nbsp;
 		<input type="text" id="setStartupStateValue" />
-        <br />
-        
-        <input type="button" id="getStartupStateButton" value="Get Startup State" onclick="javascript: getStartupStateValueIntoUI();" />
+		<br />
+	
+		<input type="button" id="getStartupStateButton" value="Get Startup State" onclick="javascript: getStartupStateValueIntoUI();" />
 		&nbsp;
 		<span id="getStartupStateValue"></span>
-        <br />
-        <br />
-
-        <input type="button" id="getCurrentStateButton" value="Get Current State" onclick="javascript: getCurrentStatValueIntoUI();" />
+		<br />
+		<br />
+	
+		<input type="button" id="getCurrentStateButton" value="Get Current State" onclick="javascript: getCurrentStatValueIntoUI();" />
 		&nbsp;
 		<span id="getCurrentStateValue"></span>
-        <br />
-
+		<br />
+	
 	</body>
 </html>

@@ -193,9 +193,9 @@
 			"options": {
 				"sync": false
 			}
-        },
+		},
 
-        {
+		{
 			"id": "GETSTARTUPSTATE",
 			"name": "GETSTARTUPSTATE",
 			"result": {
