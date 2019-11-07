@@ -92,12 +92,27 @@
 				SetRuntimeVisibleHelper(false);
 				event.completed();
 			}
+
+			function log(value) {
+				var now = new Date();
+				var time = '[' + now.getMinutes() + ':' + now.getSeconds() + '.' + now.getMilliseconds() + '] ';
+				var txt = document.createTextNode(time + value);
+				var div = document.createElement('div');
+				div.appendChild(txt);
+				document.getElementById('DivLog').appendChild(div);
+			}
 			
 			// Event handler
 			Office.onReady(function() {
+				log('Registering onVisiblityChanged');
 				OfficeRuntime.currentTaskpane.onVisibilityChanged.add(function(args) {
 					g_BgAppVisibilityState.value = args.visibility;
 					setSpanText("SpanVisiblityEventResult", args.visibility);
+					log('onVisiblityChanged:' + args.visibility);
+				}).then(function(){
+					log('Regisered onVisiblityChanged');
+				}).catch(function(e){
+					log('Failed to register onVisiblityChanged:' + JSON.stringify(e));
 				});
 			});
 		</script>
@@ -134,6 +149,9 @@
 			<div>
 				<button id="BtnGetStartupBehavior" onclick="BtnGetStartupBehavior()">BtnGetStartupBehavior</button>: <span id="SpanGetStartupBehavior"></span>
 			</div>
+		</div>
+		<div>Logs:</div>
+		<div id="DivLog">
 		</div>
 	</body>
 </html>
