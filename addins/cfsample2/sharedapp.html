@@ -5,6 +5,15 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<meta http-equiv="Expires" content="0" />
 		<title>Custom Functions Upgrade Test</title>
+		<script type="text/javascript">
+			var g_mutationObserverReset = false;
+			if (window.MutationObserver)
+			{
+				console.log('Set MutationObserver to null');
+				window.MutationObserver = null;
+				g_mutationObserverReset = true;
+			}
+		</script>
 		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.0/dist/office.debug.js" type="text/javascript"></script>
 		<script src="custom-functions.js" type="text/javascript"></script>
 		<script type="text/javascript">
@@ -47,16 +56,14 @@
             }
 			
             function BtnGetRuntimeState() {
-				return promiseWorkaround(function () {					
-					// _getState() is the internal API and it's only for Microsoft engineer team internal testing purpose. Please do not use it.
-					return OfficeRuntime.currentTaskpane._getState()
-					.then(function (value) {
-						setSpanText("SpanGetRuntimeState", value);
-						return value;
-					})
-					.catch(function (error) {
-						return error.code;
-					});
+				// _getState() is the internal API and it's only for Microsoft engineer team internal testing purpose. Please do not use it.
+				return OfficeRuntime.currentTaskpane._getState()
+				.then(function (value) {
+					setSpanText("SpanGetRuntimeState", value);
+					return value;
+				})
+				.catch(function (error) {
+					return error.code;
 				});
             }
 
@@ -70,15 +77,13 @@
 			}
 			
 			function BtnGetStartupBehavior() {
-				return promiseWorkaround(function () {
-					return OfficeRuntime.currentTaskpane.getStartupBehavior()
-					.then(function (value) {
-						setSpanText("SpanGetStartupBehavior", value);
-						return value;
-					})
-					.catch(function (error) {
-						return error.code;
-					});
+				return OfficeRuntime.currentTaskpane.getStartupBehavior()
+				.then(function (value) {
+					setSpanText("SpanGetStartupBehavior", value);
+					return value;
+				})
+				.catch(function (error) {
+					return error.code;
 				});
             }
 
@@ -153,5 +158,8 @@
 		<div>Logs:</div>
 		<div id="DivLog">
 		</div>
+		<script type="text/javascript">
+			log('MutationObserverReset=' + g_mutationObserverReset);
+		</script>
 	</body>
 </html>
