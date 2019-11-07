@@ -1,88 +1,91 @@
 ﻿{
-	"functions": [
-	  {
-		"id": "GetCFDataRangeValue",
-		"name": "GetCFDataRangeValue",
-		"description": "Get range value from CFData sheet",
-		"parameters": [
-		  {
-			"name": "address",
-			"type": "string"
-		  }
-		]
-	  },
-	  {
-		"id": "GetRangeValue",
-		"name": "GetRangeValue",
-		"description": "Get range value",
-		"parameters": [
-		  {
-			"name": "address",
-			"type": "string"
-		  }
-		]
-	  },
-	  {
-		"id": "SetRangeValue",
-		"name": "SetRangeValue",
-		"description": "Set range value",
-		"parameters": [
-		  {
-			"name": "address",
-			"type": "string"
-		  },
-		  {
-			"name": "value"
-		  }
-		]
-	  },
-	  {
-		"id": "GetValue",
-		"name": "GetValue",
-		"description": "Get shared value"
-	  },
-	  {
-		"id": "SetValue",
-		"name": "SetValue",
-		"description": "Set shared value",
-		"parameters": [
-		  {
-			"name": "value"
-		  }
-		]
-	  },
-	  {
-        "id": "SetRuntimeState",
-        "name": "SetRuntimeState",
-        "description": "Set Runtime state",
-        "parameters": [
-          {
-            "name": "state",
-			"type": "string"
-          }
-        ]
-      },
-      {
-        "id": "GetRuntimeState",
-        "name": "GetRuntimeState",
-        "description": "Get Runtime state"
-      },
-      {
-        "id": "SetStartupState",
-        "name": "SetStartupState",
-        "description": "Set Runtime startup state",
-        "parameters": [
-          {
-            "name": "state",
-			"type": "string"
-          }
-        ]
-      },
-      {
-        "id": "GetStartupState",
-        "name": "GetStartupState",
-        "description": "Get Runtime startup State"
-      }
-	]
-  }
-  
+  "functions": [
+    {
+      "id": "GetCFDataRangeValue",
+      "name": "GetCFDataRangeValue",
+      "description": "Get range value from CFData sheet",
+      "parameters": [
+        {
+          "name": "address",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "GetRangeValue",
+      "name": "GetRangeValue",
+      "description": "Get range value",
+      "parameters": [
+        {
+          "name": "address",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "SetRangeValue",
+      "name": "SetRangeValue",
+      "description": "Set range value",
+      "parameters": [
+        {
+          "name": "address",
+          "type": "string"
+        },
+        {
+          "name": "value"
+        }
+      ]
+    },
+    {
+      "id": "GetValue",
+      "name": "GetValue",
+      "description": "Get shared value"
+    },
+    {
+      "id": "SetValue",
+      "name": "SetValue",
+      "description": "Set shared value",
+      "parameters": [
+        {
+          "name": "value"
+        }
+      ]
+    },
+    {
+      "id": "Show",
+      "name": "Show",
+      "description": "Show taskpane"
+    },
+    {
+      "id": "Hide",
+      "name": "Hide",
+      "description": "Show taskpane"
+    },
+    {
+      "id": "GetRuntimeState",
+      "name": "GetRuntimeState",
+      "description": "Get Runtime State"
+    },
+    {
+      "id": "GetVisibility",
+      "name": "GetVisibility",
+      "description": "Get visitiblity"
+    },
+    {
+      "id": "SetStartupBehavior",
+      "name": "SetStartupBehavior",
+      "description": "Set Runtime startup behavior",
+      "parameters": [
+        {
+          "name": "behavior",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "GetStartupBehavior",
+      "name": "GetStartupBehavior",
+      "description": "Get Runtime startup behavior"
+    }
+  ]
+}

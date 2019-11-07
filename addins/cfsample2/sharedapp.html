@@ -5,12 +5,29 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<meta http-equiv="Expires" content="0" />
 		<title>Custom Functions Upgrade Test</title>
-		<script src="https://unpkg.com/@microsoft/office-js@1.1.33-custom.32/dist/office.debug.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var g_mutationObserverReset = false;
+			if (window.MutationObserver)
+			{
+				console.log('Set MutationObserver to null');
+				window.MutationObserver = null;
+				g_mutationObserverReset = true;
+			}
+		</script>
+		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.0/dist/office.debug.js" type="text/javascript"></script>
 		<script src="custom-functions.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			var g_sharedAppData = {};
-			var g_BgAppRuntimeState = {};
-            var g_BgAppRuntimeStartupState = {};
+			var g_BgAppVisibilityState = {};
+
+			function setSpanText(elementId, value) {
+				var txt = document.createTextNode(value);
+				var span = document.getElementById(elementId);
+				if (span.hasChildNodes()) {
+					span.removeChild(span.childNodes[0]);
+				}
+				span.appendChild(txt);
+			}
 
 			function appCmdUpdateSharedAppData(event) {
 				g_sharedAppData.value = 2019;
@@ -18,12 +35,7 @@
 			}
 
 			function BtnReadData() {
-				var txt = document.createTextNode(g_sharedAppData.value);
-				var span = document.getElementById("SpanData");
-				if (span.hasChildNodes()) {
-					span.removeChild(span.childNodes[0]);
-				}
-				span.appendChild(txt);
+				setSpanText("SpanData", g_sharedAppData.value);
 			}
 
 			function BtnSetData() {
@@ -35,88 +47,119 @@
 				g_sharedAppData.value = value;
 			}
 
+            function BtnShow() {
+				SetRuntimeVisibleHelper(true);
+			}
+			
+            function BtnHide() {
+				SetRuntimeVisibleHelper(false);
+            }
 			
             function BtnGetRuntimeState() {
-				return promiseWorkaround(function () {
-					return OfficeRuntime.currentRuntime.getState()
-					.then(function (value) {
-						var txt = document.createTextNode(value);
-						var span = document.getElementById("SpanGetRtState");
-						if (span.hasChildNodes()) {
-							span.removeChild(span.childNodes[0]);
-						}
-						span.appendChild(txt);
-						g_BgAppRuntimeState.value = value;
-						return;
-					})
-					.catch(function (error) {
-						return error.code;
-					});
+				// _getState() is the internal API and it's only for Microsoft engineer team internal testing purpose. Please do not use it.
+				return OfficeRuntime.currentTaskpane._getState()
+				.then(function (value) {
+					setSpanText("SpanGetRuntimeState", value);
+					return value;
+				})
+				.catch(function (error) {
+					return error.code;
 				});
             }
 
-            function BtnSetRuntimeState() {
-                var value = document.getElementById("TxtRtSetRtState").value;
-                if (value) {
-					 SetRuntimeStateHelper(value);
-                }
-            }
+
+			function BtnSetStartupBehaviorLoad() {
+				SetStartupBehaviorHelper(OfficeRuntime.StartupBehavior.load);
+			}
+
+			function BtnSetStartupBehaviorNone() {
+				SetStartupBehaviorHelper(OfficeRuntime.StartupBehavior.none);
+			}
 			
-			function BtnGetStartupState() {
-				return promiseWorkaround(function () {
-					return OfficeRuntime.currentRuntime.getStartupState()
-					.then(function (value) {
-						var txt = document.createTextNode(value);
-						var span = document.getElementById("SpanGetStartupState");
-						if (span.hasChildNodes()) {
-							span.removeChild(span.childNodes[0]);
-						}
-						span.appendChild(txt);
-						g_BgAppRuntimeStartupState.value = value;
-						return;
-					})
-					.catch(function (error) {
-						return error.code;
-					});
+			function BtnGetStartupBehavior() {
+				return OfficeRuntime.currentTaskpane.getStartupBehavior()
+				.then(function (value) {
+					setSpanText("SpanGetStartupBehavior", value);
+					return value;
+				})
+				.catch(function (error) {
+					return error.code;
 				});
             }
 
-            function BtnSetStartupState() {
-                var value = document.getElementById("TxtRtSetStartupState").value;
-                if (value) {
-					SetStartupStateHelper(value);
-                }
-            }
-			
+			// App Commands
 			function appCmdSetStateVisible(event) {
-				SetRuntimeStateHelper("Visible");
+				SetRuntimeVisibleHelper(true);
 				event.completed();   
 			}
 			
 			function appCmdSetStateBackground(event) {
-				SetRuntimeStateHelper("Background");
+				SetRuntimeVisibleHelper(false);
 				event.completed();
-            }
+			}
+
+			function log(value) {
+				var now = new Date();
+				var time = '[' + now.getMinutes() + ':' + now.getSeconds() + '.' + now.getMilliseconds() + '] ';
+				var txt = document.createTextNode(time + value);
+				var div = document.createElement('div');
+				div.appendChild(txt);
+				document.getElementById('DivLog').appendChild(div);
+			}
+			
+			// Event handler
+			Office.onReady(function() {
+				log('Registering onVisiblityChanged');
+				OfficeRuntime.currentTaskpane.onVisibilityChanged.add(function(args) {
+					g_BgAppVisibilityState.value = args.visibility;
+					setSpanText("SpanVisiblityEventResult", args.visibility);
+					log('onVisiblityChanged:' + args.visibility);
+				}).then(function(){
+					log('Regisered onVisiblityChanged');
+				}).catch(function(e){
+					log('Failed to register onVisiblityChanged:' + JSON.stringify(e));
+				});
+			});
 		</script>
 	</head>
 	<body>
 		<div>
-			<button id="BtnSetData" onclick="BtnSetData()">SetData</button>: <input id="TxtData" type="text" />
+			Data
+			<div>
+				<button id="BtnSetData" onclick="BtnSetData()">SetData</button>: <input id="TxtData" type="text" />
+			</div>
+			<div>
+				<button id="BtnReadData" onclick="BtnReadData()">ReadData</button>: <span id="SpanData"></span>
+			</div>
 		</div>
 		<div>
-			<button id="BtnReadData" onclick="BtnReadData()">ReadData</button>: <span id="SpanData"></span>
+			Visibility
+			<div>
+				<button id="BtnSetRuntimeState" onclick="BtnShow()">Show</button>
+				<button id="BtnSetRuntimeState" onclick="BtnHide()">Hide</button>
+			</div>
+			<div>
+				<button id="BtnGetRuntimeState" onclick="BtnGetRuntimeState()">GetRuntimeState</button>: <span id="SpanGetRuntimeState"></span>
+			</div>
+			<div>
+				Visiblity Event Result: <span id="SpanVisiblityEventResult"></span>
+			</div>
 		</div>
 		<div>
-			<button id="BtnSetRuntimeState" onclick="BtnSetRuntimeState()">BtnSetRtState</button>: <input id="TxtRtSetRtState" type="text" />
+			Startup Behavior
+			<div>
+				<button id="BtnSetStartupBehaviorLoad" onclick="BtnSetStartupBehaviorLoad()">BtnSetStartupBehaviorLoad</button>
+				<button id="BtnSetStartupBehaviorNone" onclick="BtnSetStartupBehaviorNone()">BtnSetStartupBehaviorNone</button>
+			</div>
+			<div>
+				<button id="BtnGetStartupBehavior" onclick="BtnGetStartupBehavior()">BtnGetStartupBehavior</button>: <span id="SpanGetStartupBehavior"></span>
+			</div>
 		</div>
-		<div>
-			<button id="BtnGetRuntimeState" onclick="BtnGetRuntimeState()">BtnGetRtState</button>: <span id="SpanGetRtState"></span>
+		<div>Logs:</div>
+		<div id="DivLog">
 		</div>
-		 <div>
-			<button id="BtnSetStartupState" onclick="BtnSetStartupState()">BtnSetStartupState</button>: <input id="TxtRtSetStartupState" type="text" />
-		</div>
-		<div>
-			<button id="BtnGetStartupState" onclick="BtnGetStartupState()">BtnGetStartupState</button>: <span id="SpanGetStartupState"></span>
-		</div>
+		<script type="text/javascript">
+			log('MutationObserverReset=' + g_mutationObserverReset);
+		</script>
 	</body>
 </html>
