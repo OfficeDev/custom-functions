@@ -19,14 +19,18 @@
 		});
 }
 
-function SetRuntimeStateHelper(state) {
+function SetRuntimeVisibleHelper(visible) {
 	return promiseWorkaround(function () {
-		return OfficeRuntime.currentRuntime.setState(state)
-			.then(function () {
-				if (typeof(g_BgAppRuntimeState) === 'object') {
-					g_BgAppRuntimeState.value = state;
-				}
-				return state;
+		var p;
+		if (visible) {
+			p = OfficeRuntime.currentTaskpane.show();
+		}
+		else {
+			p = OfficeRuntime.currentTaskpane.hide();
+		}
+
+		return p.then(function () {
+				return visible;
 			})
 			.catch(function (error) {
 				return error.code;
@@ -34,13 +38,10 @@ function SetRuntimeStateHelper(state) {
 	});
 }
 
-function SetStartupStateHelper(state) {
+function SetStartupBehaviorHelper(state) {
 	return promiseWorkaround(function () {
-		return OfficeRuntime.currentRuntime.setStartupState(state)
+		return OfficeRuntime.currentTaskpane.setStartupBehavior(state)
 			.then(function () {
-				if (typeof(g_BgAppRuntimeStartupState) === 'object') {
-					g_BgAppRuntimeStartupState.value = state;
-				}
 				return state;
 			})
 			.catch(function (error) {
@@ -116,12 +117,9 @@ CustomFunctions.associate('SetValue', function(value) {
 
 CustomFunctions.associate('GetRuntimeState', function() {
 	return promiseWorkaround(function () {
-		return OfficeRuntime.currentRuntime.getState()
-		.then(function (value) {
-			if (typeof(g_BgAppRuntimeState) === 'object') {
-				g_BgAppRuntimeState.value = value;
-			}
-			return value.toString();
+		// _getState() is the internal API and it's only for Microsoft engineer team internal testing purpose. Please do not use it.
+		return OfficeRuntime.currentTaskpane._getState().then(function (value) {
+			return value;
 		})
 		.catch(function (error) {
 			return error.code;
@@ -129,13 +127,21 @@ CustomFunctions.associate('GetRuntimeState', function() {
 	});
 });
 
-CustomFunctions.associate('SetRuntimeState', function (state) {
-	return SetRuntimeStateHelper(state);
+CustomFunctions.associate('GetVisibility', function() {
+	return g_BgAppVisibilityState.value;
 });
 
-CustomFunctions.associate('GetStartupState', function() {
+CustomFunctions.associate('Show', function () {
+	return SetRuntimeVisibleHelper(true);
+});
+
+CustomFunctions.associate('Hide', function () {
+	return SetRuntimeVisibleHelper(false);
+});
+
+CustomFunctions.associate('GetStartupBehavior', function() {
 	return promiseWorkaround(function () {
-		return OfficeRuntime.currentRuntime.getStartupState()
+		return OfficeRuntime.currentTaskpane.getStartupBehavior()
 		.then(function (value) {
 			if (typeof(g_BgAppRuntimeStartupState) === 'object') {
 				g_BgAppRuntimeStartupState.value = value;
@@ -150,6 +156,6 @@ CustomFunctions.associate('GetStartupState', function() {
 
 
 
-CustomFunctions.associate('SetStartupState', function (state) {
-	return SetStartupStateHelper(state);
+CustomFunctions.associate('SetStartupBehavior', function (behavior) {
+	return SetStartupBehaviorHelper(behavior);
 });
