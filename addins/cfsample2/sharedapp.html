@@ -7,9 +7,9 @@
 		<title>Custom Functions Upgrade Test</title>
 		<script type="text/javascript">
 			var g_mutationObserverReset = false;
-			if (window.MutationObserver)
+			if (!window.Promise && window.MutationObserver)
 			{
-				console.log('Set MutationObserver to null');
+				console.log('Set MutationObserver to null to workaround Promise issue');
 				window.MutationObserver = null;
 				g_mutationObserverReset = true;
 			}
@@ -108,17 +108,22 @@
 			}
 			
 			// Event handler
-			Office.onReady(function() {
-				log('Registering onVisiblityChanged');
-				OfficeRuntime.currentTaskpane.onVisibilityChanged.add(function(args) {
-					g_BgAppVisibilityState.value = args.visibility;
-					setSpanText("SpanVisiblityEventResult", args.visibility);
-					log('onVisiblityChanged:' + args.visibility);
-				}).then(function(){
-					log('Regisered onVisiblityChanged');
-				}).catch(function(e){
-					log('Failed to register onVisiblityChanged:' + JSON.stringify(e));
-				});
+			Office.onReady(function(info) {
+				if (info.platform === Office.PlatformType.OfficeOnline) {
+					log('onVisiblityChanged will be implementated soon');
+				}
+				else {
+					log('Registering onVisiblityChanged');
+					OfficeRuntime.currentTaskpane.onVisibilityChanged.add(function(args) {
+						g_BgAppVisibilityState.value = args.visibility;
+						setSpanText("SpanVisiblityEventResult", args.visibility);
+						log('onVisiblityChanged:' + args.visibility);
+					}).then(function(){
+						log('Regisered onVisiblityChanged');
+					}).catch(function(e){
+						log('Failed to register onVisiblityChanged:' + JSON.stringify(e));
+					});
+				}
 			});
 		</script>
 	</head>
@@ -148,11 +153,11 @@
 		<div>
 			Startup Behavior
 			<div>
-				<button id="BtnSetStartupBehaviorLoad" onclick="BtnSetStartupBehaviorLoad()">BtnSetStartupBehaviorLoad</button>
-				<button id="BtnSetStartupBehaviorNone" onclick="BtnSetStartupBehaviorNone()">BtnSetStartupBehaviorNone</button>
+				<button id="BtnSetStartupBehaviorLoad" onclick="BtnSetStartupBehaviorLoad()">SetStartupBehaviorLoad</button>
+				<button id="BtnSetStartupBehaviorNone" onclick="BtnSetStartupBehaviorNone()">SetStartupBehaviorNone</button>
 			</div>
 			<div>
-				<button id="BtnGetStartupBehavior" onclick="BtnGetStartupBehavior()">BtnGetStartupBehavior</button>: <span id="SpanGetStartupBehavior"></span>
+				<button id="BtnGetStartupBehavior" onclick="BtnGetStartupBehavior()">GetStartupBehavior</button>: <span id="SpanGetStartupBehavior"></span>
 			</div>
 		</div>
 		<div>Logs:</div>
