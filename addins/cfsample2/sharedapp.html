@@ -14,7 +14,7 @@
 				g_mutationObserverReset = true;
 			}
 		</script>
-		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.0/dist/office.debug.js" type="text/javascript"></script>
+		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.1/dist/office.debug.js" type="text/javascript"></script>
 		<script src="custom-functions.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			var g_sharedAppData = {};
@@ -57,7 +57,7 @@
 			
             function BtnGetRuntimeState() {
 				// _getState() is the internal API and it's only for Microsoft engineer team internal testing purpose. Please do not use it.
-				return OfficeRuntime.currentTaskpane._getState()
+				return Office.currentTaskpane._getState()
 				.then(function (value) {
 					setSpanText("SpanGetRuntimeState", value);
 					return value;
@@ -69,15 +69,15 @@
 
 
 			function BtnSetStartupBehaviorLoad() {
-				SetStartupBehaviorHelper(OfficeRuntime.StartupBehavior.load);
+				SetStartupBehaviorHelper(Office.StartupBehavior.load);
 			}
 
 			function BtnSetStartupBehaviorNone() {
-				SetStartupBehaviorHelper(OfficeRuntime.StartupBehavior.none);
+				SetStartupBehaviorHelper(Office.StartupBehavior.none);
 			}
 			
 			function BtnGetStartupBehavior() {
-				return OfficeRuntime.currentTaskpane.getStartupBehavior()
+				return Office.currentTaskpane.getStartupBehavior()
 				.then(function (value) {
 					setSpanText("SpanGetStartupBehavior", value);
 					return value;
@@ -114,7 +114,7 @@
 				}
 				else {
 					log('Registering onVisiblityChanged');
-					OfficeRuntime.currentTaskpane.onVisibilityChanged.add(function(args) {
+					Office.currentTaskpane.onVisibilityChanged.add(function(args) {
 						g_BgAppVisibilityState.value = args.visibility;
 						setSpanText("SpanVisiblityEventResult", args.visibility);
 						log('onVisiblityChanged:' + args.visibility);
