@@ -87,6 +87,11 @@
 				});
             }
 
+			function BtnRun() {
+				var code = document.getElementById("TxtCode").value;
+				eval(code);
+			}
+
 			// App Commands
 			function appCmdSetStateVisible(event) {
 				SetRuntimeVisibleHelper(true);
@@ -158,6 +163,14 @@
 			</div>
 			<div>
 				<button id="BtnGetStartupBehavior" onclick="BtnGetStartupBehavior()">GetStartupBehavior</button>: <span id="SpanGetStartupBehavior"></span>
+			</div>
+		</div>
+		<div>
+			<div>
+				<button id="BtnRun" onclick="BtnRun()">Run</button> the following code:
+			</div>
+			<div>
+				<textarea id="TxtCode" cols="40" rows="20" spellcheck="false"></textarea>
 			</div>
 		</div>
 		<div>Logs:</div>
