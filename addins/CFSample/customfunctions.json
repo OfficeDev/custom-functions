@@ -311,6 +311,22 @@
       "helpUrl": "http://dev.office.com"
     },
     {
+      "id": "ERROROUT",
+      "name": "ERROROUT",
+      "description": "Errors out",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "how",
+          "description": "'throw' | 'promise'",
+          "type": "string"
+        }
+      ]
+    },
+    {
       "id": "BITCOIN_STREAM",
       "name": "BITCOIN_STREAM",
       "description": "Does some bit coin crunching",
