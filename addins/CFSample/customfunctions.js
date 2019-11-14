@@ -273,6 +273,16 @@ function bitcoinStream(increment, handler) {
     };
 }
 
+function errorOut(how) {
+	if (how === 'throw') {
+		throw { prop1: "Jabberwocky thrown" };
+	}
+	else if (how === 'promise') {
+		return Promise.reject({ prop1: "Jabberwocky rejected" });
+	}
+	return undefined;
+}
+
 CustomFunctions.associate('ADD42', add42);
 CustomFunctions.associate('GET_DAY', getDay);
 CustomFunctions.associate('IS_PRIME', isPrime);
@@ -292,7 +302,7 @@ CustomFunctions.associate('STOCK_PRICE_STREAM', stockPriceStream);
 CustomFunctions.associate('STOCK_PRICE_HISTORY', stockPriceHistory);
 CustomFunctions.associate('DISPLAY_WEB_DIALOG', displayWebDialog);
 CustomFunctions.associate('BITCOIN_STREAM', bitcoinStream);
-
+CustomFunctions.associate('ERROROUT', errorOut);
 
 
 
