@@ -16,7 +16,7 @@ This Addin contains three components:
 # Preview Office.js
 Please reference the preview version of office.js
 ```html
-		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.2/dist/office.debug.js" type="text/javascript"></script>
+		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.4/dist/office.debug.js" type="text/javascript"></script>
 ```
 
 # Manifest Changes for Shared App
@@ -54,13 +54,13 @@ As the ShowTaskpane actioin uses the same resid as the one declared in the runti
 ## Visiblity related API
 ```js
 // Show the shared runtime
-await Office.currentTaskpane.show();
+await Office.addin.showAsTaskpane();
 
 // Hide the shared runtime
-await Office.currentTaskpane.hide();
+await Office.addin.hide();
 
 // Add event handler when the taskpane visibility is changed. It's only supported in Win32 now and it will be supported for Excel Online soon.
-var handler = await Office.currentTaskpane.onVisibilityChanged.add(function(args) {
+var handler = await Office.addin.onVisibilityChanged.add(function(args) {
     console.log('Visibility is changed to ' + args.visibility)
 });
 
@@ -71,14 +71,16 @@ await handler.remove();
 ## Startup behavior
 ```js
 // Set the runtime to be loaded when the document is opened next time
-await Office.currentTaskpane.setStartupBehavior(Office.StartupBehavior.load);
+await Office.addin.setStartupBehavior(Office.StartupBehavior.load);
 
 // Reset the startup behavior
-await Office.currentTaskpane.setStartupBehavior(Office.StartupBehavior.none);
+await Office.addin.setStartupBehavior(Office.StartupBehavior.none);
 
 // Get the startup behavior settings
-var behavior = await Office.currentTaskpane.getStartupBehavior();
+var behavior = await Office.addin.getStartupBehavior();
 ```
+# Dev Machine
+When test the addin on the dev machine, we could copy the manifest to dev catalog and the use `http-server --cors` to start the webside.
 
 # Maintainers
 [madhavagrawal17](https://github.com/madhavagrawal17)

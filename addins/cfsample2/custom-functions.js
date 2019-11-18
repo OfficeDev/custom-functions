@@ -2,10 +2,10 @@
 function SetRuntimeVisibleHelper(visible) {
 	var p;
 	if (visible) {
-		p = Office.currentTaskpane.show();
+		p = Office.addin.showAsTaskpane();
 	}
 	else {
-		p = Office.currentTaskpane.hide();
+		p = Office.addin.hide();
 	}
 
 	return p.then(function () {
@@ -17,7 +17,7 @@ function SetRuntimeVisibleHelper(visible) {
 }
 
 function SetStartupBehaviorHelper(state) {
-	return Office.currentTaskpane.setStartupBehavior(state)
+	return Office.addin.setStartupBehavior(state)
 		.then(function () {
 			return state;
 		})
@@ -87,7 +87,7 @@ CustomFunctions.associate('SetValue', function(value) {
 
 CustomFunctions.associate('GetRuntimeState', function() {
 	// _getState() is the internal API and it's only for Microsoft engineer team internal testing purpose. Please do not use it.
-	return Office.currentTaskpane._getState().then(function (value) {
+	return Office.addin._getState().then(function (value) {
 		return value;
 	})
 	.catch(function (error) {
@@ -108,7 +108,7 @@ CustomFunctions.associate('Hide', function () {
 });
 
 CustomFunctions.associate('GetStartupBehavior', function() {
-	return Office.currentTaskpane.getStartupBehavior()
+	return Office.addin.getStartupBehavior()
 	.then(function (value) {
 		if (typeof(g_BgAppRuntimeStartupState) === 'object') {
 			g_BgAppRuntimeStartupState.value = value;
@@ -124,4 +124,14 @@ CustomFunctions.associate('GetStartupBehavior', function() {
 
 CustomFunctions.associate('SetStartupBehavior', function (behavior) {
 	return SetStartupBehaviorHelper(behavior);
+});
+
+CustomFunctions.associate('ERROROUT', function (how) {
+	if (how === 'throw') {
+		throw { prop1: "Jabberwocky thrown" };
+	}
+	else if (how === 'promise') {
+		return Promise.reject({ prop1: "Jabberwocky rejected" });
+	}
+	return undefined;
 });

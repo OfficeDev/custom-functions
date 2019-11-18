@@ -5,16 +5,7 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<meta http-equiv="Expires" content="0" />
 		<title>Custom Functions Upgrade Test</title>
-		<script type="text/javascript">
-			var g_mutationObserverReset = false;
-			if (!window.Promise && window.MutationObserver)
-			{
-				console.log('Set MutationObserver to null to workaround Promise issue');
-				window.MutationObserver = null;
-				g_mutationObserverReset = true;
-			}
-		</script>
-		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.2/dist/office.debug.js" type="text/javascript"></script>
+		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.4/dist/office.debug.js" type="text/javascript"></script>
 		<script src="custom-functions.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			var g_sharedAppData = {};
@@ -57,7 +48,7 @@
 			
             function BtnGetRuntimeState() {
 				// _getState() is the internal API and it's only for Microsoft engineer team internal testing purpose. Please do not use it.
-				return Office.currentTaskpane._getState()
+				return Office.addin._getState()
 				.then(function (value) {
 					setSpanText("SpanGetRuntimeState", value);
 					return value;
@@ -77,7 +68,7 @@
 			}
 			
 			function BtnGetStartupBehavior() {
-				return Office.currentTaskpane.getStartupBehavior()
+				return Office.addin.getStartupBehavior()
 				.then(function (value) {
 					setSpanText("SpanGetStartupBehavior", value);
 					return value;
@@ -114,21 +105,16 @@
 			
 			// Event handler
 			Office.onReady(function(info) {
-				if (info.platform === Office.PlatformType.OfficeOnline) {
-					log('onVisiblityChanged will be implementated soon');
-				}
-				else {
-					log('Registering onVisiblityChanged');
-					Office.currentTaskpane.onVisibilityChanged.add(function(args) {
-						g_BgAppVisibilityState.value = args.visibility;
-						setSpanText("SpanVisiblityEventResult", args.visibility);
-						log('onVisiblityChanged:' + args.visibility);
-					}).then(function(){
-						log('Regisered onVisiblityChanged');
-					}).catch(function(e){
-						log('Failed to register onVisiblityChanged:' + JSON.stringify(e));
-					});
-				}
+				log('Registering onVisiblityChanged');
+				Office.addin.onVisibilityChanged.add(function(args) {
+					g_BgAppVisibilityState.value = args.visibility;
+					setSpanText("SpanVisiblityEventResult", args.visibility);
+					log('onVisiblityChanged:' + args.visibility);
+				}).then(function(){
+					log('Regisered onVisiblityChanged');
+				}).catch(function(e){
+					log('Failed to register onVisiblityChanged:' + JSON.stringify(e));
+				});
 			});
 		</script>
 	</head>
@@ -176,8 +162,5 @@
 		<div>Logs:</div>
 		<div id="DivLog">
 		</div>
-		<script type="text/javascript">
-			log('MutationObserverReset=' + g_mutationObserverReset);
-		</script>
 	</body>
 </html>
