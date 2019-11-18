@@ -86,6 +86,22 @@
       "id": "GetStartupBehavior",
       "name": "GetStartupBehavior",
       "description": "Get Runtime startup behavior"
+    },
+    {
+      "id": "ERROROUT",
+      "name": "ERROROUT",
+      "description": "Errors out",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "type": "number"
+      },
+      "parameters": [
+        {
+          "name": "how",
+          "description": "'throw' | 'promise'",
+          "type": "string"
+        }
+      ]
     }
   ]
 }
