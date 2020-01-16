@@ -57,6 +57,11 @@
       "description": "Show taskpane"
     },
     {
+      "id": "DelayShow",
+      "name": "DelayShow",
+      "description": "DelayShow taskpane"
+    },
+    {
       "id": "Hide",
       "name": "Hide",
       "description": "Show taskpane"
