@@ -103,6 +103,12 @@ CustomFunctions.associate('Show', function () {
 	return SetRuntimeVisibleHelper(true);
 });
 
+CustomFunctions.associate('DelayShow', function () {
+	setTimeout(function () {
+		return SetRuntimeVisibleHelper(true);
+	}, 5000);
+});
+
 CustomFunctions.associate('Hide', function () {
 	return SetRuntimeVisibleHelper(false);
 });
