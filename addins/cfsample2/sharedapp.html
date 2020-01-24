@@ -5,7 +5,7 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<meta http-equiv="Expires" content="0" />
 		<title>Custom Functions Upgrade Test</title>
-		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.4/dist/office.debug.js" type="text/javascript"></script>
+		<script src="https://unpkg.com/@microsoft/office-js@1.1.37-custom.17/dist/office.debug.js" type="text/javascript"></script>
 		<script src="custom-functions.js" type="text/javascript"></script>
 		<script type="text/javascript">
 			var g_sharedAppData = {};
@@ -105,15 +105,16 @@
 			
 			// Event handler
 			Office.onReady(function(info) {
-				log('Registering onVisiblityChanged');
-				Office.addin.onVisibilityChanged.add(function(args) {
-					g_BgAppVisibilityState.value = args.visibility;
-					setSpanText("SpanVisiblityEventResult", args.visibility);
-					log('onVisiblityChanged:' + args.visibility);
+				log('onReady info.addin.visibilityMode = ' + (info.addin? info.addin.visibilityMode : 'null'))
+				log('Registering onVisiblityModeChanged');
+				Office.addin.onVisibilityModeChanged(function(args) {
+					g_BgAppVisibilityState.value = args.visibilityMode;
+					setSpanText("SpanVisiblityEventResult", args.visibilityMode);
+					log('onVisiblityModeChanged:' + args.visibilityMode);
 				}).then(function(){
-					log('Regisered onVisiblityChanged');
+					log('Regisered onVisiblityModeChanged');
 				}).catch(function(e){
-					log('Failed to register onVisiblityChanged:' + JSON.stringify(e));
+					log('Failed to register onVisiblityModeChanged:' + JSON.stringify(e));
 				});
 			});
 		</script>

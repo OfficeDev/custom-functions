@@ -16,7 +16,7 @@ This Addin contains three components:
 # Preview Office.js
 Please reference the preview version of office.js
 ```html
-		<script src="https://unpkg.com/@microsoft/office-js@1.1.35-custom.4/dist/office.debug.js" type="text/javascript"></script>
+		<script src="https://unpkg.com/@microsoft/office-js@1.1.37-custom.17/dist/office.debug.js" type="text/javascript"></script>
 ```
 
 # Manifest Changes for Shared App
@@ -59,14 +59,21 @@ await Office.addin.showAsTaskpane();
 // Hide the shared runtime
 await Office.addin.hide();
 
-// Add event handler when the taskpane visibility is changed. It's only supported in Win32 now and it will be supported for Excel Online soon.
-var handler = await Office.addin.onVisibilityChanged.add(function(args) {
-    console.log('Visibility is changed to ' + args.visibility)
+// Add event handler when the taskpane visibility mode is changed.
+var handlerRemove = await Office.addin.onVisibilityModeChanged(function(args) {
+    console.log('Visibility is changed to ' + args.visibilityMode)
 });
 
 // Remove the handler
-await handler.remove();
+await handlerRemove();
 ```
+
+// To know the initial visibility mode.
+Office.onReady(function(hostInfo) {
+  if (hostInfo.addin) { // it works on desktop client. It will work on Excel online once the code is deployed.
+    console.log(hostInfo.addin.visibilityMode);
+  }
+})
 
 ## Startup behavior
 ```js
