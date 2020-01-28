@@ -66,7 +66,43 @@
 			function BtnSetStartupBehaviorNone() {
 				SetStartupBehaviorHelper(Office.StartupBehavior.none);
 			}
-			
+
+			function BtnEnableControlsClicked() {
+				UpdateRibbonControlsEnableDisableState(true);
+			}
+
+			function BtnDisableControlsClicked() {
+				UpdateRibbonControlsEnableDisableState(false);
+			}
+
+			function UpdateRibbonControlsEnableDisableState(enableState) {
+				let controlIds = document.getElementById('ribbonControlIds').value.split(';');
+				// prepare controls
+				var commandControls = [];
+				for (var i = 0; i < controlIds.length; i++) {
+					var commandButtonID = controlIds[i];
+					if (commandButtonID != "") {
+						commandControls.push({id: commandButtonID, enabled: enableState});
+					}
+				}
+				var tab = {id: "OfficeAppTab1", controls: commandControls};
+				// prepare tabs
+				var commandtabs = {tabs: [tab]};
+				// update ribbon control state
+				OfficeRuntime.ui.getRibbon()
+					.then(function (ret) {
+						var datarequest = ret;
+						var data = commandtabs;
+						datarequest.requestUpdate(data)
+						.then(function (result) {
+							log('Success:' + JSON.stringify(result));
+						})
+						.catch(function (error) {
+							log('Error:' + JSON.stringify(error));
+					});
+				});
+			}
+
 			function BtnGetStartupBehavior() {
 				return Office.addin.getStartupBehavior()
 				.then(function (value) {
@@ -150,6 +186,14 @@
 			</div>
 			<div>
 				<button id="BtnGetStartupBehavior" onclick="BtnGetStartupBehavior()">GetStartupBehavior</button>: <span id="SpanGetStartupBehavior"></span>
+			</div>
+		</div>
+		<div>
+			Enable/Disable Controls
+			<div>
+				<label>Ribbon Control IDs:  <input id="ribbonControlIds" type="text" value="OEP.TestVisibleButton;OEP.TestBackgroundButton"/></label><br>
+				<button id="bntEnableControls" onclick="BtnEnableControlsClicked()">EnableRibbonControls</button>
+				<button id="bntDisableControls" onclick="BtnDisableControlsClicked()">DisableRibbonControls</button>
 			</div>
 		</div>
 		<div>

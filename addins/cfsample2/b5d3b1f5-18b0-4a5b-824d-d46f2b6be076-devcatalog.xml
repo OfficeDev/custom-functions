@@ -87,7 +87,7 @@
           <!-- PrimaryCommandSurface is the main Office Ribbon. -->
           <ExtensionPoint xsi:type="PrimaryCommandSurface">
             <!-- Use OfficeTab to extend an existing Tab. Use CustomTab to create a new tab. -->
-            <OfficeTab id="TabHome">
+            <CustomTab id="OfficeAppTab1">
               <!-- Ensure you provide a unique id for the group. Recommendation for any IDs is to namespace using your company name. -->
               <Group id="OEP.Group1">
                 <!-- Label for your group. resid must point to a ShortString resource. -->
@@ -136,8 +136,9 @@
                   <Action xsi:type="ExecuteFunction">
                     <FunctionName>appCmdSetStateVisible</FunctionName>
                   </Action>
+                  <Enabled>false</Enabled>
                 </Control>
-				
+
 	              <Control xsi:type="Button" id="OEP.TestBackgroundButton">
                   <Label resid="OEP.TestBackgroundButton.Label" />
                   <Supertip>
@@ -155,6 +156,7 @@
                   <Action xsi:type="ExecuteFunction">
                     <FunctionName>appCmdSetStateBackground</FunctionName>
                   </Action>
+                  <Enabled>true</Enabled>
                 </Control>
 
                 <!-- Control. It can be of type "Button" or "Menu". -->
@@ -179,7 +181,8 @@
                   </Action>
                 </Control>
               </Group>
-            </OfficeTab>
+              <Label resid="OEP.Group1Label" />
+            </CustomTab>
           </ExtensionPoint>
         </DesktopFormFactor>
       </Host>
