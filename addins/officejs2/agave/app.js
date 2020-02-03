@@ -20,7 +20,7 @@ function log(text) {
 
 Office.onReady(function (hostAndPlatform) {
     _perfData.officeOnReadyApp = Date.now();
-    _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.excelJsStart;
+    _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.start;
     log(JSON.stringify(_perfData));
 
     log(Office.context.displayLanguage);
