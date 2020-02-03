@@ -2,8 +2,21 @@
 
 <head>
     <title>Office.js V2</title>
+    <script type='text/javascript'>
+        var _perfData = {};
+        _perfData.excelJsStart = Date.now();
+    </script>
     <script src='../dist/excel.bundle.js' type='text/javascript'></script>
     <script type='text/javascript'>
+        _perfData.excelJsEnd = Date.now();
+        _perfData.excelJsDuration = _perfData.excelJsEnd - _perfData.excelJsStart;
+        Office.onReady(function (hostAndPlatform) {
+            _perfData.officeOnReady = Date.now();
+            _perfData.officeOnReadyDuration = _perfData.officeOnReady - _perfData.excelJsStart;
+        });
+    </script>
+    <script type='text/javascript'>
+
         var _bodyOnLoadCalled = false;
         var _pendingLogs = [];
         function BodyOnLoad() {
@@ -24,6 +37,10 @@
         }
 
         Office.onReady(function (hostAndPlatform) {
+            _perfData.officeOnReadyApp = Date.now();
+            _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.excelJsStart;
+            log(JSON.stringify(_perfData));
+
             log(Office.context.displayLanguage);
             log(hostAndPlatform.host);
             log(hostAndPlatform.platform);
