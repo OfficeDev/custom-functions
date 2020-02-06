@@ -92,11 +92,11 @@
 				<bt:Url id="OEP.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
 			</bt:Urls>
 			<bt:ShortStrings>
-				<bt:String id="OEP.UDF.Namespace" DefaultValue="OfficeJs1Sample" />
+				<bt:String id="OEP.UDF.Namespace" DefaultValue="OfficeJs2Sample" />
 				<bt:String id="OEP.TaskpaneButton.Label" DefaultValue="Show Taskpane" />
-				<bt:String id="OEP.Group1Label" DefaultValue="OfficeJs1-Sample" />
-				<bt:String id="OEP.GetStarted.Title" DefaultValue="OfficeJs1-Sample" />
-	  			<bt:String id="OEP.JupyterTab.Label" DefaultValue="OfficeJs1 (Sample)" />
+				<bt:String id="OEP.Group1Label" DefaultValue="OfficeJs2-Sample" />
+				<bt:String id="OEP.GetStarted.Title" DefaultValue="OfficeJs2-Sample" />
+	  			<bt:String id="OEP.JupyterTab.Label" DefaultValue="OfficeJs2 (Sample)" />
 			</bt:ShortStrings>
 			<bt:LongStrings>
 				<bt:String id="OEP.TaskpaneButton.Tooltip" DefaultValue="Click to show task pane" />
