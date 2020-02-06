@@ -1,5 +1,3 @@
-import { workerData } from "worker_threads";
-
 var _bodyOnLoadCalled = false;
 var _pendingLogs = [];
 function BodyOnLoad() {
