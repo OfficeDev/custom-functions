@@ -14,7 +14,7 @@
 		<Host Name="Document" />
 	</Hosts>
 	<DefaultSettings>
-		<SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/officejs2/agave/WordHome-v2.html"/>
+		<SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/officejs2/agave/wordHome-v2.html"/>
 	</DefaultSettings>
 	<Permissions>ReadWriteDocument</Permissions>
 	<VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
@@ -88,7 +88,7 @@
         <bt:Image id="OEP.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button80x80.png" />
 			</bt:Images>
 			<bt:Urls>
-				<bt:Url id="OEP.SharedRuntime.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/officejs2/agave/WordHome-v2.html" />
+				<bt:Url id="OEP.SharedRuntime.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/officejs2/agave/wordHome-v2.html" />
 				<bt:Url id="OEP.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
 			</bt:Urls>
 			<bt:ShortStrings>
