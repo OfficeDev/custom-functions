@@ -8,8 +8,8 @@
     </script>
     <script src='https://officedev.github.io/custom-functions/addins/officejs2/dist/word.bundle.js' type='text/javascript'></script>
     <script type='text/javascript'>
-        _perfData.excelJsEnd = Date.now();
-        _perfData.excelJsDuration = _perfData.excelJsEnd - _perfData.start;
+        _perfData.wordJsEnd = Date.now();
+        _perfData.wordJsDuration = _perfData.wordJsEnd - _perfData.start;
         Office.onReady(function (hostAndPlatform) {
             _perfData.officeOnReady = Date.now();
             _perfData.officeOnReadyDuration = _perfData.officeOnReady - _perfData.start;
@@ -23,9 +23,7 @@
         <input type="button" onclick='BtnReloadClick()' value='Reload' />
     </div>
     <div>
-        <input type="button" onclick="BtnTestClick()" value="Set Range value" />
-        <input type="button" onclick="test_settings_read()" value="test_settings_readV1" />
-        <input type="button" onclick="test_settings_add()" value="test_settings_updateUsingV2" />
+        <input type="button" onclick="BtnTestClick()" value="Add paragraph" />
     </div>
     <div>
         <div>

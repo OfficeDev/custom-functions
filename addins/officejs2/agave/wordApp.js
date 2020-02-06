@@ -71,57 +71,6 @@ function BtnTestClick() {
     
 }
 
-function test_settings_updateUsingV2() {
-   // Run a batch operation against the Word object model.
-    Word.run(function (context) {
-
-        // Queue commands add a setting.
-        var settings = context.document.settings;
-        settings.add('startMonth', { month: 'March', year: 1998 });
-
-        // Queue a command to get the count of settings.
-        var count = settings.getCount();
-
-        // Synchronize the document state by executing the queued commands, 
-        // and return a promise to indicate task completion.
-        return context.sync().then(function () {
-            log(count.value);
-        });
-    })
-    .catch(function (error) {
-        log('Error: ' + JSON.stringify(error));
-        if (error instanceof OfficeExtension.Error) {
-            log('Debug info: ' + JSON.stringify(error.debugInfo));
-        }
-    });
-}
-
-function test_settings_readV1() {
-    // Run a batch operation against the Word object model.
-    Word.run(function (context) {
-
-        // Queue commands add a setting.
-        var settings = context.document.settings;
-
-        // Queue a command to retrieve a setting.
-        var startMonth = settings.getItem('startMonth');
-
-        // Queue a command to load the setting.
-        context.load(startMonth);
-
-        // Synchronize the document state by executing the queued commands, 
-        // and return a promise to indicate task completion.
-        return context.sync().then(function () {
-            log(JSON.stringify(startMonth.value));
-        });
-    })
-    .catch(function (error) {
-        log('Error: ' + JSON.stringify(error));
-        if (error instanceof OfficeExtension.Error) {
-            log('Debug info: ' + JSON.stringify(error.debugInfo));
-        }
-    });
-}
 function BtnClearLogClick() {
     document.getElementById('DivLog').innerHTML = '';
 }
