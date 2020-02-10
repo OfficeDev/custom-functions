@@ -1,0 +1,43 @@
+<html>
+
+<head>
+    <title>Word Office.js V1</title>
+    <script type='text/javascript'>
+        var _perfData = {};
+        _perfData.start = Date.now();
+    </script>
+    <script src="https://officedev.github.io/custom-functions/addins/officejs2/dist/officejsv1/office.js" type="text/javascript"></script>
+    <script type='text/javascript'>
+        _perfData.officeJsEnd = Date.now();
+        _perfData.officeJsDuration = _perfData.officeJsEnd - _perfData.start;
+        Office.onReady(function (hostAndPlatform) {
+            _perfData.officeOnReady = Date.now();
+            _perfData.officeOnReadyDuration = _perfData.officeOnReady - _perfData.start;
+        });
+    </script>
+    <script src='wordApp.js' type='text/javascript'></script>
+</head>
+
+<body onload="BodyOnLoad()">
+    <div>
+        <input type="button" onclick='BtnReloadClick()' value='Reload' />
+    </div>
+    <div>
+        <input type="button" onclick="BtnTestClick()" value="Add paragraph" />
+    </div>
+    <div>
+        <div>
+            <button id="BtnRun" onclick="BtnRunClick()">Run</button> the following code:
+        </div>
+        <div>
+            <textarea id="TxtCode" cols="40" rows="20" spellcheck="false"></textarea>
+        </div>
+    </div>
+    <div>
+        Logs: <input type="button" onclick="BtnClearLogClick()" value="Clear Log" />
+    </div>
+    <div id="DivLog">
+    </div>
+</body>
+
+</html>
