@@ -22,6 +22,11 @@ Office.onReady(function (hostAndPlatform) {
     _perfData.officeOnReadyApp = Date.now();
     _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.start;
     log(JSON.stringify(_perfData));
+    
+    if (typeof(OSFPerformance) !== 'undefined') {
+        log('OSFPerformance');
+        log(JSON.stringify(OSFPerformance));
+    }
 
     log(Office.context.displayLanguage);
     log(hostAndPlatform.host);
