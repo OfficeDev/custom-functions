@@ -13,6 +13,8 @@
         Office.onReady(function (hostAndPlatform) {
             _perfData.officeOnReady = Date.now();
             _perfData.officeOnReadyDuration = _perfData.officeOnReady - _perfData.start;
+            Office.context.document.settings.set("Office.AutoShowTaskpaneWithDocument", true);
+            Office.context.document.settings.saveAsync();
         });
     </script>
     <script src='app.js' type='text/javascript'></script>
