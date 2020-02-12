@@ -65,6 +65,8 @@ var OSFPerformance;
     OSFPerformance.hostInitializationEnd = 0;
     OSFPerformance.createOMEnd = 0;
     OSFPerformance.hostSpecificFileName = "";
+    OSFPerformance.getAppContextStart = 0;
+    OSFPerformance.getAppContextEnd = 0;
 })(OSFPerformance || (OSFPerformance = {}));
 var OSF;
 (function (OSF) {
@@ -903,6 +905,8 @@ var OSFPerfUtil;
                     oteljs.makeDoubleDataField("officeExecuteEnd", OSFPerformance.officeExecuteEnd),
                     oteljs.makeDoubleDataField("hostInitializationStart", OSFPerformance.hostInitializationStart),
                     oteljs.makeDoubleDataField("hostInitializationEnd", OSFPerformance.hostInitializationEnd),
+                    oteljs.makeDoubleDataField("getAppContextStart", OSFPerformance.getAppContextStart),
+                    oteljs.makeDoubleDataField("getAppContextEnd", OSFPerformance.getAppContextEnd),
                     oteljs.makeDoubleDataField("createOMEnd", OSFPerformance.createOMEnd)
                 ]);
                 Microsoft.Office.WebExtension.sendTelemetryEvent({
@@ -1661,9 +1665,11 @@ var OSF;
                                 _initializationHelper.saveAndSetDialogInfo(OSF.Utility.getQueryStringValue("_host_Info"));
                             }
                             _initializationHelper.setAgaveHostCommunication();
+                            OSFPerformance.getAppContextStart = OSFPerformance.now();
                             return [4, _initializationHelper.getAppContext(window)];
                         case 1:
                             officeAppContext = _a.sent();
+                            OSFPerformance.getAppContextEnd = OSFPerformance.now();
                             _officeAppContext = officeAppContext;
                             _initializationHelper.createClientHostController();
                             _asyncMethodExecutor = _initializationHelper.createAsyncMethodExecutor();
@@ -4188,9 +4194,6 @@ var OSF;
                             OSF.AppTelemetry.logAppException(errorMsg);
                         }
                         reject(errorMsg);
-                    }
-                    if (typeof CustomEvent === "function" && typeof dispatchEvent === "function") {
-                        dispatchEvent(new CustomEvent("JSPerfFinished"));
                     }
                 };
                 try {
