@@ -10,21 +10,6 @@
     <script type='text/javascript'>
         _perfData.officeJsEnd = Date.now();
         _perfData.officeJsDuration = _perfData.officeJsEnd - _perfData.start;
-        Office.onReady(function (hostAndPlatform) {
-            _perfData.officeOnReady = Date.now();
-            _perfData.officeOnReadyDuration = _perfData.officeOnReady - _perfData.start;
-            Word.run(function (context) {
-                var settings = context.document.settings;
-                settings.add('Office.AutoShowTaskpaneWithDocument', true);
-                return context.sync();
-            })
-            .catch(function (error) {
-                console.log('Error: ' + JSON.stringify(error));
-                if (error instanceof OfficeExtension.Error) {
-                    console.log('Debug info: ' + JSON.stringify(error.debugInfo));
-                }
-            });
-        });
     </script>
     <script src='wordApp.js' type='text/javascript'></script>
 </head>
