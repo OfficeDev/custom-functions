@@ -19,13 +19,22 @@ function log(text) {
 }
 
 Office.onReady(function (hostAndPlatform) {
-    _perfData.officeOnReadyApp = Date.now();
+    _perfData.officeOnReadyApp = performance.now();
     _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.start;
     log(JSON.stringify(_perfData));
     
     if (typeof(OSFPerformance) !== 'undefined') {
         log('OSFPerformance');
         log(JSON.stringify(OSFPerformance));
+        var summary = {
+            networkDuration: OSFPerformance.officeExecuteStart - _perfData.start,
+            officeJsExecution: OSFPerformance.officeExecuteEnd - OSFPerformance.officeExecuteStart,
+            officeJsStartToGetAppContext: OSFPerformance.getAppContextStart - OSFPerformance.officeExecuteStart,
+            getAppContextDuration: OSFPerformance.getAppContextEnd - OSFPerformance.getAppContextStart,
+            officeOnReadyDuration: OSFPerformance.createOMEnd - OSFPerformance.officeExecuteStart,
+            officeOnReadyAppDuration: _perfData.officeOnReadyAppDuration
+        };
+        log(JSON.stringify(summary));
     }
 
     log(Office.context.displayLanguage);

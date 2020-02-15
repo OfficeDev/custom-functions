@@ -4,14 +4,14 @@
     <title>Office.js V2</title>
     <script type='text/javascript'>
         var _perfData = {};
-        _perfData.start = Date.now();
+        _perfData.start = performance.now();
     </script>
     <script src='../dist/excel.js' type='text/javascript'></script>
     <script type='text/javascript'>
-        _perfData.excelJsEnd = Date.now();
+        _perfData.excelJsEnd = performance.now();
         _perfData.excelJsDuration = _perfData.excelJsEnd - _perfData.start;
         Office.onReady(function (hostAndPlatform) {
-            _perfData.officeOnReady = Date.now();
+            _perfData.officeOnReady = performance.now();
             _perfData.officeOnReadyDuration = _perfData.officeOnReady - _perfData.start;
         });
     </script>
