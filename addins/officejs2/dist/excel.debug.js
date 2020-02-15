@@ -941,6 +941,14 @@ var OSF;
             }
             Guid.generateNewGuid = generateNewGuid;
         })(Guid = OUtil.Guid || (OUtil.Guid = {}));
+        function isArray(obj) {
+            return Object.prototype.toString.apply(obj) === "[object Array]";
+        }
+        OUtil.isArray = isArray;
+        function isFunction(obj) {
+            return Object.prototype.toString.apply(obj) === "[object Function]";
+        }
+        OUtil.isFunction = isFunction;
         function isDate(obj) {
             return Object.prototype.toString.apply(obj) === "[object Date]";
         }
