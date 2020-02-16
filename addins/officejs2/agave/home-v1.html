@@ -15,7 +15,13 @@
             _perfData.officeOnReadyDuration = _perfData.officeOnReady - _perfData.start;
         });
     </script>
+    <script type='text/javascript'>
+        _perfData.appJsStart = performance.now();
+    </script>
     <script src='app.js' type='text/javascript'></script>
+    <script type='text/javascript'>
+        _perfData.appJsEnd = performance.now();
+    </script>
 </head>
 
 <body onload="BodyOnLoad()">
