@@ -1,0 +1,59 @@
+<html>
+
+<head>
+    <title>Office.js V2</title>
+    <script type='text/javascript'>
+        var _perfData = {};
+        _perfData.start = performance.now();
+    </script>
+    <script src='../dist/excel.debug.js' type='text/javascript'></script>
+    <script type='text/javascript'>
+        _perfData.excelJsEnd = performance.now();
+        _perfData.excelJsDuration = _perfData.excelJsEnd - _perfData.start;
+        Office.onReady(function (hostAndPlatform) {
+            _perfData.officeOnReadyPage = performance.now();
+            _perfData.officeOnReadyPageDuration = _perfData.officeOnReadyPage - _perfData.start;
+        });
+
+        Office.onReady().then(function() {
+            _perfData.officeOnReadyPageThen = performance.now();
+            _perfData.officeOnReadyPageThenDuration = _perfData.officeOnReadyPageThen - _perfData.start;
+        });
+
+    </script>
+    <script type='text/javascript'>
+        _perfData.appJsStart = performance.now();
+    </script>
+    <script src='app.js' type='text/javascript'></script>
+    <script type='text/javascript'>
+        _perfData.appJsEnd = performance.now();
+    </script>
+</head>
+
+<body onload="BodyOnLoad()">
+    <div>
+        <input type="button" onclick='BtnReloadClick()' value='Reload' />
+    </div>
+    <div>
+        <input type="button" onclick="BtnTestClick()" value="Set Range value" />
+        <input type="button" onclick="BtnTest2Click()" value="Large Range value" />
+        <input type="button" onclick="BtnTestEventClick()" value="Event" />
+        <input type="button" onclick="test_settings_readV1()" value="test_settings_readV1" />
+        <input type="button" onclick="test_settings_updateUsingV2()" value="test_settings_updateUsingV2" />
+    </div>
+    <div>
+        <div>
+            <button id="BtnRun" onclick="BtnRunClick()">Run</button> the following code:
+        </div>
+        <div>
+            <textarea id="TxtCode" cols="40" rows="20" spellcheck="false"></textarea>
+        </div>
+    </div>
+    <div>
+        Logs: <input type="button" onclick="BtnClearLogClick()" value="Clear Log" />
+    </div>
+    <div id="DivLog">
+    </div>
+</body>
+
+</html>
