@@ -15,6 +15,17 @@
  */
 
 
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -47,6 +58,9 @@ var OSFPerformance;
     OSFPerformance.hostSpecificFileName = "";
     OSFPerformance.getAppContextStart = 0;
     OSFPerformance.getAppContextEnd = 0;
+    OSFPerformance.getAppContextXdmStart = 0;
+    OSFPerformance.getAppContextXdmEnd = 0;
+    OSFPerformance.officeOnReady = 0;
 })(OSFPerformance || (OSFPerformance = {}));
 var OSF;
 (function (OSF) {
@@ -887,7 +901,10 @@ var OSFPerfUtil;
                     oteljs.makeDoubleDataField("hostInitializationEnd", OSFPerformance.hostInitializationEnd),
                     oteljs.makeDoubleDataField("getAppContextStart", OSFPerformance.getAppContextStart),
                     oteljs.makeDoubleDataField("getAppContextEnd", OSFPerformance.getAppContextEnd),
-                    oteljs.makeDoubleDataField("createOMEnd", OSFPerformance.createOMEnd)
+                    oteljs.makeDoubleDataField("getAppContextXdmStart", OSFPerformance.getAppContextXdmStart),
+                    oteljs.makeDoubleDataField("getAppContextXdmEnd", OSFPerformance.getAppContextXdmEnd),
+                    oteljs.makeDoubleDataField("createOMEnd", OSFPerformance.createOMEnd),
+                    oteljs.makeDoubleDataField("officeOnReady", OSFPerformance.officeOnReady)
                 ]);
                 Microsoft.Office.WebExtension.sendTelemetryEvent({
                     eventName: "Office.Extensibility.OfficeJs.JSPerformanceTelemetryV06",
@@ -1517,6 +1534,9 @@ var Office;
     var _isOfficeOnReadyCalled = false;
     var _officeOnReadyPromise = null;
     var _officeOnReadyPromiseResolve = null;
+    var _officeOnReadyCallbacks = [];
+    var _officeOnReadyHostAndPlatformInfo;
+    var _officeOnReadyFired;
     function ensureOfficeOnReadyPromise() {
         if (!_officeOnReadyPromise) {
             _officeOnReadyPromise = new Office.Promise(function (resolve, reject) {
@@ -1527,9 +1547,12 @@ var Office;
     function onReadyInternal(callback) {
         ensureOfficeOnReadyPromise();
         if (callback) {
-            _officeOnReadyPromise.then(function (info) {
-                callback(info);
-            });
+            if (_officeOnReadyFired) {
+                callback(_officeOnReadyHostAndPlatformInfo);
+            }
+            else {
+                _officeOnReadyCallbacks.push(callback);
+            }
         }
         return _officeOnReadyPromise;
     }
@@ -1541,7 +1564,13 @@ var Office;
     Office.onReady = onReady;
     function fireOnReady(hostAndPlatformInfo) {
         ensureOfficeOnReadyPromise();
-        _officeOnReadyPromiseResolve(hostAndPlatformInfo);
+        _officeOnReadyHostAndPlatformInfo = __assign({}, hostAndPlatformInfo);
+        _officeOnReadyFired = true;
+        OSFPerformance.officeOnReady = OSFPerformance.now();
+        while (_officeOnReadyCallbacks.length > 0) {
+            _officeOnReadyCallbacks.shift()(_officeOnReadyHostAndPlatformInfo);
+        }
+        _officeOnReadyPromiseResolve(_officeOnReadyHostAndPlatformInfo);
     }
     Office.fireOnReady = fireOnReady;
 })(Office || (Office = {}));
@@ -1630,7 +1659,7 @@ var OSF;
         var _initializationHelper;
         var _asyncMethodExecutor;
         var _officeAppContext;
-        function bootstrap() {
+        function bootstrap(onSuccess, onError) {
             _webAppState = {
                 id: null,
                 webAppUrl: null,
@@ -1649,8 +1678,7 @@ var OSF;
             }
             _initializationHelper.setAgaveHostCommunication();
             OSFPerformance.getAppContextStart = OSFPerformance.now();
-            return _initializationHelper.getAppContext(window)
-                .then(function (officeAppContext) {
+            var onGetAppContextSuccess = function (officeAppContext) {
                 OSFPerformance.getAppContextEnd = OSFPerformance.now();
                 _officeAppContext = officeAppContext;
                 _initializationHelper.createClientHostController();
@@ -1661,8 +1689,12 @@ var OSF;
                     host: OSF.HostName.Host.getInstance().getHost(appNameNumber),
                     platform: OSF.HostName.Host.getInstance().getPlatform(appNameNumber)
                 });
-                return officeAppContext;
-            });
+                onSuccess(officeAppContext);
+            };
+            var onGetAppContextError = function (e) {
+                onError(e);
+            };
+            _initializationHelper.getAppContext(window, onGetAppContextSuccess, onGetAppContextError);
         }
         _OfficeAppFactory.bootstrap = bootstrap;
         function retrieveHostInfo() {
@@ -3339,11 +3371,12 @@ var OSF;
             }
             return this._osfControlContext;
         };
-        RichClientInitializationHelper.prototype.getAppContext = function () {
+        RichClientInitializationHelper.prototype.getAppContext = function (wnd, onSuccess, onError) {
             var _this = this;
             var context = this.getOsfControlContext();
             if (!context) {
-                return Promise.reject(new Error("The Office.js is loaded outside of Office client"));
+                onError(new Error("The Office.js is loaded outside of Office client"));
+                return;
             }
             var appType = context.GetAppType();
             var id = context.GetSolutionRef();
@@ -3410,10 +3443,9 @@ var OSF;
             var settingsFunc = function () { return _this.initializeSettings(); };
             var officeThemeFunc = function () { return _this.getOfficeTheme(); };
             var returnedContext = new OSF.OfficeAppContext(id, appType, version, UILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, undefined, undefined, undefined, undefined, dialogRequirementMatrix, sdxFeatureGates, officeThemeFunc);
-            if (OSF.AppTelemetry) {
-                OSF.AppTelemetry.initialize(returnedContext);
-            }
-            return OSF.Utility.createPromiseFromResult(returnedContext);
+            OSF.AppTelemetry.initialize(returnedContext);
+            onSuccess(returnedContext);
+            return;
         };
         RichClientInitializationHelper.prototype.createClientHostController = function () {
             if (!this._clientHostController) {
@@ -3751,9 +3783,7 @@ var OSF;
         }
         Utility.debugLog = debugLog;
         function createPromiseFromResult(result) {
-            return createPromise(function (resolve, reject) {
-                resolve(result);
-            });
+            return Promise.resolve(result);
         }
         Utility.createPromiseFromResult = createPromiseFromResult;
         function createPromise(executor) {
@@ -4131,74 +4161,72 @@ var OSF;
                 throw ex;
             }
         };
-        WebInitializationHelper.prototype.getAppContext = function (wnd) {
+        WebInitializationHelper.prototype.getAppContext = function (wnd, onSuccess, onError) {
             var _this = this;
             var me = this;
-            return new Promise(function (resolve, reject) {
-                var getInvocationCallbackWebApp = function (errorCode, appContext) {
-                    if (appContext._appName === 16) {
-                        var serializedSettingsFromHost = appContext._settings;
-                        _this._serializedSettings = {};
-                        for (var index in serializedSettingsFromHost) {
-                            var setting = serializedSettingsFromHost[index];
-                            _this._serializedSettings[setting[0]] = setting[1];
-                        }
-                    }
-                    else {
-                        _this._serializedSettings = appContext._settings;
-                    }
-                    if (!me._hostInfo.isDialog || window.opener == null) {
-                        var pageUrl = window.location.href;
-                        me._webAppState.clientEndPoint.invoke("ContextActivationManager_notifyHost", null, [me._webAppState.id, OSF.AgaveHostAction.UpdateTargetUrl, pageUrl]);
-                    }
-                    if (errorCode === 0 && appContext._id != undefined && appContext._appName != undefined && appContext._appVersion != undefined && appContext._appUILocale != undefined && appContext._dataLocale != undefined &&
-                        appContext._docUrl != undefined && appContext._clientMode != undefined && appContext._settings != undefined && appContext._reason != undefined) {
-                        me._appContext = appContext;
-                        var appInstanceId = (appContext._appInstanceId ? appContext._appInstanceId : appContext._id);
-                        var touchEnabled = false;
-                        var commerceAllowed = true;
-                        var minorVersion = 0;
-                        if (appContext._appMinorVersion != undefined) {
-                            minorVersion = appContext._appMinorVersion;
-                        }
-                        var requirementMatrix = undefined;
-                        if (appContext._requirementMatrix != undefined) {
-                            requirementMatrix = appContext._requirementMatrix;
-                        }
-                        appContext.eToken = appContext.eToken ? appContext.eToken : "";
-                        var settingsFunc = function () {
-                            return _this.deserializeSettings(_this._serializedSettings);
-                        };
-                        var returnedContext = new OSF.OfficeAppContext(appContext._id, appContext._appName, appContext._appVersion, appContext._appUILocale, appContext._dataLocale, appContext._docUrl, appContext._clientMode, settingsFunc, appContext._reason, appContext._osfControlType, appContext._eToken, appContext._correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, appContext._hostCustomMessage, appContext._hostFullVersion, appContext._clientWindowHeight, appContext._clientWindowWidth, appContext._addinName, appContext._appDomains, appContext._dialogRequirementMatrix, appContext._featureGates);
-                        if (OSF.AppTelemetry) {
-                            OSF.AppTelemetry.initialize(returnedContext);
-                        }
-                        resolve(returnedContext);
-                    }
-                    else {
-                        var errorMsg = "Function ContextActivationManager_getAppContextAsync call failed. ErrorCode is " + errorCode + ", exception: " + appContext;
-                        if (OSF.AppTelemetry) {
-                            OSF.AppTelemetry.logAppException(errorMsg);
-                        }
-                        reject(errorMsg);
-                    }
-                };
-                try {
-                    if (_this._hostInfo.isDialog && window.opener != null) {
-                        var appContext = OSF.OUtil.parseAppContextFromWindowName(false, OSF._OfficeAppFactory.getWindowName());
-                        getInvocationCallbackWebApp(0, appContext);
-                    }
-                    else {
-                        _this._webAppState.clientEndPoint.invoke("ContextActivationManager_getAppContextAsync", getInvocationCallbackWebApp, _this._webAppState.id);
+            var getInvocationCallbackWebApp = function (errorCode, appContext) {
+                OSFPerformance.getAppContextXdmEnd = OSFPerformance.now();
+                if (appContext._appName === 16) {
+                    var serializedSettingsFromHost = appContext._settings;
+                    _this._serializedSettings = {};
+                    for (var index in serializedSettingsFromHost) {
+                        var setting = serializedSettingsFromHost[index];
+                        _this._serializedSettings[setting[0]] = setting[1];
                     }
                 }
-                catch (ex) {
+                else {
+                    _this._serializedSettings = appContext._settings;
+                }
+                if (!me._hostInfo.isDialog || window.opener == null) {
+                    var pageUrl = window.location.href;
+                    me._webAppState.clientEndPoint.invoke("ContextActivationManager_notifyHost", null, [me._webAppState.id, OSF.AgaveHostAction.UpdateTargetUrl, pageUrl]);
+                }
+                if (errorCode === 0 && appContext._id != undefined && appContext._appName != undefined && appContext._appVersion != undefined && appContext._appUILocale != undefined && appContext._dataLocale != undefined &&
+                    appContext._docUrl != undefined && appContext._clientMode != undefined && appContext._settings != undefined && appContext._reason != undefined) {
+                    me._appContext = appContext;
+                    var appInstanceId = (appContext._appInstanceId ? appContext._appInstanceId : appContext._id);
+                    var touchEnabled = false;
+                    var commerceAllowed = true;
+                    var minorVersion = 0;
+                    if (appContext._appMinorVersion != undefined) {
+                        minorVersion = appContext._appMinorVersion;
+                    }
+                    var requirementMatrix = undefined;
+                    if (appContext._requirementMatrix != undefined) {
+                        requirementMatrix = appContext._requirementMatrix;
+                    }
+                    appContext.eToken = appContext.eToken ? appContext.eToken : "";
+                    var settingsFunc = function () {
+                        return _this.deserializeSettings(_this._serializedSettings);
+                    };
+                    var returnedContext = new OSF.OfficeAppContext(appContext._id, appContext._appName, appContext._appVersion, appContext._appUILocale, appContext._dataLocale, appContext._docUrl, appContext._clientMode, settingsFunc, appContext._reason, appContext._osfControlType, appContext._eToken, appContext._correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, appContext._hostCustomMessage, appContext._hostFullVersion, appContext._clientWindowHeight, appContext._clientWindowWidth, appContext._addinName, appContext._appDomains, appContext._dialogRequirementMatrix, appContext._featureGates);
+                    OSF.AppTelemetry.initialize(returnedContext);
+                    onSuccess(returnedContext);
+                }
+                else {
+                    var errorMsg = "Function ContextActivationManager_getAppContextAsync call failed. ErrorCode is " + errorCode + ", exception: " + appContext;
                     if (OSF.AppTelemetry) {
-                        OSF.AppTelemetry.logAppException("Exception thrown when trying to invoke getAppContextAsync. Exception:[" + ex + "]");
+                        OSF.AppTelemetry.logAppException(errorMsg);
                     }
-                    reject(ex);
+                    onError(errorMsg);
                 }
-            });
+            };
+            try {
+                if (this._hostInfo.isDialog && window.opener != null) {
+                    var appContext = OSF.OUtil.parseAppContextFromWindowName(false, OSF._OfficeAppFactory.getWindowName());
+                    getInvocationCallbackWebApp(0, appContext);
+                }
+                else {
+                    OSFPerformance.getAppContextXdmStart = OSFPerformance.now();
+                    this._webAppState.clientEndPoint.invoke("ContextActivationManager_getAppContextAsync", getInvocationCallbackWebApp, this._webAppState.id);
+                }
+            }
+            catch (ex) {
+                if (OSF.AppTelemetry) {
+                    OSF.AppTelemetry.logAppException("Exception thrown when trying to invoke getAppContextAsync. Exception:[" + ex + "]");
+                }
+                onError(ex);
+            }
         };
         WebInitializationHelper.prototype.createClientHostController = function () {
             if (!this._clientHostController) {
@@ -5328,8 +5356,7 @@ var OSF;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
-    OSF._OfficeAppFactory.bootstrap()
-        .catch(function (e) {
+    OSF._OfficeAppFactory.bootstrap(function () { }, function (e) {
         console.error(JSON.stringify(e));
     });
     window.addEventListener('DOMContentLoaded', function (event) {
