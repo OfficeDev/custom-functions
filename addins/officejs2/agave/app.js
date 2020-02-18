@@ -1,3 +1,4 @@
+_perfData.appJsExecutionStart = performance.now();
 
 var _bodyOnLoadCalled = false;
 var _pendingLogs = [];
@@ -19,9 +20,26 @@ function log(text) {
 }
 
 Office.onReady(function (hostAndPlatform) {
-    _perfData.officeOnReadyApp = Date.now();
+    _perfData.officeOnReadyApp = performance.now();
     _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.start;
+    log('_perfData');
     log(JSON.stringify(_perfData));
+    
+    if (typeof(OSFPerformance) !== 'undefined') {
+        log('OSFPerformance');
+        log(JSON.stringify(OSFPerformance));
+        var summary = {
+            networkDuration: OSFPerformance.officeExecuteStart - _perfData.start,
+            officeJsExecutionDuration: OSFPerformance.officeExecuteEnd - OSFPerformance.officeExecuteStart,
+            officeJsStartToGetAppContext: OSFPerformance.getAppContextStart - OSFPerformance.officeExecuteStart,
+            getAppContextDuration: OSFPerformance.getAppContextEnd - OSFPerformance.getAppContextStart,
+            getAppContextXdmDuration: OSFPerformance.getAppContextXdmEnd - OSFPerformance.getAppContextXdmStart,
+            officeOnReadyDuration: Math.max(OSFPerformance.officeExecuteEnd, OSFPerformance.officeOnReady) - OSFPerformance.officeExecuteStart,
+            officeOnReadyAppDuration: _perfData.officeOnReadyAppDuration
+        };
+        log('Summary:');
+        log(JSON.stringify(summary));
+    }
 
     log(Office.context.displayLanguage);
     log(hostAndPlatform.host);
@@ -146,3 +164,11 @@ function test_settings_readV1() {
 function BtnClearLogClick() {
     document.getElementById('DivLog').innerHTML = '';
 }
+
+
+function appcmdTestButton(args) {
+    log('appcmdTestButton invoked');
+    args.completed();
+}
+
+_perfData.appJsExecutionEnd = performance.now();
