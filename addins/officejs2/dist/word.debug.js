@@ -1573,6 +1573,10 @@ var Office;
         _officeOnReadyPromiseResolve(_officeOnReadyHostAndPlatformInfo);
     }
     Office.fireOnReady = fireOnReady;
+    function sendTelemetryEvent(telemetryEvent) {
+        Microsoft.Office.WebExtension.sendTelemetryEvent(telemetryEvent);
+    }
+    Office.sendTelemetryEvent = sendTelemetryEvent;
 })(Office || (Office = {}));
 var OSF;
 (function (OSF) {
