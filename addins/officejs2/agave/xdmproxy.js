@@ -1,6 +1,4 @@
 var appContext = {};
-var sdxwindow = null;
-var sdxorigin = null;
 window.addEventListener("message", receiveMessage, false);
 var XdmMessagePackager = (function () {
     function XdmMessagePackager() {
@@ -34,13 +32,9 @@ function receiveMessage(e) {
         }
         else if (messageObject._actionName == "ContextActivationManager_getAppContextAsync")
         {
-            sdxwindow = e.source;
-            sdxorigin = e.origin;
-
             var requestJson = XdmMessagePackager.unenvelope(e.data, 1);            
             appContext._conversationId = requestJson._conversationId;
-            sdxwindow.postMessage(XdmMessagePackager.envelope(appContext, 1), sdxorigin);
-            // delete itself
+            e.source.postMessage(XdmMessagePackager.envelope(appContext, 1), e.origin);
         }
     }
 }
