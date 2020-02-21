@@ -27,11 +27,15 @@ function receiveMessage(e) {
             return;
         }
         if (messageObject._actionName == "HostAppContextAsync") {
-            appContext = serializedMessage;
+            appContext = messageObject;
         }
         else if (messageObject._actionName == "ContextActivationManager_getAppContextAsync")
         {
-            e.source.postMessage(appContext, e.origin);
+            var requestJson = XdmMessagePackager.unenvelope(e.data, 1);
+            appContext._actionName = "ContextActivationManager_getAppContextAsync";
+            appContext._conversationId = requestJson._conversationId;
+
+            e.source.postMessage(XdmMessagePackager.envelope(appContext, 1), e.origin);
             // delete itself
         }
     }
