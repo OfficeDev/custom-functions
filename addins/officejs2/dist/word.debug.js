@@ -4216,8 +4216,12 @@ var OSF;
                 }
             };
             try {
+                var skipSessionStorage = true;
                 if (this._hostInfo.isDialog && window.opener != null) {
-                    var appContext = OSF.OUtil.parseAppContextFromWindowName(false, OSF._OfficeAppFactory.getWindowName());
+                    skipSessionStorage = false;
+                }
+                var appContext = OSF.OUtil.parseAppContextFromWindowName(skipSessionStorage, OSF._OfficeAppFactory.getWindowName());
+                if (appContext) {
                     getInvocationCallbackWebApp(0, appContext);
                 }
                 else {
