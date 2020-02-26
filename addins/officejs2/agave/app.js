@@ -138,6 +138,66 @@ function BtnTestEventClick() {
     });
 }
 
+function BtnTestEvent2Click() {
+    Excel.run(function(ctx) {
+        var worksheet;
+        var eventResult;
+        var eventCount = 0;
+    
+        ctx.workbook.worksheets.load();
+        return ctx.sync()
+            .then(function() {
+                if (ctx.workbook.worksheets.items.length < 2) {
+                    ctx.workbook.worksheets.add();
+                    ctx.workbook.worksheets.load();
+                }
+                return ctx.sync();
+            })
+            .then(function() {
+                worksheet = ctx.workbook.worksheets.getFirst(true);
+
+                // Register event
+                eventResult = worksheet.onActivated.add(
+                    function() {
+                        eventCount++;
+                        log("WorksheetActivatedEvent fired - eventCount=" + eventCount);
+                        return null;
+                    });
+                log("Add event");
+                return ctx.sync();
+            })
+            .then(function() {
+                // Activate the last sheet.
+                log("activate the last visible sheet");
+                var lastsheet = ctx.workbook.worksheets.getLast(true);
+                lastsheet.activate();
+                return ctx.sync();
+            })
+            .then(function() {
+                // Activate the first sheet.
+                log("activate the first visible sheet");
+                worksheet.activate();
+                return ctx.sync();
+            })
+            .then(function() {
+                log("Wait for 2 seconds");
+                return OfficeExtension.Utility._createTimeoutPromise(2000);
+            })
+            .then(function() {
+                if (eventCount !== 1) {
+                    log("Event is not fired correctly");
+                }
+                else {
+                    log("Event is fired correctly");
+                }
+
+                log("Remove event");
+                eventResult.remove();
+                return ctx.sync();
+            });
+    });
+}
+
 function test_settings_updateUsingV2() {
     Excel.run(function (ctx) {
         ctx.workbook.settings.add('stringKey', 'Hello');
