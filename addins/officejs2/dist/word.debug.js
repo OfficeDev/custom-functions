@@ -42,12 +42,7 @@ var __extends = (this && this.__extends) || (function () {
 var OSFPerformance;
 (function (OSFPerformance) {
     function now() {
-        if (performance && performance.now) {
-            return performance.now();
-        }
-        else {
-            return 0;
-        }
+        return Date.now();
     }
     OSFPerformance.now = now;
     OSFPerformance.officeExecuteStart = now();
@@ -411,7 +406,6 @@ var OSF;
     var EventDispatch = (function () {
         function EventDispatch(eventInfos) {
             this._eventInfos = {};
-            this._eventHandlers = {};
             this._queuedEventsArgs = {};
             this._eventHandlers = {};
             this._queuedEventsArgs = {};
@@ -545,9 +539,11 @@ var OSF;
             var dispId = 0;
             function onEnsureRegistration(status) {
                 if (status == 0) {
-                    var added = eventDispatch.addEventHandler(eventType, handler);
-                    if (!added) {
-                        status = 5010;
+                    if (!eventDispatch.hasEventHandler(eventType, handler)) {
+                        var added = eventDispatch.addEventHandler(eventType, handler);
+                        if (!added) {
+                            status = 5010;
+                        }
                     }
                 }
                 var asyncMethodExecutor = OSF._OfficeAppFactory.getAsyncMethodExecutor();
@@ -723,6 +719,14 @@ var OSF;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
+    var HostInfoHostType;
+    (function (HostInfoHostType) {
+        HostInfoHostType["excel"] = "excel";
+        HostInfoHostType["word"] = "word";
+    })(HostInfoHostType = OSF.HostInfoHostType || (OSF.HostInfoHostType = {}));
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
     var HostInfoPlatform;
     (function (HostInfoPlatform) {
         HostInfoPlatform["web"] = "web";
@@ -732,6 +736,9 @@ var OSF;
         HostInfoPlatform["ios"] = "ios";
         HostInfoPlatform["android"] = "android";
     })(HostInfoPlatform = OSF.HostInfoPlatform || (OSF.HostInfoPlatform = {}));
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
@@ -753,7 +760,10 @@ var OSF;
         InitializationHelper.prototype.createAsyncMethodExecutor = function () {
             return null;
         };
-        InitializationHelper.prototype.deserializeSettings = function (serializedSettings) {
+        InitializationHelper.prototype.createClientSettingsManager = function () {
+            return null;
+        };
+        InitializationHelper.prototype.createSettings = function (serializedSettings) {
             var osfSessionStorage = OSF.OUtil.getSessionStorage();
             if (osfSessionStorage) {
                 var storageSettings = osfSessionStorage.getItem(OSF._OfficeAppFactory.getCachedSessionSettingsKey());
@@ -766,7 +776,8 @@ var OSF;
                 }
             }
             var deserializedSettings = OSF.OUtil.deserializeSettings(serializedSettings);
-            var settings = new Office.Settings(deserializedSettings);
+            var clientSettingsManager = this.createClientSettingsManager();
+            var settings = new Office.Settings(deserializedSettings, clientSettingsManager);
             return settings;
         };
         InitializationHelper.prototype.prepareApiSurface = function (officeAppContext) {
@@ -1423,7 +1434,8 @@ var Office;
             function get_settings() {
                 if (!_settings) {
                     var settingsFunc = OSF._OfficeAppFactory.getOfficeAppContext().get_settingsFunc();
-                    _settings = settingsFunc();
+                    var serializedSettings = settingsFunc();
+                    _settings = OSF._OfficeAppFactory.getInitializationHelper().createSettings(serializedSettings);
                 }
                 return _settings;
             }
@@ -1755,15 +1767,8 @@ var OSF;
                     OSF.Utility.log(JSON.stringify(ex));
                 }
             }
-            var osfSessionStorage = null;
-            try {
-                if (window.sessionStorage) {
-                    osfSessionStorage = window.sessionStorage;
-                }
-            }
-            catch (ex) {
-            }
-            if (!hostInfoValue && osfSessionStorage && osfSessionStorage.getItem("hostInfoValue")) {
+            var osfSessionStorage = OSF.OUtil.getSessionStorage();
+            if (!hostInfoValue && osfSessionStorage.getItem("hostInfoValue")) {
                 hostInfoValue = osfSessionStorage.getItem("hostInfoValue");
             }
             if (hostInfoValue) {
@@ -1785,13 +1790,7 @@ var OSF;
                 _hostInfo.isDialog = (((typeof items[5]) != "undefined") && items[5] == "isDialog") ? true : false;
                 _hostInfo.disableLogging = (((typeof items[6]) != "undefined") && items[6] == "disableLogging") ? true : false;
                 _hostInfo.flags = (((typeof items[7]) === "string") && items[7].length > 0) ? parseInt(items[7]) : 0;
-                if (osfSessionStorage) {
-                    try {
-                        osfSessionStorage.setItem("hostInfoValue", hostInfoValue);
-                    }
-                    catch (e) {
-                    }
-                }
+                osfSessionStorage.setItem("hostInfoValue", hostInfoValue);
             }
             else {
                 _hostInfo.isO15 = true;
@@ -1871,6 +1870,10 @@ var OSF;
             return _webAppState.id;
         }
         _OfficeAppFactory.getId = getId;
+        function getInitializationHelper() {
+            return _initializationHelper;
+        }
+        _OfficeAppFactory.getInitializationHelper = getInitializationHelper;
     })(_OfficeAppFactory = OSF._OfficeAppFactory || (OSF._OfficeAppFactory = {}));
     function getClientEndPoint() {
         return _OfficeAppFactory.getWebAppState().clientEndPoint;
@@ -2821,330 +2824,25 @@ var OSF;
             return DefaultDialogSetRequirement;
         }(DefaultSetRequirement));
         Requirement.DefaultDialogSetRequirement = DefaultDialogSetRequirement;
-        var ExcelClientDefaultSetRequirement = (function (_super) {
-            __extends(ExcelClientDefaultSetRequirement, _super);
-            function ExcelClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "documentevents": 1.1,
-                    "excelapi": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return ExcelClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.ExcelClientDefaultSetRequirement = ExcelClientDefaultSetRequirement;
-        var ExcelClientV1DefaultSetRequirement = (function (_super) {
-            __extends(ExcelClientV1DefaultSetRequirement, _super);
-            function ExcelClientV1DefaultSetRequirement() {
-                var _this = _super.call(this) || this;
-                _this._addSetMap({
-                    "imagecoercion": 1.1
-                });
-                return _this;
-            }
-            return ExcelClientV1DefaultSetRequirement;
-        }(ExcelClientDefaultSetRequirement));
-        Requirement.ExcelClientV1DefaultSetRequirement = ExcelClientV1DefaultSetRequirement;
-        var OutlookClientDefaultSetRequirement = (function (_super) {
-            __extends(OutlookClientDefaultSetRequirement, _super);
-            function OutlookClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "mailbox": 1.3
-                }) || this;
-            }
-            return OutlookClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.OutlookClientDefaultSetRequirement = OutlookClientDefaultSetRequirement;
-        var WordClientDefaultSetRequirement = (function (_super) {
-            __extends(WordClientDefaultSetRequirement, _super);
-            function WordClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "compressedfile": 1.1,
-                    "customxmlparts": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "htmlcoercion": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "ooxmlcoercion": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1,
-                    "textfile": 1.1,
-                    "wordapi": 1.1
-                }) || this;
-            }
-            return WordClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.WordClientDefaultSetRequirement = WordClientDefaultSetRequirement;
-        var WordClientV1DefaultSetRequirement = (function (_super) {
-            __extends(WordClientV1DefaultSetRequirement, _super);
-            function WordClientV1DefaultSetRequirement() {
-                var _this = _super.call(this) || this;
-                _this._addSetMap({
-                    "customxmlparts": 1.2,
-                    "wordapi": 1.2,
-                    "imagecoercion": 1.1
-                });
-                return _this;
-            }
-            return WordClientV1DefaultSetRequirement;
-        }(WordClientDefaultSetRequirement));
-        Requirement.WordClientV1DefaultSetRequirement = WordClientV1DefaultSetRequirement;
-        var PowerpointClientDefaultSetRequirement = (function (_super) {
-            __extends(PowerpointClientDefaultSetRequirement, _super);
-            function PowerpointClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "activeview": 1.1,
-                    "compressedfile": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return PowerpointClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.PowerpointClientDefaultSetRequirement = PowerpointClientDefaultSetRequirement;
-        var PowerpointClientV1DefaultSetRequirement = (function (_super) {
-            __extends(PowerpointClientV1DefaultSetRequirement, _super);
-            function PowerpointClientV1DefaultSetRequirement() {
-                var _this = _super.call(this) || this;
-                _this._addSetMap({
-                    "imagecoercion": 1.1
-                });
-                return _this;
-            }
-            return PowerpointClientV1DefaultSetRequirement;
-        }(PowerpointClientDefaultSetRequirement));
-        Requirement.PowerpointClientV1DefaultSetRequirement = PowerpointClientV1DefaultSetRequirement;
-        var ProjectClientDefaultSetRequirement = (function (_super) {
-            __extends(ProjectClientDefaultSetRequirement, _super);
-            function ProjectClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "selection": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return ProjectClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.ProjectClientDefaultSetRequirement = ProjectClientDefaultSetRequirement;
-        var ExcelWebDefaultSetRequirement = (function (_super) {
-            __extends(ExcelWebDefaultSetRequirement, _super);
-            function ExcelWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "documentevents": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1,
-                    "file": 1.1
-                }) || this;
-            }
-            return ExcelWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.ExcelWebDefaultSetRequirement = ExcelWebDefaultSetRequirement;
-        var WordWebDefaultSetRequirement = (function (_super) {
-            __extends(WordWebDefaultSetRequirement, _super);
-            function WordWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "compressedfile": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "imagecoercion": 1.1,
-                    "matrixcoercion": 1.1,
-                    "ooxmlcoercion": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textcoercion": 1.1,
-                    "textfile": 1.1
-                }) || this;
-            }
-            return WordWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.WordWebDefaultSetRequirement = WordWebDefaultSetRequirement;
-        var PowerpointWebDefaultSetRequirement = (function (_super) {
-            __extends(PowerpointWebDefaultSetRequirement, _super);
-            function PowerpointWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "activeview": 1.1,
-                    "settings": 1.1
-                }) || this;
-            }
-            return PowerpointWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.PowerpointWebDefaultSetRequirement = PowerpointWebDefaultSetRequirement;
-        var OutlookWebDefaultSetRequirement = (function (_super) {
-            __extends(OutlookWebDefaultSetRequirement, _super);
-            function OutlookWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "mailbox": 1.3
-                }) || this;
-            }
-            return OutlookWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.OutlookWebDefaultSetRequirement = OutlookWebDefaultSetRequirement;
-        var SwayWebDefaultSetRequirement = (function (_super) {
-            __extends(SwayWebDefaultSetRequirement, _super);
-            function SwayWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "activeview": 1.1,
-                    "documentevents": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return SwayWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.SwayWebDefaultSetRequirement = SwayWebDefaultSetRequirement;
-        var AccessWebDefaultSetRequirement = (function (_super) {
-            __extends(AccessWebDefaultSetRequirement, _super);
-            function AccessWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "partialtablebindings": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1
-                }) || this;
-            }
-            return AccessWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.AccessWebDefaultSetRequirement = AccessWebDefaultSetRequirement;
-        var ExcelIOSDefaultSetRequirement = (function (_super) {
-            __extends(ExcelIOSDefaultSetRequirement, _super);
-            function ExcelIOSDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "documentevents": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return ExcelIOSDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.ExcelIOSDefaultSetRequirement = ExcelIOSDefaultSetRequirement;
-        var WordIOSDefaultSetRequirement = (function (_super) {
-            __extends(WordIOSDefaultSetRequirement, _super);
-            function WordIOSDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "compressedfile": 1.1,
-                    "customxmlparts": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "htmlcoercion": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "ooxmlcoercion": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1,
-                    "textfile": 1.1
-                }) || this;
-            }
-            return WordIOSDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.WordIOSDefaultSetRequirement = WordIOSDefaultSetRequirement;
-        var WordIOSV1DefaultSetRequirement = (function (_super) {
-            __extends(WordIOSV1DefaultSetRequirement, _super);
-            function WordIOSV1DefaultSetRequirement() {
-                var _this = _super.call(this) || this;
-                _this._addSetMap({
-                    "customxmlparts": 1.2,
-                    "wordapi": 1.2
-                });
-                return _this;
-            }
-            return WordIOSV1DefaultSetRequirement;
-        }(WordIOSDefaultSetRequirement));
-        Requirement.WordIOSV1DefaultSetRequirement = WordIOSV1DefaultSetRequirement;
-        var PowerpointIOSDefaultSetRequirement = (function (_super) {
-            __extends(PowerpointIOSDefaultSetRequirement, _super);
-            function PowerpointIOSDefaultSetRequirement() {
-                return _super.call(this, {
-                    "activeview": 1.1,
-                    "compressedfile": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return PowerpointIOSDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.PowerpointIOSDefaultSetRequirement = PowerpointIOSDefaultSetRequirement;
-        var OutlookIOSDefaultSetRequirement = (function (_super) {
-            __extends(OutlookIOSDefaultSetRequirement, _super);
-            function OutlookIOSDefaultSetRequirement() {
-                return _super.call(this, {
-                    "mailbox": 1.1
-                }) || this;
-            }
-            return OutlookIOSDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.OutlookIOSDefaultSetRequirement = OutlookIOSDefaultSetRequirement;
         var RequirementsMatrixFactory = (function () {
             function RequirementsMatrixFactory() {
             }
             RequirementsMatrixFactory.getDefaultRequirementMatrix = function (appContext) {
-                this.initializeDefaultSetMatrix();
                 var defaultRequirementMatrix = undefined;
                 var clientRequirement = appContext.get_requirementMatrix();
-                if (clientRequirement != undefined && clientRequirement.length > 0 && typeof (JSON) !== "undefined") {
+                if (clientRequirement != undefined && clientRequirement.length > 0) {
                     var matrixItem = JSON.parse(appContext.get_requirementMatrix().toLowerCase());
                     defaultRequirementMatrix = new RequirementMatrix(new DefaultSetRequirement(matrixItem));
                 }
                 else {
-                    var appLocator = RequirementsMatrixFactory.getClientFullVersionString(appContext);
-                    if (RequirementsMatrixFactory.DefaultSetArrayMatrix != undefined && RequirementsMatrixFactory.DefaultSetArrayMatrix[appLocator] != undefined) {
-                        defaultRequirementMatrix = new RequirementMatrix(RequirementsMatrixFactory.DefaultSetArrayMatrix[appLocator]);
-                    }
-                    else {
-                        defaultRequirementMatrix = new RequirementMatrix(new DefaultSetRequirement({}));
-                    }
+                    defaultRequirementMatrix = new RequirementMatrix(new DefaultSetRequirement({}));
                 }
                 return defaultRequirementMatrix;
             };
             RequirementsMatrixFactory.getDefaultDialogRequirementMatrix = function (appContext) {
                 var defaultRequirementMatrix = undefined;
                 var clientRequirement = appContext.get_dialogRequirementMatrix();
-                if (clientRequirement != undefined && clientRequirement.length > 0 && typeof (JSON) !== "undefined") {
+                if (clientRequirement != undefined && clientRequirement.length > 0) {
                     var matrixItem = JSON.parse(appContext.get_requirementMatrix().toLowerCase());
                     defaultRequirementMatrix = new RequirementMatrix(new DefaultSetRequirement(matrixItem));
                 }
@@ -3153,80 +2851,6 @@ var OSF;
                 }
                 return defaultRequirementMatrix;
             };
-            RequirementsMatrixFactory.getClientFullVersionString = function (appContext) {
-                var appMinorVersion = appContext.get_appMinorVersion();
-                var appMinorVersionString = "";
-                var appFullVersion = "";
-                var appName = appContext.get_appName();
-                var isIOSClient = appName == 1024 ||
-                    appName == 4096 ||
-                    appName == 8192 ||
-                    appName == 65536;
-                if (isIOSClient && appContext.get_appVersion() == 1) {
-                    if (appName == 4096 && appMinorVersion >= 15) {
-                        appFullVersion = "16.00.01";
-                    }
-                    else {
-                        appFullVersion = "16.00";
-                    }
-                }
-                else if (appContext.get_appName() == 64) {
-                    appFullVersion = appContext.get_appVersion();
-                }
-                else {
-                    if (appMinorVersion < 10) {
-                        appMinorVersionString = "0" + appMinorVersion;
-                    }
-                    else {
-                        appMinorVersionString = "" + appMinorVersion;
-                    }
-                    appFullVersion = appContext.get_appVersion() + "." + appMinorVersionString;
-                }
-                return appContext.get_appName() + "-" + appFullVersion;
-            };
-            RequirementsMatrixFactory.initializeDefaultSetMatrix = function () {
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Excel_RCLIENT_1600] = new ExcelClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_RCLIENT_1600] = new WordClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.PowerPoint_RCLIENT_1600] = new PowerpointClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Excel_RCLIENT_1601] = new ExcelClientV1DefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_RCLIENT_1601] = new WordClientV1DefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.PowerPoint_RCLIENT_1601] = new PowerpointClientV1DefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Outlook_RCLIENT_1600] = new OutlookClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Excel_WAC_1600] = new ExcelWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_WAC_1600] = new WordWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Outlook_WAC_1600] = new OutlookWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Outlook_WAC_1601] = new OutlookWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Project_RCLIENT_1600] = new ProjectClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Access_WAC_1600] = new AccessWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.PowerPoint_WAC_1600] = new PowerpointWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Excel_IOS_1600] = new ExcelIOSDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.SWAY_WAC_1600] = new SwayWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_IOS_1600] = new WordIOSDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_IOS_16001] = new WordIOSV1DefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.PowerPoint_IOS_1600] = new PowerpointIOSDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Outlook_IOS_1600] = new OutlookIOSDefaultSetRequirement();
-            };
-            RequirementsMatrixFactory.Excel_RCLIENT_1600 = "1-16.00";
-            RequirementsMatrixFactory.Excel_RCLIENT_1601 = "1-16.01";
-            RequirementsMatrixFactory.Word_RCLIENT_1600 = "2-16.00";
-            RequirementsMatrixFactory.Word_RCLIENT_1601 = "2-16.01";
-            RequirementsMatrixFactory.PowerPoint_RCLIENT_1600 = "4-16.00";
-            RequirementsMatrixFactory.PowerPoint_RCLIENT_1601 = "4-16.01";
-            RequirementsMatrixFactory.Outlook_RCLIENT_1600 = "8-16.00";
-            RequirementsMatrixFactory.Excel_WAC_1600 = "16-16.00";
-            RequirementsMatrixFactory.Word_WAC_1600 = "32-16.00";
-            RequirementsMatrixFactory.Outlook_WAC_1600 = "64-16.00";
-            RequirementsMatrixFactory.Outlook_WAC_1601 = "64-16.01";
-            RequirementsMatrixFactory.Project_RCLIENT_1600 = "128-16.00";
-            RequirementsMatrixFactory.Access_WAC_1600 = "256-16.00";
-            RequirementsMatrixFactory.PowerPoint_WAC_1600 = "512-16.00";
-            RequirementsMatrixFactory.Excel_IOS_1600 = "1024-16.00";
-            RequirementsMatrixFactory.SWAY_WAC_1600 = "2048-16.00";
-            RequirementsMatrixFactory.Word_IOS_1600 = "4096-16.00";
-            RequirementsMatrixFactory.Word_IOS_16001 = "4096-16.00.01";
-            RequirementsMatrixFactory.PowerPoint_IOS_1600 = "8192-16.00";
-            RequirementsMatrixFactory.Outlook_IOS_1600 = "65536-16.00";
-            RequirementsMatrixFactory.DefaultSetArrayMatrix = {};
             return RequirementsMatrixFactory;
         }());
         Requirement.RequirementsMatrixFactory = RequirementsMatrixFactory;
@@ -3376,11 +3000,13 @@ var OSF;
                         this._osfControlContext = window.external.GetContext();
                     }
                     else {
+                        console.error("There is no window.external.");
                         OSF.Utility.trace(warningText);
                         return null;
                     }
                 }
                 catch (e) {
+                    console.error("Error when call window.external.GetContext() :" + JSON.stringify(e));
                     OSF.Utility.trace(warningText);
                     return null;
                 }
@@ -3456,7 +3082,7 @@ var OSF;
                 }
             }
             eToken = eToken ? eToken.toString() : "";
-            var settingsFunc = function () { return _this.initializeSettings(); };
+            var settingsFunc = function () { return _this.getSerializedSettings(); };
             var officeThemeFunc = function () { return _this.getOfficeTheme(); };
             var returnedContext = new OSF.OfficeAppContext(id, appType, version, UILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, undefined, undefined, undefined, undefined, dialogRequirementMatrix, sdxFeatureGates, officeThemeFunc);
             onSuccess(returnedContext);
@@ -3476,6 +3102,26 @@ var OSF;
         RichClientInitializationHelper.prototype.createAsyncMethodExecutor = function () {
             return new OSF.SafeArrayAsyncMethodExecutor(this._clientHostController);
         };
+        RichClientInitializationHelper.prototype.createClientSettingsManager = function () {
+            var manager = new OSF.RichClientSettingsManager(this.getOsfControlContext());
+            return manager;
+        };
+        RichClientInitializationHelper.prototype.getSerializedSettings = function () {
+            var osfControlContext = this.getOsfControlContext();
+            var keys = [];
+            var values = [];
+            if (typeof OsfOMToken != 'undefined' && OsfOMToken) {
+                osfControlContext.GetSettings(OsfOMToken).Read(keys, values);
+            }
+            else {
+                osfControlContext.GetSettings().Read(keys, values);
+            }
+            var serializedSettings = {};
+            for (var index = 0; index < keys.length; index++) {
+                serializedSettings[keys[index]] = values[index];
+            }
+            return serializedSettings;
+        };
         RichClientInitializationHelper.prototype.initializeSettings = function () {
             var osfControlContext = this.getOsfControlContext();
             var keys = [];
@@ -3490,7 +3136,7 @@ var OSF;
             for (var index = 0; index < keys.length; index++) {
                 serializedSettings[keys[index]] = values[index];
             }
-            return this.deserializeSettings(serializedSettings);
+            return this.createSettings(serializedSettings);
         };
         RichClientInitializationHelper.prototype.getOfficeTheme = function () {
             var osfControlContext = this.getOsfControlContext();
@@ -3507,6 +3153,57 @@ var OSF;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
+    var RichClientSettingsManager = (function () {
+        function RichClientSettingsManager(_osfClientContext) {
+            this._osfClientContext = _osfClientContext;
+        }
+        RichClientSettingsManager.prototype.read = function (onComplete) {
+            var keys = [];
+            var values = [];
+            var osfControlContext = this._osfClientContext;
+            if (typeof OsfOMToken != 'undefined' && OsfOMToken) {
+                osfControlContext.GetSettings(OsfOMToken).Read(keys, values);
+            }
+            else {
+                osfControlContext.GetSettings().Read(keys, values);
+            }
+            var serializedSettings = {};
+            for (var index = 0; index < keys.length; index++) {
+                serializedSettings[keys[index]] = values[index];
+            }
+            if (onComplete) {
+                onComplete(0, serializedSettings);
+            }
+        };
+        RichClientSettingsManager.prototype.write = function (serializedSettings, onComplete) {
+            var keys = [];
+            var values = [];
+            for (var key in serializedSettings) {
+                keys.push(key);
+                values.push(serializedSettings[key]);
+            }
+            var osfControlContext = this._osfClientContext;
+            var settingObj;
+            if (typeof OsfOMToken != 'undefined' && OsfOMToken) {
+                settingObj = osfControlContext.GetSettings(OsfOMToken);
+            }
+            else {
+                settingObj = osfControlContext.GetSettings();
+            }
+            if (typeof settingObj.WriteAsync != 'undefined') {
+                settingObj.WriteAsync(keys, values, onComplete);
+            }
+            else {
+                settingObj.Write(keys, values);
+                onComplete(0);
+            }
+        };
+        return RichClientSettingsManager;
+    }());
+    OSF.RichClientSettingsManager = RichClientSettingsManager;
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
     var SafeArrayAsyncMethodExecutor = (function (_super) {
         __extends(SafeArrayAsyncMethodExecutor, _super);
         function SafeArrayAsyncMethodExecutor(_clientHostController) {
@@ -3514,17 +3211,6 @@ var OSF;
             _this._clientHostController = _clientHostController;
             return _this;
         }
-        SafeArrayAsyncMethodExecutor.prototype.fromSafeArray = function (value) {
-            var ret = value;
-            if (value != null && value.toArray) {
-                var arrayResult = value.toArray();
-                ret = new Array(arrayResult.length);
-                for (var i = 0; i < arrayResult.length; i++) {
-                    ret[i] = this.fromSafeArray(arrayResult[i]);
-                }
-            }
-            return ret;
-        };
         SafeArrayAsyncMethodExecutor.prototype.executeAsync = function (id, dataTransform, callback) {
             var _this = this;
             try {
@@ -3532,7 +3218,7 @@ var OSF;
                 this._clientHostController.execute(id, dataTransform.toSafeArrayHost(), function (hostResponseArgsNative, resultCode) {
                     var result;
                     var status;
-                    var hostResponseArgs = _this.fromSafeArray(hostResponseArgsNative);
+                    var hostResponseArgs = OSF.Utility.fromSafeArray(hostResponseArgsNative);
                     if (typeof hostResponseArgs === "number") {
                         result = [];
                         status = hostResponseArgs;
@@ -3594,13 +3280,13 @@ var OSF;
             var _this = this;
             try {
                 this._clientHostController.registerEvent(id, eventType, targetId, function (eventDispId, payload) {
-                    var eventPayload = _this.fromSafeArray(payload);
+                    var eventPayload = OSF.Utility.fromSafeArray(payload);
                     var eventArgs = dataTransform.fromSafeArrayHost(eventPayload);
                     handler(eventArgs);
                 }, function (hostResponseArgsNative) {
                     var result;
                     var status;
-                    var hostResponseArgs = _this.fromSafeArray(hostResponseArgsNative);
+                    var hostResponseArgs = OSF.Utility.fromSafeArray(hostResponseArgsNative);
                     if (typeof hostResponseArgs === "number") {
                         result = [];
                         status = hostResponseArgs;
@@ -3623,7 +3309,7 @@ var OSF;
                 this._clientHostController.unregisterEvent(id, eventType, targetId, function (hostResponseArgsNative, resultCode) {
                     var result;
                     var status;
-                    var hostResponseArgs = _this.fromSafeArray(hostResponseArgsNative);
+                    var hostResponseArgs = OSF.Utility.fromSafeArray(hostResponseArgsNative);
                     if (typeof hostResponseArgs === "number") {
                         result = [];
                         status = hostResponseArgs;
@@ -3736,9 +3422,30 @@ var OSF;
 var Office;
 (function (Office) {
     var Settings = (function () {
-        function Settings(settings) {
+        function Settings(settings, _clientSettingsManager) {
+            var _this = this;
+            this._clientSettingsManager = _clientSettingsManager;
             settings = settings || {};
             this._settings = settings;
+            this._eventDispatch = new OSF.EventDispatch([
+                {
+                    id: 1,
+                    type: OSF.EventType.SettingsChanged,
+                    getTargetId: function () { return ''; },
+                    fromSafeArrayHost: function (payload) {
+                        return {
+                            type: OSF.EventType.SettingsChanged,
+                            settings: _this
+                        };
+                    },
+                    fromWebHost: function (payload) {
+                        return {
+                            type: OSF.EventType.SettingsChanged,
+                            settings: _this
+                        };
+                    }
+                }
+            ]);
         }
         Settings.prototype.cacheSessionSettings = function (settings) {
             var osfSessionStorage = OSF.OUtil.getSessionStorage();
@@ -3761,10 +3468,34 @@ var Office;
             this.cacheSessionSettings(this._settings);
         };
         Settings.prototype.saveAsync = function (callback) {
-            throw OSF.Utility.createNotImplementedException();
+            var settingsManager = this._clientSettingsManager;
+            var serializedSettings = OSF.OUtil.serializeSettings(this._settings);
+            settingsManager.write(serializedSettings, function (errorCode) {
+                var result = OSF.Utility.asyncResultFromErrorCode(errorCode);
+                if (callback) {
+                    callback(result);
+                }
+            });
         };
         Settings.prototype.refreshAsync = function (callback) {
-            throw OSF.Utility.createNotImplementedException();
+            var _this = this;
+            var settingsManager = this._clientSettingsManager;
+            settingsManager.read(function (errorCode, serializedSettings) {
+                var result = OSF.Utility.asyncResultFromErrorCode(errorCode);
+                if (result.status === Office.AsyncResultStatus.succeeded) {
+                    _this._settings = OSF.OUtil.deserializeSettings(serializedSettings);
+                    result.value = _this;
+                }
+                if (callback) {
+                    callback(result);
+                }
+            });
+        };
+        Settings.prototype.addHandlerAsync = function (eventType, handler, callback) {
+            OSF.EventHelper.addEventHandler(eventType, handler, callback, this._eventDispatch);
+        };
+        Settings.prototype.removeHandlerAsync = function (eventType, handler, callback) {
+            OSF.EventHelper.removeEventHandler(eventType, handler, callback, this._eventDispatch);
         };
         Settings.prototype.toJSON = function () {
             return this._settings;
@@ -3876,6 +3607,34 @@ var OSF;
             return false;
         }
         Utility.stringEndsWith = stringEndsWith;
+        function fromSafeArray(value) {
+            var ret = value;
+            if (value != null && value.toArray) {
+                var arrayResult = value.toArray();
+                ret = new Array(arrayResult.length);
+                for (var i = 0; i < arrayResult.length; i++) {
+                    ret[i] = fromSafeArray(arrayResult[i]);
+                }
+            }
+            return ret;
+        }
+        Utility.fromSafeArray = fromSafeArray;
+        function asyncResultFromErrorCode(errorCode) {
+            if (errorCode === 0) {
+                return {
+                    status: Office.AsyncResultStatus.succeeded
+                };
+            }
+            else {
+                return {
+                    status: Office.AsyncResultStatus.failed,
+                    error: {
+                        code: errorCode
+                    }
+                };
+            }
+        }
+        Utility.asyncResultFromErrorCode = asyncResultFromErrorCode;
         Utility._DebugXdm = false;
     })(Utility = OSF.Utility || (OSF.Utility = {}));
 })(OSF || (OSF = {}));
@@ -3937,6 +3696,9 @@ var OSF;
         WebClientHostController.prototype.execute = function (id, params, callback) {
             var _this = this;
             var hostCallArgs = params;
+            if (!hostCallArgs) {
+                hostCallArgs = {};
+            }
             hostCallArgs.DdaMethod = {
                 ControlId: this._webAppState.id,
                 DispatchId: id,
@@ -4046,6 +3808,96 @@ var OSF;
         return WebClientHostController;
     }());
     OSF.WebClientHostController = WebClientHostController;
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
+    var WebClientSettingsManager = (function () {
+        function WebClientSettingsManager() {
+        }
+        WebClientSettingsManager.prototype.read = function (onComplete) {
+            var asyncMethodExecutor = OSF._OfficeAppFactory.getAsyncMethodExecutor();
+            var dataTransform = {
+                toSafeArrayHost: function () {
+                    return [];
+                },
+                fromSafeArrayHost: function (payload) {
+                    return null;
+                },
+                toWebHost: function () {
+                    return {};
+                },
+                fromWebHost: function (payload) {
+                    return payload.Properties.Settings;
+                }
+            };
+            var callback = function (result) {
+                if (result.status === Office.AsyncResultStatus.succeeded) {
+                    var serializedSettings = {};
+                    var isExcelWeb = false;
+                    if (OSF._OfficeAppFactory.getHostInfo().hostPlatform === OSF.HostInfoPlatform.web &&
+                        OSF._OfficeAppFactory.getHostInfo().hostType === OSF.HostInfoHostType.excel) {
+                        isExcelWeb = true;
+                    }
+                    for (var i = 0; i < result.value.length; i++) {
+                        var entry = result.value[i];
+                        if (isExcelWeb) {
+                            serializedSettings[entry.Name] = entry.Value;
+                        }
+                        else {
+                            serializedSettings[entry[0]] = entry[1];
+                        }
+                    }
+                    onComplete(0, serializedSettings);
+                }
+                else {
+                    var errorCode = result.error.code;
+                    onComplete(errorCode, {});
+                }
+            };
+            asyncMethodExecutor.executeAsync(75, dataTransform, callback);
+        };
+        WebClientSettingsManager.prototype.write = function (serializedSettings, onComplete) {
+            var asyncMethodExecutor = OSF._OfficeAppFactory.getAsyncMethodExecutor();
+            var properties = [];
+            for (var key in serializedSettings) {
+                var entry = [];
+                entry.push(key);
+                entry.push(serializedSettings[key]);
+                properties.push(entry);
+            }
+            var dataTransform = {
+                toSafeArrayHost: function () {
+                    return null;
+                },
+                fromSafeArrayHost: function (payload) {
+                    return null;
+                },
+                toWebHost: function () {
+                    return {
+                        DdaSettingsMethod: {
+                            OverwriteIfStale: true,
+                            Properties: properties
+                        }
+                    };
+                },
+                fromWebHost: function (payload) {
+                    return null;
+                }
+            };
+            var callback = function (result) {
+                if (result.status === Office.AsyncResultStatus.succeeded) {
+                    onComplete(0);
+                }
+                else {
+                    var errorCode = result.error.code;
+                    onComplete(errorCode);
+                }
+            };
+            asyncMethodExecutor.executeAsync(76, dataTransform, callback);
+        };
+        return WebClientSettingsManager;
+    }());
+    OSF.WebClientSettingsManager = WebClientSettingsManager;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
@@ -4216,7 +4068,7 @@ var OSF;
                     }
                     appContext.eToken = appContext.eToken ? appContext.eToken : "";
                     var settingsFunc = function () {
-                        return _this.deserializeSettings(_this._serializedSettings);
+                        return _this._serializedSettings;
                     };
                     var returnedContext = new OSF.OfficeAppContext(appContext._id, appContext._appName, appContext._appVersion, appContext._appUILocale, appContext._dataLocale, appContext._docUrl, appContext._clientMode, settingsFunc, appContext._reason, appContext._osfControlType, appContext._eToken, appContext._correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, appContext._hostCustomMessage, appContext._hostFullVersion, appContext._clientWindowHeight, appContext._clientWindowWidth, appContext._addinName, appContext._appDomains, appContext._dialogRequirementMatrix, appContext._featureGates);
                     onSuccess(returnedContext);
@@ -4258,6 +4110,9 @@ var OSF;
         };
         WebInitializationHelper.prototype.createAsyncMethodExecutor = function () {
             return new OSF.WebAsyncMethodExecutor(this._clientHostController);
+        };
+        WebInitializationHelper.prototype.createClientSettingsManager = function () {
+            return new OSF.WebClientSettingsManager();
         };
         WebInitializationHelper.prototype.addOrRemoveEventListenersForWindow = function (isAdd) {
             var me = this;
@@ -4343,6 +4198,51 @@ var OSF;
         return WebInitializationHelper;
     }(OSF.InitializationHelper));
     OSF.WebInitializationHelper = WebInitializationHelper;
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
+    var WebkitClientSettingsManager = (function () {
+        function WebkitClientSettingsManager(_initializationHelper, _scriptMessager) {
+            this._initializationHelper = _initializationHelper;
+            this._scriptMessager = _scriptMessager;
+        }
+        WebkitClientSettingsManager.prototype.read = function (onComplete) {
+            var keys = [];
+            var values = [];
+            var initializationHelper = this._initializationHelper;
+            var onGetAppContextSuccess = function (appContext) {
+                if (onComplete) {
+                    var serializedSettings = appContext.get_settingsFunc()();
+                    onComplete(0, serializedSettings);
+                }
+            };
+            var onGetAppContextError = function (e) {
+                if (onComplete) {
+                    onComplete(5001, {});
+                }
+            };
+            initializationHelper.getAppContext(null, onGetAppContextSuccess, onGetAppContextError);
+        };
+        WebkitClientSettingsManager.prototype.write = function (serializedSettings, onComplete) {
+            var hostParams = {};
+            var keys = [];
+            var values = [];
+            for (var key in serializedSettings) {
+                keys.push(key);
+                values.push(serializedSettings[key]);
+            }
+            hostParams["keys"] = keys;
+            hostParams["values"] = values;
+            var onWriteCompleted = function onWriteCompleted(status) {
+                if (onComplete) {
+                    onComplete(status[0]);
+                }
+            };
+            this._scriptMessager.invokeMethod(OSF.Webkit.MessageHandlerName, OSF.Webkit.MethodId.WriteSettings, hostParams, onWriteCompleted);
+        };
+        return WebkitClientSettingsManager;
+    }());
+    OSF.WebkitClientSettingsManager = WebkitClientSettingsManager;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
@@ -4567,11 +4467,11 @@ var OSF;
                 var appContextProperties = OSF.Webkit.AppContextProperties;
                 var appType = appContext[appContextProperties.AppType];
                 var hostSettings = appContext[appContextProperties.Settings];
-                var serializedSettings = {};
+                _this._serializedSettings = {};
                 var keys = hostSettings[0];
                 var values = hostSettings[1];
                 for (var index = 0; index < keys.length; index++) {
-                    serializedSettings[keys[index]] = values[index];
+                    _this._serializedSettings[keys[index]] = values[index];
                 }
                 var id = appContext[appContextProperties.SolutionReferenceId];
                 var version = appContext[appContextProperties.MajorVersion];
@@ -4592,7 +4492,7 @@ var OSF;
                 var hostCustomMessage = appContext[appContextProperties.HostCustomMessage];
                 var hostFullVersion = appContext[appContextProperties.HostFullVersion];
                 var settingsFunc = function () {
-                    return _this.deserializeSettings(serializedSettings);
+                    return _this._serializedSettings;
                 };
                 returnedContext = new OSF.OfficeAppContext(id, appType, version, UILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, undefined, undefined, undefined, undefined, undefined, undefined);
                 onSuccess(returnedContext);
@@ -4614,6 +4514,9 @@ var OSF;
         };
         WebkitInitializationHelper.prototype.createAsyncMethodExecutor = function () {
             return new OSF.SafeArrayAsyncMethodExecutor(this.createClientHostController());
+        };
+        WebkitInitializationHelper.prototype.createClientSettingsManager = function () {
+            return new OSF.WebkitClientSettingsManager(this, OSF.ScriptMessaging.GetScriptMessenger());
         };
         return WebkitInitializationHelper;
     }(OSF.InitializationHelper));

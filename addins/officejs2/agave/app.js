@@ -1,4 +1,4 @@
-_perfData.appJsExecutionStart = performance.now();
+_perfData.appJsExecutionStart = Date.now();
 
 var _bodyOnLoadCalled = false;
 var _pendingLogs = [];
@@ -20,7 +20,7 @@ function log(text) {
 }
 
 Office.onReady(function (hostAndPlatform) {
-    _perfData.officeOnReadyApp = performance.now();
+    _perfData.officeOnReadyApp = Date.now();
     _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.start;
     log('_perfData');
     log(JSON.stringify(_perfData));
@@ -201,9 +201,9 @@ function BtnTestEvent2Click() {
 function test_settings_updateUsingV2() {
     Excel.run(function (ctx) {
         ctx.workbook.settings.add('stringKey', 'Hello');
-        // ctx.workbook.settings.add('intKey', 1000);
-        // ctx.workbook.settings.add('dateKey', new Date());
-        ctx.sync()
+        ctx.workbook.settings.add('intKey', 1000);
+        ctx.workbook.settings.add('dateKey', new Date());
+        return ctx.sync()
             .then(function () {
                 log("Done");
             })
@@ -221,6 +221,43 @@ function test_settings_readV1() {
     log(intValue);
     log(dateValue);
 }
+
+function test_settings_updateUsingV1() {
+    Office.context.document.settings.set('stringKey', 'HelloV1');
+    Office.context.document.settings.set('intKey', 2000);
+    var now = new Date();
+    var previousDate = new Date(now);
+    previousDate.setDate(now.getDate()  - 2);
+    Office.context.document.settings.set('dateKey', previousDate);
+    Office.context.document.settings.saveAsync(function(result) {
+        log('Saved:' + result.status);
+        test_settings_refreshUsingV1();
+    });
+}
+
+function test_settings_refreshUsingV1() {
+    Office.context.document.settings.refreshAsync(function(result) {
+        log('Refreshed:' + result.status);
+        test_settings_readV1();
+    });
+}
+
+function settingsChangedHandler() {
+    log('Settings Changed');
+}
+
+function test_settings_addChangedHandler() {    
+    Office.context.document.settings.addHandlerAsync('settingsChanged', settingsChangedHandler, function(result) {
+        log('Add SettingsChanged:' + result.status);
+    });
+}
+
+function test_settings_removeChangedHandler() {    
+    Office.context.document.settings.removeHandlerAsync('settingsChanged', settingsChangedHandler, function(result) {
+        log('Remove SettingsChanged:' + result.status);
+    });
+}
+
 function BtnClearLogClick() {
     document.getElementById('DivLog').innerHTML = '';
 }
@@ -231,4 +268,4 @@ function appcmdTestButton(args) {
     args.completed();
 }
 
-_perfData.appJsExecutionEnd = performance.now();
+_perfData.appJsExecutionEnd = Date.now();
