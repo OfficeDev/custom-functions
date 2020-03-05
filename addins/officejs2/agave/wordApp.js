@@ -18,7 +18,7 @@ function log(text) {
 }
 
 Office.onReady(function (hostAndPlatform) {
-    _perfData.officeOnReadyApp = Date.now();
+    _perfData.officeOnReadyApp = performance.now();
     _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.start;
     log(JSON.stringify(_perfData));
     if (typeof(OSFPerformance) !== 'undefined') {

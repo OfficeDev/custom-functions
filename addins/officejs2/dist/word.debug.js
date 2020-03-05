@@ -42,9 +42,15 @@ var __extends = (this && this.__extends) || (function () {
 var OSFPerformance;
 (function (OSFPerformance) {
     function now() {
-        return Date.now();
+        if (performance && performance.now) {
+            return performance.now();
+        }
+        else {
+            return 0;
+        }
     }
     OSFPerformance.now = now;
+    OSFPerformance.officeExecuteStartDate = Date.now();
     OSFPerformance.officeExecuteStart = now();
     OSFPerformance.officeExecuteEnd = 0;
     OSFPerformance.hostInitializationStart = 0;
@@ -906,6 +912,7 @@ var OSFPerfUtil;
                     dataFields = dataFields.concat(prepareDataFieldsForOtel(officePerfResource_1, "OfficeJs"));
                 }
                 dataFields = dataFields.concat([
+                    oteljs.makeDoubleDataField("officeExecuteStartDate", OSFPerformance.officeExecuteStartDate),
                     oteljs.makeDoubleDataField("officeExecuteStart", OSFPerformance.officeExecuteStart),
                     oteljs.makeDoubleDataField("officeExecuteEnd", OSFPerformance.officeExecuteEnd),
                     oteljs.makeDoubleDataField("hostInitializationStart", OSFPerformance.hostInitializationStart),
@@ -3833,18 +3840,13 @@ var OSF;
             var callback = function (result) {
                 if (result.status === Office.AsyncResultStatus.succeeded) {
                     var serializedSettings = {};
-                    var isExcelWeb = false;
-                    if (OSF._OfficeAppFactory.getHostInfo().hostPlatform === OSF.HostInfoPlatform.web &&
-                        OSF._OfficeAppFactory.getHostInfo().hostType === OSF.HostInfoHostType.excel) {
-                        isExcelWeb = true;
-                    }
                     for (var i = 0; i < result.value.length; i++) {
                         var entry = result.value[i];
-                        if (isExcelWeb) {
-                            serializedSettings[entry.Name] = entry.Value;
+                        if (Array.isArray(entry)) {
+                            serializedSettings[entry[0]] = entry[1];
                         }
                         else {
-                            serializedSettings[entry[0]] = entry[1];
+                            serializedSettings[entry.Name] = entry.Value;
                         }
                     }
                     onComplete(0, serializedSettings);

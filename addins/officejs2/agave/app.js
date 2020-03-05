@@ -1,4 +1,4 @@
-_perfData.appJsExecutionStart = Date.now();
+_perfData.appJsExecutionStart = performance.now();
 
 var _bodyOnLoadCalled = false;
 var _pendingLogs = [];
@@ -20,7 +20,7 @@ function log(text) {
 }
 
 Office.onReady(function (hostAndPlatform) {
-    _perfData.officeOnReadyApp = Date.now();
+    _perfData.officeOnReadyApp = performance.now();
     _perfData.officeOnReadyAppDuration = _perfData.officeOnReadyApp - _perfData.start;
     log('_perfData');
     log(JSON.stringify(_perfData));
@@ -268,4 +268,4 @@ function appcmdTestButton(args) {
     args.completed();
 }
 
-_perfData.appJsExecutionEnd = Date.now();
+_perfData.appJsExecutionEnd = performance.now();

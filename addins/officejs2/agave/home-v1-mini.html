@@ -4,23 +4,23 @@
     <title>Office.js V1 Mini</title>
     <script type='text/javascript'>
         var _perfData = {};
-        _perfData.start = Date.now();
+        _perfData.start = performance.now();
     </script>
     <script src="https://unpkg.com/@microsoft/office-js@1.1.37-custom.29/dist/office.js" type="text/javascript"></script>
     <script type='text/javascript'>
-        _perfData.officeJsEnd = Date.now();
+        _perfData.officeJsEnd = performance.now();
         _perfData.officeJsDuration = _perfData.officeJsEnd - _perfData.start;
         Office.onReady(function (hostAndPlatform) {
-            _perfData.officeOnReady = Date.now();
+            _perfData.officeOnReady = performance.now();
             _perfData.officeOnReadyDuration = _perfData.officeOnReady - _perfData.start;
         });
     </script>
     <script type='text/javascript'>
-        _perfData.appJsStart = Date.now();
+        _perfData.appJsStart = performance.now();
     </script>
     <script src='app.js' type='text/javascript'></script>
     <script type='text/javascript'>
-        _perfData.appJsEnd = Date.now();
+        _perfData.appJsEnd = performance.now();
     </script>
 </head>
 
