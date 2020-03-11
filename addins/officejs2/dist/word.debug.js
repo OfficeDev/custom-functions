@@ -2019,7 +2019,7 @@ var OSF;
             this._actionName = actionName;
             this._conversationId = conversationId;
             this._correlationId = correlationId;
-            this._origin = window.location.href;
+            this._origin = window.location.origin;
             if (typeof data === "undefined") {
                 this._data = null;
             }
