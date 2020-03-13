@@ -6,7 +6,7 @@
         var _perfData = {};
         _perfData.start = performance.now();
     </script>
-    <script src='https://fa000000059.resources.office.net/f7024bdc-7caf-4ca8-807d-2908f09640d6/1.0.2002.26002/en-us_web/src/excel.js' type='text/javascript'></script>
+    <script src='https://appsforoffice.microsoft.com/lib/beta/hosted/excel.js' type='text/javascript'></script>
     <script type='text/javascript'>
         _perfData.excelJsEnd = performance.now();
         _perfData.excelJsDuration = _perfData.excelJsEnd - _perfData.start;
@@ -40,7 +40,10 @@
         <input type="button" onclick="BtnTestEventClick()" value="Event" />
         <input type="button" onclick="BtnTestEvent2Click()" value="Event Sheet Activated" />
         <input type="button" onclick="test_settings_readV1()" value="test_settings_readV1" />
+        <input type="button" onclick="test_settings_updateUsingV1()" value="test_settings_updateV1" />
         <input type="button" onclick="test_settings_updateUsingV2()" value="test_settings_updateUsingV2" />
+        <input type="button" onclick="test_settings_addChangedHandler()" value="test_settings_addChangedHandler" />
+        <input type="button" onclick="test_settings_removeChangedHandler()" value="test_settings_removeChangedHandler" />
     </div>
     <div>
         <div>

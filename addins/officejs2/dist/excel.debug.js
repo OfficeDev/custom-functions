@@ -42,7 +42,7 @@ var __extends = (this && this.__extends) || (function () {
 var OSFPerformance;
 (function (OSFPerformance) {
     function now() {
-        if (performance && performance.now) {
+        if (typeof (performance) !== 'undefined' && performance.now) {
             return performance.now();
         }
         else {
@@ -50,6 +50,7 @@ var OSFPerformance;
         }
     }
     OSFPerformance.now = now;
+    OSFPerformance.officeExecuteStartDate = Date.now();
     OSFPerformance.officeExecuteStart = now();
     OSFPerformance.officeExecuteEnd = 0;
     OSFPerformance.hostInitializationStart = 0;
@@ -366,18 +367,20 @@ var OSF;
     }());
     OSF.Constants = Constants;
 })(OSF || (OSF = {}));
-var CustomFunctionMappings = window.CustomFunctionMappings || {};
+var CustomFunctionMappings;
+(function (CustomFunctionMappings) {
+})(CustomFunctionMappings || (CustomFunctionMappings = {}));
 var CustomFunctions;
 (function (CustomFunctions) {
     function delayInitialization() {
-        CustomFunctionMappings['__delay__'] = true;
+        CustomFunctionMappings.__delay__ = true;
     }
     CustomFunctions.delayInitialization = delayInitialization;
     ;
     CustomFunctions._association = new OSF.Association();
     function associate() {
         CustomFunctions._association.associate.apply(CustomFunctions._association, arguments);
-        delete CustomFunctionMappings['__delay__'];
+        delete CustomFunctionMappings.__delay__;
     }
     CustomFunctions.associate = associate;
     ;
@@ -411,7 +414,6 @@ var OSF;
     var EventDispatch = (function () {
         function EventDispatch(eventInfos) {
             this._eventInfos = {};
-            this._eventHandlers = {};
             this._queuedEventsArgs = {};
             this._eventHandlers = {};
             this._queuedEventsArgs = {};
@@ -545,9 +547,11 @@ var OSF;
             var dispId = 0;
             function onEnsureRegistration(status) {
                 if (status == 0) {
-                    var added = eventDispatch.addEventHandler(eventType, handler);
-                    if (!added) {
-                        status = 5010;
+                    if (!eventDispatch.hasEventHandler(eventType, handler)) {
+                        var added = eventDispatch.addEventHandler(eventType, handler);
+                        if (!added) {
+                            status = 5010;
+                        }
                     }
                 }
                 var asyncMethodExecutor = OSF._OfficeAppFactory.getAsyncMethodExecutor();
@@ -723,6 +727,14 @@ var OSF;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
+    var HostInfoHostType;
+    (function (HostInfoHostType) {
+        HostInfoHostType["excel"] = "excel";
+        HostInfoHostType["word"] = "word";
+    })(HostInfoHostType = OSF.HostInfoHostType || (OSF.HostInfoHostType = {}));
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
     var HostInfoPlatform;
     (function (HostInfoPlatform) {
         HostInfoPlatform["web"] = "web";
@@ -753,7 +765,10 @@ var OSF;
         InitializationHelper.prototype.createAsyncMethodExecutor = function () {
             return null;
         };
-        InitializationHelper.prototype.deserializeSettings = function (serializedSettings) {
+        InitializationHelper.prototype.createClientSettingsManager = function () {
+            return null;
+        };
+        InitializationHelper.prototype.createSettings = function (serializedSettings) {
             var osfSessionStorage = OSF.OUtil.getSessionStorage();
             if (osfSessionStorage) {
                 var storageSettings = osfSessionStorage.getItem(OSF._OfficeAppFactory.getCachedSessionSettingsKey());
@@ -766,7 +781,8 @@ var OSF;
                 }
             }
             var deserializedSettings = OSF.OUtil.deserializeSettings(serializedSettings);
-            var settings = new Office.Settings(deserializedSettings);
+            var clientSettingsManager = this.createClientSettingsManager();
+            var settings = new Office.Settings(deserializedSettings, clientSettingsManager);
             return settings;
         };
         InitializationHelper.prototype.prepareApiSurface = function (officeAppContext) {
@@ -788,6 +804,9 @@ var OSF;
         InitializationReason["Inserted"] = "inserted";
         InitializationReason["DocumentOpened"] = "documentOpened";
     })(InitializationReason = OSF.InitializationReason || (OSF.InitializationReason = {}));
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
@@ -856,551 +875,6 @@ var Microsoft;
         })(WebExtension = Office.WebExtension || (Office.WebExtension = {}));
     })(Office = Microsoft.Office || (Microsoft.Office = {}));
 })(Microsoft || (Microsoft = {}));
-var OSFPerfUtil;
-(function (OSFPerfUtil) {
-    function prepareDataFieldsForOtel(resource, name) {
-        name = name + "_Resource";
-        if (oteljs !== undefined) {
-            return [
-                oteljs.makeStringDataField(name + "_name", resource.name),
-                oteljs.makeDoubleDataField(name + "_responseEnd", resource.responseEnd),
-                oteljs.makeDoubleDataField(name + "_responseStart", resource.responseStart),
-                oteljs.makeDoubleDataField(name + "_startTime", resource.startTime),
-                oteljs.makeDoubleDataField(name + "_transferSize", resource.transferSize)
-            ];
-        }
-        return [];
-    }
-    function sendPerformanceTelemetry() {
-        if (OSF.AppTelemetry.enableTelemetry) {
-            var hostPerfResource_1;
-            var officePerfResource_1;
-            var hostSpecificFileName_1 = OSF.LoadScriptHelper.getHostBundleJsName();
-            var resources = performance.getEntriesByType("resource");
-            resources.forEach(function (resource) {
-                if (OSF.Utility.stringEndsWith(resource.name, hostSpecificFileName_1)) {
-                    hostPerfResource_1 = resource;
-                }
-                else if (OSF.Utility.stringEndsWith(resource.name, OSF.ConstantNames.OfficeDebugJS) ||
-                    OSF.Utility.stringEndsWith(resource.name, OSF.ConstantNames.OfficeJS)) {
-                    officePerfResource_1 = resource;
-                }
-            });
-            OTel.OTelLogger.onTelemetryLoaded(function () {
-                var dataFields = [];
-                if (hostPerfResource_1) {
-                    dataFields = dataFields.concat(prepareDataFieldsForOtel(hostPerfResource_1, "HostJs"));
-                }
-                if (officePerfResource_1) {
-                    dataFields = dataFields.concat(prepareDataFieldsForOtel(officePerfResource_1, "OfficeJs"));
-                }
-                dataFields = dataFields.concat([
-                    oteljs.makeDoubleDataField("officeExecuteStart", OSFPerformance.officeExecuteStart),
-                    oteljs.makeDoubleDataField("officeExecuteEnd", OSFPerformance.officeExecuteEnd),
-                    oteljs.makeDoubleDataField("hostInitializationStart", OSFPerformance.hostInitializationStart),
-                    oteljs.makeDoubleDataField("hostInitializationEnd", OSFPerformance.hostInitializationEnd),
-                    oteljs.makeDoubleDataField("getAppContextStart", OSFPerformance.getAppContextStart),
-                    oteljs.makeDoubleDataField("getAppContextEnd", OSFPerformance.getAppContextEnd),
-                    oteljs.makeDoubleDataField("getAppContextXdmStart", OSFPerformance.getAppContextXdmStart),
-                    oteljs.makeDoubleDataField("getAppContextXdmEnd", OSFPerformance.getAppContextXdmEnd),
-                    oteljs.makeDoubleDataField("createOMEnd", OSFPerformance.createOMEnd),
-                    oteljs.makeDoubleDataField("officeOnReady", OSFPerformance.officeOnReady)
-                ]);
-                Microsoft.Office.WebExtension.sendTelemetryEvent({
-                    eventName: "Office.Extensibility.OfficeJs.JSPerformanceTelemetryV06",
-                    dataFields: dataFields,
-                    eventFlags: {
-                        dataCategories: oteljs.DataCategories.ProductServiceUsage,
-                        diagnosticLevel: oteljs.DiagnosticLevel.FullEvent
-                    }
-                });
-            });
-        }
-    }
-    OSFPerfUtil.sendPerformanceTelemetry = sendPerformanceTelemetry;
-})(OSFPerfUtil || (OSFPerfUtil = {}));
-var OSF;
-(function (OSF) {
-    var OUtil;
-    (function (OUtil) {
-        var _uniqueId = -1;
-        var _xdmInfoKey = '&_xdm_Info=';
-        var _serializerVersionKey = '&_serializer_version=';
-        var _xdmSessionKeyPrefix = '_xdm_';
-        var _serializerVersionKeyPrefix = '_serializer_version=';
-        var _fragmentSeparator = '#';
-        var _fragmentInfoDelimiter = '&';
-        var _loadedScripts = {};
-        var _defaultScriptLoadingTimeout = 30000;
-        var _safeSessionStorage;
-        var _safeLocalStorage;
-        var Guid;
-        (function (Guid) {
-            var hexCode = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
-            function generateNewGuid() {
-                var result = "";
-                var tick = (new Date()).getTime();
-                var index = 0;
-                for (; index < 32 && tick > 0; index++) {
-                    if (index == 8 || index == 12 || index == 16 || index == 20) {
-                        result += "-";
-                    }
-                    result += hexCode[tick % 16];
-                    tick = Math.floor(tick / 16);
-                }
-                for (; index < 32; index++) {
-                    if (index == 8 || index == 12 || index == 16 || index == 20) {
-                        result += "-";
-                    }
-                    result += hexCode[Math.floor(Math.random() * 16)];
-                }
-                return result;
-            }
-            Guid.generateNewGuid = generateNewGuid;
-        })(Guid = OUtil.Guid || (OUtil.Guid = {}));
-        function isArray(obj) {
-            return Object.prototype.toString.apply(obj) === "[object Array]";
-        }
-        OUtil.isArray = isArray;
-        function isFunction(obj) {
-            return Object.prototype.toString.apply(obj) === "[object Function]";
-        }
-        OUtil.isFunction = isFunction;
-        function isDate(obj) {
-            return Object.prototype.toString.apply(obj) === "[object Date]";
-        }
-        OUtil.isDate = isDate;
-        function addEventListener(element, eventName, listener) {
-            if (element.addEventListener) {
-                element.addEventListener(eventName, listener, false);
-            }
-            else if (element.attachEvent) {
-                element.attachEvent("on" + eventName, listener);
-            }
-            else {
-                throw new Error("Cannot attach event");
-            }
-        }
-        OUtil.addEventListener = addEventListener;
-        function removeEventListener(element, eventName, listener) {
-            if (element.removeEventListener) {
-                element.removeEventListener(eventName, listener, false);
-            }
-            else if (element.detachEvent) {
-                element.detachEvent("on" + eventName, listener);
-            }
-            else {
-                throw new Error("Cannot remove event");
-            }
-        }
-        OUtil.removeEventListener = removeEventListener;
-        var DateJSONPrefix = "Date(";
-        var DataJSONSuffix = ")";
-        function serializeSettings(settingsCollection) {
-            var ret = {};
-            for (var key in settingsCollection) {
-                var value = settingsCollection[key];
-                try {
-                    value = JSON.stringify(value, function dateReplacer(k, v) {
-                        return OSF.OUtil.isDate(this[k]) ? DateJSONPrefix + this[k].getTime() + DataJSONSuffix : v;
-                    });
-                    ret[key] = value;
-                }
-                catch (ex) {
-                }
-            }
-            return ret;
-        }
-        OUtil.serializeSettings = serializeSettings;
-        function deserializeSettings(serializedSettings) {
-            var ret = {};
-            serializedSettings = serializedSettings || {};
-            for (var key in serializedSettings) {
-                var value = serializedSettings[key];
-                try {
-                    value = JSON.parse(value, function dateReviver(k, v) {
-                        var d;
-                        if (typeof v === 'string' && v && v.length > 6 && v.slice(0, 5) === DateJSONPrefix && v.slice(-1) === DataJSONSuffix) {
-                            d = new Date(parseInt(v.slice(5, -1)));
-                            if (d) {
-                                return d;
-                            }
-                        }
-                        return v;
-                    });
-                    ret[key] = value;
-                }
-                catch (ex) {
-                }
-            }
-            return ret;
-        }
-        OUtil.deserializeSettings = deserializeSettings;
-        function loadScript(url, callback, timeoutInMs) {
-            if (url && callback) {
-                var doc = window.document;
-                var _loadedScriptEntry = _loadedScripts[url];
-                if (!_loadedScriptEntry) {
-                    var script = doc.createElement("script");
-                    script.type = "text/javascript";
-                    _loadedScriptEntry = { loaded: false, pendingCallbacks: [callback], timer: null };
-                    _loadedScripts[url] = _loadedScriptEntry;
-                    var onLoadCallback = function OSF_OUtil_loadScript$onLoadCallback() {
-                        if (_loadedScriptEntry.timer != null) {
-                            clearTimeout(_loadedScriptEntry.timer);
-                            delete _loadedScriptEntry.timer;
-                        }
-                        _loadedScriptEntry.loaded = true;
-                        var pendingCallbackCount = _loadedScriptEntry.pendingCallbacks.length;
-                        for (var i = 0; i < pendingCallbackCount; i++) {
-                            var currentCallback = _loadedScriptEntry.pendingCallbacks.shift();
-                            currentCallback(true);
-                        }
-                    };
-                    var onLoadError = function OSF_OUtil_loadScript$onLoadError() {
-                        delete _loadedScripts[url];
-                        if (_loadedScriptEntry.timer != null) {
-                            clearTimeout(_loadedScriptEntry.timer);
-                            delete _loadedScriptEntry.timer;
-                        }
-                        var pendingCallbackCount = _loadedScriptEntry.pendingCallbacks.length;
-                        for (var i = 0; i < pendingCallbackCount; i++) {
-                            var currentCallback = _loadedScriptEntry.pendingCallbacks.shift();
-                            currentCallback(false);
-                        }
-                    };
-                    if (script.readyState) {
-                        script.onreadystatechange = function () {
-                            if (script.readyState == "loaded" || script.readyState == "complete") {
-                                script.onreadystatechange = null;
-                                onLoadCallback();
-                            }
-                        };
-                    }
-                    else {
-                        script.onload = onLoadCallback;
-                    }
-                    script.onerror = onLoadError;
-                    timeoutInMs = timeoutInMs || _defaultScriptLoadingTimeout;
-                    _loadedScriptEntry.timer = setTimeout(onLoadError, timeoutInMs);
-                    script.setAttribute("crossOrigin", "anonymous");
-                    script.src = url;
-                    doc.getElementsByTagName("head")[0].appendChild(script);
-                }
-                else if (_loadedScriptEntry.loaded) {
-                    callback(true);
-                }
-                else {
-                    _loadedScriptEntry.pendingCallbacks.push(callback);
-                }
-            }
-        }
-        OUtil.loadScript = loadScript;
-        function getSessionStorage() {
-            if (!_safeSessionStorage) {
-                try {
-                    var sessionStorage = window.sessionStorage;
-                }
-                catch (ex) {
-                    sessionStorage = null;
-                }
-                _safeSessionStorage = new OSF.SafeStorage(sessionStorage);
-            }
-            return _safeSessionStorage;
-        }
-        OUtil.getSessionStorage = getSessionStorage;
-        function getLocalStorage() {
-            if (!_safeLocalStorage) {
-                try {
-                    var localStorage = window.localStorage;
-                }
-                catch (ex) {
-                    localStorage = null;
-                }
-                _safeLocalStorage = new OSF.SafeStorage(localStorage);
-            }
-            return _safeLocalStorage;
-        }
-        OUtil.getLocalStorage = getLocalStorage;
-        function convertIntToCssHexColor(val) {
-            var hex = "#" + (Number(val) + 0x1000000).toString(16).slice(-6);
-            return hex;
-        }
-        OUtil.convertIntToCssHexColor = convertIntToCssHexColor;
-        function parseAppContextFromWindowName(skipSessionStorage, windowName) {
-            return OUtil.parseInfoFromWindowName(skipSessionStorage, windowName, "appContext");
-        }
-        OUtil.parseAppContextFromWindowName = parseAppContextFromWindowName;
-        function parseHostInfoFromWindowName(skipSessionStorage, windowName) {
-            return OSF.OUtil.parseInfoFromWindowName(skipSessionStorage, windowName, "hostInfo");
-        }
-        OUtil.parseHostInfoFromWindowName = parseHostInfoFromWindowName;
-        function parseXdmInfo(skipSessionStorage) {
-            var xdmInfoValue = OUtil.parseXdmInfoWithGivenFragment(skipSessionStorage, window.location.hash);
-            if (!xdmInfoValue) {
-                xdmInfoValue = OUtil.parseXdmInfoFromWindowName(skipSessionStorage, window.name);
-            }
-            return xdmInfoValue;
-        }
-        OUtil.parseXdmInfo = parseXdmInfo;
-        function parseXdmInfoFromWindowName(skipSessionStorage, windowName) {
-            return OSF.OUtil.parseInfoFromWindowName(skipSessionStorage, windowName, "xdmInfo");
-        }
-        OUtil.parseXdmInfoFromWindowName = parseXdmInfoFromWindowName;
-        function parseXdmInfoWithGivenFragment(skipSessionStorage, fragment) {
-            return OSF.OUtil.parseInfoWithGivenFragment(_xdmInfoKey, _xdmSessionKeyPrefix, false, skipSessionStorage, fragment);
-        }
-        OUtil.parseXdmInfoWithGivenFragment = parseXdmInfoWithGivenFragment;
-        function parseSerializerVersion(skipSessionStorage) {
-            var serializerVersion = OSF.OUtil.parseSerializerVersionWithGivenFragment(skipSessionStorage, window.location.hash);
-            if (isNaN(serializerVersion)) {
-                serializerVersion = OSF.OUtil.parseSerializerVersionFromWindowName(skipSessionStorage, window.name);
-            }
-            return serializerVersion;
-        }
-        OUtil.parseSerializerVersion = parseSerializerVersion;
-        function parseSerializerVersionFromWindowName(skipSessionStorage, windowName) {
-            return parseInt(OSF.OUtil.parseInfoFromWindowName(skipSessionStorage, windowName, "serializerVersion"));
-        }
-        OUtil.parseSerializerVersionFromWindowName = parseSerializerVersionFromWindowName;
-        function parseSerializerVersionWithGivenFragment(skipSessionStorage, fragment) {
-            return parseInt(OSF.OUtil.parseInfoWithGivenFragment(_serializerVersionKey, _serializerVersionKeyPrefix, true, skipSessionStorage, fragment));
-        }
-        OUtil.parseSerializerVersionWithGivenFragment = parseSerializerVersionWithGivenFragment;
-        function parseInfoFromWindowName(skipSessionStorage, windowName, infoKey) {
-            try {
-                var windowNameObj = JSON.parse(windowName);
-                var infoValue = windowNameObj != null ? windowNameObj[infoKey] : null;
-                var osfSessionStorage = OUtil.getSessionStorage();
-                if (!skipSessionStorage && osfSessionStorage && windowNameObj != null) {
-                    var sessionKey = windowNameObj["baseFrameName"] + infoKey;
-                    if (infoValue) {
-                        osfSessionStorage.setItem(sessionKey, infoValue);
-                    }
-                    else {
-                        infoValue = osfSessionStorage.getItem(sessionKey);
-                    }
-                }
-                return infoValue;
-            }
-            catch (Exception) {
-                return null;
-            }
-        }
-        OUtil.parseInfoFromWindowName = parseInfoFromWindowName;
-        function parseInfoWithGivenFragment(infoKey, infoKeyPrefix, decodeInfo, skipSessionStorage, fragment) {
-            var fragmentParts = fragment.split(infoKey);
-            var infoValue = fragmentParts.length > 1 ? fragmentParts[fragmentParts.length - 1] : null;
-            if (decodeInfo && infoValue != null) {
-                if (infoValue.indexOf(_fragmentInfoDelimiter) >= 0) {
-                    infoValue = infoValue.split(_fragmentInfoDelimiter)[0];
-                }
-                infoValue = decodeURIComponent(infoValue);
-            }
-            var osfSessionStorage = OUtil.getSessionStorage();
-            if (!skipSessionStorage && osfSessionStorage) {
-                var sessionKeyStart = window.name.indexOf(infoKeyPrefix);
-                if (sessionKeyStart > -1) {
-                    var sessionKeyEnd = window.name.indexOf(";", sessionKeyStart);
-                    if (sessionKeyEnd == -1) {
-                        sessionKeyEnd = window.name.length;
-                    }
-                    var sessionKey = window.name.substring(sessionKeyStart, sessionKeyEnd);
-                    if (infoValue) {
-                        osfSessionStorage.setItem(sessionKey, infoValue);
-                    }
-                    else {
-                        infoValue = osfSessionStorage.getItem(sessionKey);
-                    }
-                }
-            }
-            return infoValue;
-        }
-        OUtil.parseInfoWithGivenFragment = parseInfoWithGivenFragment;
-        function getConversationId() {
-            var searchString = window.location.search;
-            var conversationId = null;
-            if (searchString) {
-                var index = searchString.indexOf("&");
-                conversationId = index > 0 ? searchString.substring(1, index) : searchString.substr(1);
-                if (conversationId && conversationId.charAt(conversationId.length - 1) === '=') {
-                    conversationId = conversationId.substring(0, conversationId.length - 1);
-                    if (conversationId) {
-                        conversationId = decodeURIComponent(conversationId);
-                    }
-                }
-            }
-            return conversationId;
-        }
-        OUtil.getConversationId = getConversationId;
-        function getInfoItems(strInfo) {
-            var items = strInfo.split('$');
-            if (typeof items[1] == "undefined") {
-                items = strInfo.split("|");
-            }
-            if (typeof items[1] == "undefined") {
-                items = strInfo.split("%7C");
-            }
-            return items;
-        }
-        OUtil.getInfoItems = getInfoItems;
-        function getXdmFieldValue(xdmFieldName, skipSessionStorage) {
-            var fieldValue = '';
-            var xdmInfoValue = OSF.OUtil.parseXdmInfo(skipSessionStorage);
-            if (xdmInfoValue) {
-                var items = OSF.OUtil.getInfoItems(xdmInfoValue);
-                if (items != undefined && items.length >= 3) {
-                    switch (xdmFieldName) {
-                        case "ConversationUrl":
-                            fieldValue = items[2];
-                            break;
-                        case "AppId":
-                            fieldValue = items[1];
-                            break;
-                    }
-                }
-            }
-            return fieldValue;
-        }
-        OUtil.getXdmFieldValue = getXdmFieldValue;
-        function _reOrderTabbableElements(elements) {
-            var bucket0 = [];
-            var bucketPositive = [];
-            var i;
-            var len = elements.length;
-            var ele;
-            for (i = 0; i < len; i++) {
-                ele = elements[i];
-                if (ele.tabIndex) {
-                    if (ele.tabIndex > 0) {
-                        bucketPositive.push(ele);
-                    }
-                    else if (ele.tabIndex === 0) {
-                        bucket0.push(ele);
-                    }
-                }
-                else {
-                    bucket0.push(ele);
-                }
-            }
-            bucketPositive = bucketPositive.sort(function (left, right) {
-                var diff = left.tabIndex - right.tabIndex;
-                if (diff === 0) {
-                    diff = bucketPositive.indexOf(left) - bucketPositive.indexOf(right);
-                }
-                return diff;
-            });
-            return [].concat(bucketPositive, bucket0);
-        }
-        ;
-        function focusToFirstTabbable(all, backward) {
-            var next;
-            var focused = false;
-            var candidate;
-            var setFlag = function (e) {
-                focused = true;
-            };
-            var findNextPos = function (allLen, currPos, backward) {
-                if (currPos < 0 || currPos > allLen) {
-                    return -1;
-                }
-                else if (currPos === 0 && backward) {
-                    return -1;
-                }
-                else if (currPos === allLen - 1 && !backward) {
-                    return -1;
-                }
-                if (backward) {
-                    return currPos - 1;
-                }
-                else {
-                    return currPos + 1;
-                }
-            };
-            all = _reOrderTabbableElements(all);
-            next = backward ? all.length - 1 : 0;
-            if (all.length === 0) {
-                return null;
-            }
-            while (!focused && next >= 0 && next < all.length) {
-                candidate = all[next];
-                window.focus();
-                candidate.addEventListener('focus', setFlag);
-                candidate.focus();
-                candidate.removeEventListener('focus', setFlag);
-                next = findNextPos(all.length, next, backward);
-                if (!focused && candidate === document.activeElement) {
-                    focused = true;
-                }
-            }
-            if (focused) {
-                return candidate;
-            }
-            else {
-                return null;
-            }
-        }
-        OUtil.focusToFirstTabbable = focusToFirstTabbable;
-        function focusToNextTabbable(all, curr, shift) {
-            var currPos;
-            var next;
-            var focused = false;
-            var candidate;
-            var setFlag = function (e) {
-                focused = true;
-            };
-            var findCurrPos = function (all, curr) {
-                var i = 0;
-                for (; i < all.length; i++) {
-                    if (all[i] === curr) {
-                        return i;
-                    }
-                }
-                return -1;
-            };
-            var findNextPos = function (allLen, currPos, shift) {
-                if (currPos < 0 || currPos > allLen) {
-                    return -1;
-                }
-                else if (currPos === 0 && shift) {
-                    return -1;
-                }
-                else if (currPos === allLen - 1 && !shift) {
-                    return -1;
-                }
-                if (shift) {
-                    return currPos - 1;
-                }
-                else {
-                    return currPos + 1;
-                }
-            };
-            all = _reOrderTabbableElements(all);
-            currPos = findCurrPos(all, curr);
-            next = findNextPos(all.length, currPos, shift);
-            if (next < 0) {
-                return null;
-            }
-            while (!focused && next >= 0 && next < all.length) {
-                candidate = all[next];
-                candidate.addEventListener('focus', setFlag);
-                candidate.focus();
-                candidate.removeEventListener('focus', setFlag);
-                next = findNextPos(all.length, next, shift);
-                if (!focused && candidate === document.activeElement) {
-                    focused = true;
-                }
-            }
-            if (focused) {
-                return candidate;
-            }
-            else {
-                return null;
-            }
-        }
-        OUtil.focusToNextTabbable = focusToNextTabbable;
-    })(OUtil = OSF.OUtil || (OSF.OUtil = {}));
-})(OSF || (OSF = {}));
 var Office;
 (function (Office) {
     var context;
@@ -1423,7 +897,8 @@ var Office;
             function get_settings() {
                 if (!_settings) {
                     var settingsFunc = OSF._OfficeAppFactory.getOfficeAppContext().get_settingsFunc();
-                    _settings = settingsFunc();
+                    var serializedSettings = settingsFunc();
+                    _settings = OSF._OfficeAppFactory.getInitializationHelper().createSettings(serializedSettings);
                 }
                 return _settings;
             }
@@ -1581,7 +1056,7 @@ var Office;
 var OSF;
 (function (OSF) {
     var OfficeAppContext = (function () {
-        function OfficeAppContext(id, appName, appVersion, appUILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, appMinorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, clientWindowHeight, clientWindowWidth, addinName, appDomains, dialogRequirementMatrix, featureGates, officeThemeFunc) {
+        function OfficeAppContext(id, appName, appVersion, appUILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, appMinorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, clientWindowHeight, clientWindowWidth, addinName, appDomains, dialogRequirementMatrix, featureGates, officeThemeFunc, initialDisplayMode) {
             this._isDialog = false;
             this._id = id;
             this._appName = appName;
@@ -1610,6 +1085,7 @@ var OSF;
             this._dialogRequirementMatrix = dialogRequirementMatrix;
             this._featureGates = featureGates;
             this._officeThemeFunc = officeThemeFunc;
+            this._initialDisplayMode = initialDisplayMode;
         }
         OfficeAppContext.prototype.get_id = function () {
             return this._id;
@@ -1646,6 +1122,7 @@ var OSF;
         OfficeAppContext.prototype.get_appDomains = function () { return this._appDomains; };
         OfficeAppContext.prototype.get_featureGates = function () { return this._featureGates; };
         OfficeAppContext.prototype.get_officeThemeFunc = function () { return this._officeThemeFunc; };
+        OfficeAppContext.prototype.get_initialDisplayMode = function () { return this._initialDisplayMode ? this._initialDisplayMode : 0; };
         return OfficeAppContext;
     }());
     OSF.OfficeAppContext = OfficeAppContext;
@@ -1654,15 +1131,28 @@ var OSF;
 (function (OSF) {
     var _OfficeAppFactory;
     (function (_OfficeAppFactory) {
-        var _windowLocationHash = window.location.hash;
-        var _windowLocationSearch = window.location.search;
-        var _windowName = window.name;
+        var _windowLocationHash;
+        var _windowLocationSearch;
+        var _windowName;
+        if (typeof (window) !== 'undefined') {
+            if (window.location) {
+                _windowLocationHash = window.location.hash;
+                _windowLocationSearch = window.location.search;
+            }
+            _windowName = window.name;
+        }
         var _hostInfo;
         var _webAppState;
         var _isLoggingAllowed;
         var _initializationHelper;
         var _asyncMethodExecutor;
         var _officeAppContext;
+        var _initialDisplayModeMappings = {
+            0: "Unknown",
+            1: "Hidden",
+            2: "Taskpane",
+            3: "Dialog"
+        };
         function bootstrap(onSuccess, onError) {
             _webAppState = {
                 id: null,
@@ -1677,6 +1167,10 @@ var OSF;
             retrieveHostInfo();
             retrieveLoggingAllowed();
             createInitializationHelper();
+            if (!_initializationHelper) {
+                onError(new Error("Office.js cannot be initialized."));
+                return;
+            }
             if (_hostInfo.hostPlatform === OSF.HostInfoPlatform.web) {
                 _initializationHelper.saveAndSetDialogInfo(OSF.Utility.getQueryStringValue("_host_Info"));
             }
@@ -1690,9 +1184,16 @@ var OSF;
                 _asyncMethodExecutor = _initializationHelper.createAsyncMethodExecutor();
                 _initializationHelper.prepareApiSurface(officeAppContext);
                 var appNameNumber = officeAppContext.get_appName();
+                var addinInfo = null;
+                if ((_hostInfo.flags & 1) !== 0) {
+                    addinInfo = {
+                        visibilityMode: _initialDisplayModeMappings[officeAppContext.get_initialDisplayMode()]
+                    };
+                }
                 Office.fireOnReady({
                     host: OSF.HostName.Host.getInstance().getHost(appNameNumber),
-                    platform: OSF.HostName.Host.getInstance().getPlatform(appNameNumber)
+                    platform: OSF.HostName.Host.getInstance().getPlatform(appNameNumber),
+                    addin: addinInfo
                 });
                 onSuccess(officeAppContext);
             };
@@ -1719,8 +1220,11 @@ var OSF;
             var hostInfoValue = OSF.Utility.getQueryStringValue(hostInfoParaName);
             if (!hostInfoValue) {
                 try {
-                    var windowNameObj = JSON.parse(window.name);
-                    hostInfoValue = windowNameObj ? windowNameObj["hostInfo"] : null;
+                    var windowName = window.name;
+                    if (windowName) {
+                        var windowNameObj = JSON.parse(windowName);
+                        hostInfoValue = windowNameObj ? windowNameObj["hostInfo"] : null;
+                    }
                 }
                 catch (ex) {
                     OSF.Utility.log(JSON.stringify(ex));
@@ -1755,15 +1259,8 @@ var OSF;
                     OSF.Utility.log(JSON.stringify(ex));
                 }
             }
-            var osfSessionStorage = null;
-            try {
-                if (window.sessionStorage) {
-                    osfSessionStorage = window.sessionStorage;
-                }
-            }
-            catch (ex) {
-            }
-            if (!hostInfoValue && osfSessionStorage && osfSessionStorage.getItem("hostInfoValue")) {
+            var osfSessionStorage = OSF.OUtil.getSessionStorage();
+            if (!hostInfoValue && osfSessionStorage.getItem("hostInfoValue")) {
                 hostInfoValue = osfSessionStorage.getItem("hostInfoValue");
             }
             if (hostInfoValue) {
@@ -1785,13 +1282,7 @@ var OSF;
                 _hostInfo.isDialog = (((typeof items[5]) != "undefined") && items[5] == "isDialog") ? true : false;
                 _hostInfo.disableLogging = (((typeof items[6]) != "undefined") && items[6] == "disableLogging") ? true : false;
                 _hostInfo.flags = (((typeof items[7]) === "string") && items[7].length > 0) ? parseInt(items[7]) : 0;
-                if (osfSessionStorage) {
-                    try {
-                        osfSessionStorage.setItem("hostInfoValue", hostInfoValue);
-                    }
-                    catch (e) {
-                    }
-                }
+                osfSessionStorage.setItem("hostInfoValue", hostInfoValue);
             }
             else {
                 _hostInfo.isO15 = true;
@@ -1830,6 +1321,9 @@ var OSF;
                 else {
                     throw OSF.Utility.createNotImplementedException();
                 }
+            }
+            else {
+                console.warn("Office.js is loaded inside in unknown host or platform " + _hostInfo.hostPlatform);
             }
         }
         function isWebkit2Sandbox() {
@@ -1871,6 +1365,10 @@ var OSF;
             return _webAppState.id;
         }
         _OfficeAppFactory.getId = getId;
+        function getInitializationHelper() {
+            return _initializationHelper;
+        }
+        _OfficeAppFactory.getInitializationHelper = getInitializationHelper;
     })(_OfficeAppFactory = OSF._OfficeAppFactory || (OSF._OfficeAppFactory = {}));
     function getClientEndPoint() {
         return _OfficeAppFactory.getWebAppState().clientEndPoint;
@@ -1879,6 +1377,11 @@ var OSF;
 })(OSF || (OSF = {}));
 var Office;
 (function (Office) {
+    var VisibilityMode;
+    (function (VisibilityMode) {
+        VisibilityMode["hidden"] = "Hidden";
+        VisibilityMode["taskpane"] = "Taskpane";
+    })(VisibilityMode = Office.VisibilityMode || (Office.VisibilityMode = {}));
     var AsyncResultStatus;
     (function (AsyncResultStatus) {
         AsyncResultStatus["succeeded"] = "succeeded";
@@ -2516,7 +2019,7 @@ var OSF;
             this._actionName = actionName;
             this._conversationId = conversationId;
             this._correlationId = correlationId;
-            this._origin = window.location.href;
+            this._origin = window.location.origin;
             if (typeof data === "undefined") {
                 this._data = null;
             }
@@ -2719,6 +2222,552 @@ var OSF;
         return XdmInvoker;
     }());
 })(OSF || (OSF = {}));
+var OSFPerfUtil;
+(function (OSFPerfUtil) {
+    function prepareDataFieldsForOtel(resource, name) {
+        name = name + "_Resource";
+        if (oteljs !== undefined) {
+            return [
+                oteljs.makeStringDataField(name + "_name", resource.name),
+                oteljs.makeDoubleDataField(name + "_responseEnd", resource.responseEnd),
+                oteljs.makeDoubleDataField(name + "_responseStart", resource.responseStart),
+                oteljs.makeDoubleDataField(name + "_startTime", resource.startTime),
+                oteljs.makeDoubleDataField(name + "_transferSize", resource.transferSize)
+            ];
+        }
+        return [];
+    }
+    function sendPerformanceTelemetry() {
+        if (OSF.AppTelemetry.enableTelemetry) {
+            var hostPerfResource_1;
+            var officePerfResource_1;
+            var hostSpecificFileName_1 = OSF.LoadScriptHelper.getHostBundleJsName();
+            var resources = performance.getEntriesByType("resource");
+            resources.forEach(function (resource) {
+                if (OSF.Utility.stringEndsWith(resource.name, hostSpecificFileName_1)) {
+                    hostPerfResource_1 = resource;
+                }
+                else if (OSF.Utility.stringEndsWith(resource.name, OSF.ConstantNames.OfficeDebugJS) ||
+                    OSF.Utility.stringEndsWith(resource.name, OSF.ConstantNames.OfficeJS)) {
+                    officePerfResource_1 = resource;
+                }
+            });
+            OTel.OTelLogger.onTelemetryLoaded(function () {
+                var dataFields = [];
+                if (hostPerfResource_1) {
+                    dataFields = dataFields.concat(prepareDataFieldsForOtel(hostPerfResource_1, "HostJs"));
+                }
+                if (officePerfResource_1) {
+                    dataFields = dataFields.concat(prepareDataFieldsForOtel(officePerfResource_1, "OfficeJs"));
+                }
+                dataFields = dataFields.concat([
+                    oteljs.makeDoubleDataField("officeExecuteStartDate", OSFPerformance.officeExecuteStartDate),
+                    oteljs.makeDoubleDataField("officeExecuteStart", OSFPerformance.officeExecuteStart),
+                    oteljs.makeDoubleDataField("officeExecuteEnd", OSFPerformance.officeExecuteEnd),
+                    oteljs.makeDoubleDataField("hostInitializationStart", OSFPerformance.hostInitializationStart),
+                    oteljs.makeDoubleDataField("hostInitializationEnd", OSFPerformance.hostInitializationEnd),
+                    oteljs.makeDoubleDataField("getAppContextStart", OSFPerformance.getAppContextStart),
+                    oteljs.makeDoubleDataField("getAppContextEnd", OSFPerformance.getAppContextEnd),
+                    oteljs.makeDoubleDataField("getAppContextXdmStart", OSFPerformance.getAppContextXdmStart),
+                    oteljs.makeDoubleDataField("getAppContextXdmEnd", OSFPerformance.getAppContextXdmEnd),
+                    oteljs.makeDoubleDataField("createOMEnd", OSFPerformance.createOMEnd),
+                    oteljs.makeDoubleDataField("officeOnReady", OSFPerformance.officeOnReady)
+                ]);
+                Microsoft.Office.WebExtension.sendTelemetryEvent({
+                    eventName: "Office.Extensibility.OfficeJs.JSPerformanceTelemetryV06",
+                    dataFields: dataFields,
+                    eventFlags: {
+                        dataCategories: oteljs.DataCategories.ProductServiceUsage,
+                        diagnosticLevel: oteljs.DiagnosticLevel.FullEvent
+                    }
+                });
+            });
+        }
+    }
+    OSFPerfUtil.sendPerformanceTelemetry = sendPerformanceTelemetry;
+})(OSFPerfUtil || (OSFPerfUtil = {}));
+var OSF;
+(function (OSF) {
+    var OUtil;
+    (function (OUtil) {
+        var _uniqueId = -1;
+        var _xdmInfoKey = '&_xdm_Info=';
+        var _serializerVersionKey = '&_serializer_version=';
+        var _xdmSessionKeyPrefix = '_xdm_';
+        var _serializerVersionKeyPrefix = '_serializer_version=';
+        var _fragmentSeparator = '#';
+        var _fragmentInfoDelimiter = '&';
+        var _loadedScripts = {};
+        var _defaultScriptLoadingTimeout = 30000;
+        var _safeSessionStorage;
+        var _safeLocalStorage;
+        var Guid;
+        (function (Guid) {
+            var hexCode = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
+            function generateNewGuid() {
+                var result = "";
+                var tick = (new Date()).getTime();
+                var index = 0;
+                for (; index < 32 && tick > 0; index++) {
+                    if (index == 8 || index == 12 || index == 16 || index == 20) {
+                        result += "-";
+                    }
+                    result += hexCode[tick % 16];
+                    tick = Math.floor(tick / 16);
+                }
+                for (; index < 32; index++) {
+                    if (index == 8 || index == 12 || index == 16 || index == 20) {
+                        result += "-";
+                    }
+                    result += hexCode[Math.floor(Math.random() * 16)];
+                }
+                return result;
+            }
+            Guid.generateNewGuid = generateNewGuid;
+        })(Guid = OUtil.Guid || (OUtil.Guid = {}));
+        function isArray(obj) {
+            return Object.prototype.toString.apply(obj) === "[object Array]";
+        }
+        OUtil.isArray = isArray;
+        function isFunction(obj) {
+            return Object.prototype.toString.apply(obj) === "[object Function]";
+        }
+        OUtil.isFunction = isFunction;
+        function isDate(obj) {
+            return Object.prototype.toString.apply(obj) === "[object Date]";
+        }
+        OUtil.isDate = isDate;
+        function addEventListener(element, eventName, listener) {
+            if (element.addEventListener) {
+                element.addEventListener(eventName, listener, false);
+            }
+            else if (element.attachEvent) {
+                element.attachEvent("on" + eventName, listener);
+            }
+            else {
+                throw new Error("Cannot attach event");
+            }
+        }
+        OUtil.addEventListener = addEventListener;
+        function removeEventListener(element, eventName, listener) {
+            if (element.removeEventListener) {
+                element.removeEventListener(eventName, listener, false);
+            }
+            else if (element.detachEvent) {
+                element.detachEvent("on" + eventName, listener);
+            }
+            else {
+                throw new Error("Cannot remove event");
+            }
+        }
+        OUtil.removeEventListener = removeEventListener;
+        var DateJSONPrefix = "Date(";
+        var DataJSONSuffix = ")";
+        function serializeSettings(settingsCollection) {
+            var ret = {};
+            for (var key in settingsCollection) {
+                var value = settingsCollection[key];
+                try {
+                    value = JSON.stringify(value, function dateReplacer(k, v) {
+                        return OSF.OUtil.isDate(this[k]) ? DateJSONPrefix + this[k].getTime() + DataJSONSuffix : v;
+                    });
+                    ret[key] = value;
+                }
+                catch (ex) {
+                }
+            }
+            return ret;
+        }
+        OUtil.serializeSettings = serializeSettings;
+        function deserializeSettings(serializedSettings) {
+            var ret = {};
+            serializedSettings = serializedSettings || {};
+            for (var key in serializedSettings) {
+                var value = serializedSettings[key];
+                try {
+                    value = JSON.parse(value, function dateReviver(k, v) {
+                        var d;
+                        if (typeof v === 'string' && v && v.length > 6 && v.slice(0, 5) === DateJSONPrefix && v.slice(-1) === DataJSONSuffix) {
+                            d = new Date(parseInt(v.slice(5, -1)));
+                            if (d) {
+                                return d;
+                            }
+                        }
+                        return v;
+                    });
+                    ret[key] = value;
+                }
+                catch (ex) {
+                }
+            }
+            return ret;
+        }
+        OUtil.deserializeSettings = deserializeSettings;
+        function loadScript(url, callback, timeoutInMs) {
+            if (url && callback) {
+                var doc = window.document;
+                var _loadedScriptEntry = _loadedScripts[url];
+                if (!_loadedScriptEntry) {
+                    var script = doc.createElement("script");
+                    script.type = "text/javascript";
+                    _loadedScriptEntry = { loaded: false, pendingCallbacks: [callback], timer: null };
+                    _loadedScripts[url] = _loadedScriptEntry;
+                    var onLoadCallback = function OSF_OUtil_loadScript$onLoadCallback() {
+                        if (_loadedScriptEntry.timer != null) {
+                            clearTimeout(_loadedScriptEntry.timer);
+                            delete _loadedScriptEntry.timer;
+                        }
+                        _loadedScriptEntry.loaded = true;
+                        var pendingCallbackCount = _loadedScriptEntry.pendingCallbacks.length;
+                        for (var i = 0; i < pendingCallbackCount; i++) {
+                            var currentCallback = _loadedScriptEntry.pendingCallbacks.shift();
+                            currentCallback(true);
+                        }
+                    };
+                    var onLoadError = function OSF_OUtil_loadScript$onLoadError() {
+                        delete _loadedScripts[url];
+                        if (_loadedScriptEntry.timer != null) {
+                            clearTimeout(_loadedScriptEntry.timer);
+                            delete _loadedScriptEntry.timer;
+                        }
+                        var pendingCallbackCount = _loadedScriptEntry.pendingCallbacks.length;
+                        for (var i = 0; i < pendingCallbackCount; i++) {
+                            var currentCallback = _loadedScriptEntry.pendingCallbacks.shift();
+                            currentCallback(false);
+                        }
+                    };
+                    if (script.readyState) {
+                        script.onreadystatechange = function () {
+                            if (script.readyState == "loaded" || script.readyState == "complete") {
+                                script.onreadystatechange = null;
+                                onLoadCallback();
+                            }
+                        };
+                    }
+                    else {
+                        script.onload = onLoadCallback;
+                    }
+                    script.onerror = onLoadError;
+                    timeoutInMs = timeoutInMs || _defaultScriptLoadingTimeout;
+                    _loadedScriptEntry.timer = setTimeout(onLoadError, timeoutInMs);
+                    script.setAttribute("crossOrigin", "anonymous");
+                    script.src = url;
+                    doc.getElementsByTagName("head")[0].appendChild(script);
+                }
+                else if (_loadedScriptEntry.loaded) {
+                    callback(true);
+                }
+                else {
+                    _loadedScriptEntry.pendingCallbacks.push(callback);
+                }
+            }
+        }
+        OUtil.loadScript = loadScript;
+        function getSessionStorage() {
+            if (!_safeSessionStorage) {
+                try {
+                    var sessionStorage = window.sessionStorage;
+                }
+                catch (ex) {
+                    sessionStorage = null;
+                }
+                _safeSessionStorage = new OSF.SafeStorage(sessionStorage);
+            }
+            return _safeSessionStorage;
+        }
+        OUtil.getSessionStorage = getSessionStorage;
+        function getLocalStorage() {
+            if (!_safeLocalStorage) {
+                try {
+                    var localStorage = window.localStorage;
+                }
+                catch (ex) {
+                    localStorage = null;
+                }
+                _safeLocalStorage = new OSF.SafeStorage(localStorage);
+            }
+            return _safeLocalStorage;
+        }
+        OUtil.getLocalStorage = getLocalStorage;
+        function convertIntToCssHexColor(val) {
+            var hex = "#" + (Number(val) + 0x1000000).toString(16).slice(-6);
+            return hex;
+        }
+        OUtil.convertIntToCssHexColor = convertIntToCssHexColor;
+        function parseAppContextFromWindowName(skipSessionStorage, windowName) {
+            return OUtil.parseInfoFromWindowName(skipSessionStorage, windowName, "appContext");
+        }
+        OUtil.parseAppContextFromWindowName = parseAppContextFromWindowName;
+        function parseHostInfoFromWindowName(skipSessionStorage, windowName) {
+            return OSF.OUtil.parseInfoFromWindowName(skipSessionStorage, windowName, "hostInfo");
+        }
+        OUtil.parseHostInfoFromWindowName = parseHostInfoFromWindowName;
+        function parseXdmInfo(skipSessionStorage) {
+            var xdmInfoValue = OUtil.parseXdmInfoWithGivenFragment(skipSessionStorage, window.location.hash);
+            if (!xdmInfoValue) {
+                xdmInfoValue = OUtil.parseXdmInfoFromWindowName(skipSessionStorage, window.name);
+            }
+            return xdmInfoValue;
+        }
+        OUtil.parseXdmInfo = parseXdmInfo;
+        function parseXdmInfoFromWindowName(skipSessionStorage, windowName) {
+            return OSF.OUtil.parseInfoFromWindowName(skipSessionStorage, windowName, "xdmInfo");
+        }
+        OUtil.parseXdmInfoFromWindowName = parseXdmInfoFromWindowName;
+        function parseXdmInfoWithGivenFragment(skipSessionStorage, fragment) {
+            return OSF.OUtil.parseInfoWithGivenFragment(_xdmInfoKey, _xdmSessionKeyPrefix, false, skipSessionStorage, fragment);
+        }
+        OUtil.parseXdmInfoWithGivenFragment = parseXdmInfoWithGivenFragment;
+        function parseSerializerVersion(skipSessionStorage) {
+            var serializerVersion = OSF.OUtil.parseSerializerVersionWithGivenFragment(skipSessionStorage, window.location.hash);
+            if (isNaN(serializerVersion)) {
+                serializerVersion = OSF.OUtil.parseSerializerVersionFromWindowName(skipSessionStorage, window.name);
+            }
+            return serializerVersion;
+        }
+        OUtil.parseSerializerVersion = parseSerializerVersion;
+        function parseSerializerVersionFromWindowName(skipSessionStorage, windowName) {
+            return parseInt(OSF.OUtil.parseInfoFromWindowName(skipSessionStorage, windowName, "serializerVersion"));
+        }
+        OUtil.parseSerializerVersionFromWindowName = parseSerializerVersionFromWindowName;
+        function parseSerializerVersionWithGivenFragment(skipSessionStorage, fragment) {
+            return parseInt(OSF.OUtil.parseInfoWithGivenFragment(_serializerVersionKey, _serializerVersionKeyPrefix, true, skipSessionStorage, fragment));
+        }
+        OUtil.parseSerializerVersionWithGivenFragment = parseSerializerVersionWithGivenFragment;
+        function parseInfoFromWindowName(skipSessionStorage, windowName, infoKey) {
+            try {
+                var windowNameObj = JSON.parse(windowName);
+                var infoValue = windowNameObj != null ? windowNameObj[infoKey] : null;
+                var osfSessionStorage = OUtil.getSessionStorage();
+                if (!skipSessionStorage && osfSessionStorage && windowNameObj != null) {
+                    var sessionKey = windowNameObj["baseFrameName"] + infoKey;
+                    if (infoValue) {
+                        osfSessionStorage.setItem(sessionKey, infoValue);
+                    }
+                    else {
+                        infoValue = osfSessionStorage.getItem(sessionKey);
+                    }
+                }
+                return infoValue;
+            }
+            catch (Exception) {
+                return null;
+            }
+        }
+        OUtil.parseInfoFromWindowName = parseInfoFromWindowName;
+        function parseInfoWithGivenFragment(infoKey, infoKeyPrefix, decodeInfo, skipSessionStorage, fragment) {
+            var fragmentParts = fragment.split(infoKey);
+            var infoValue = fragmentParts.length > 1 ? fragmentParts[fragmentParts.length - 1] : null;
+            if (decodeInfo && infoValue != null) {
+                if (infoValue.indexOf(_fragmentInfoDelimiter) >= 0) {
+                    infoValue = infoValue.split(_fragmentInfoDelimiter)[0];
+                }
+                infoValue = decodeURIComponent(infoValue);
+            }
+            var osfSessionStorage = OUtil.getSessionStorage();
+            if (!skipSessionStorage && osfSessionStorage) {
+                var sessionKeyStart = window.name.indexOf(infoKeyPrefix);
+                if (sessionKeyStart > -1) {
+                    var sessionKeyEnd = window.name.indexOf(";", sessionKeyStart);
+                    if (sessionKeyEnd == -1) {
+                        sessionKeyEnd = window.name.length;
+                    }
+                    var sessionKey = window.name.substring(sessionKeyStart, sessionKeyEnd);
+                    if (infoValue) {
+                        osfSessionStorage.setItem(sessionKey, infoValue);
+                    }
+                    else {
+                        infoValue = osfSessionStorage.getItem(sessionKey);
+                    }
+                }
+            }
+            return infoValue;
+        }
+        OUtil.parseInfoWithGivenFragment = parseInfoWithGivenFragment;
+        function getConversationId() {
+            var searchString = window.location.search;
+            var conversationId = null;
+            if (searchString) {
+                var index = searchString.indexOf("&");
+                conversationId = index > 0 ? searchString.substring(1, index) : searchString.substr(1);
+                if (conversationId && conversationId.charAt(conversationId.length - 1) === '=') {
+                    conversationId = conversationId.substring(0, conversationId.length - 1);
+                    if (conversationId) {
+                        conversationId = decodeURIComponent(conversationId);
+                    }
+                }
+            }
+            return conversationId;
+        }
+        OUtil.getConversationId = getConversationId;
+        function getInfoItems(strInfo) {
+            var items = strInfo.split('$');
+            if (typeof items[1] == "undefined") {
+                items = strInfo.split("|");
+            }
+            if (typeof items[1] == "undefined") {
+                items = strInfo.split("%7C");
+            }
+            return items;
+        }
+        OUtil.getInfoItems = getInfoItems;
+        function getXdmFieldValue(xdmFieldName, skipSessionStorage) {
+            var fieldValue = '';
+            var xdmInfoValue = OSF.OUtil.parseXdmInfo(skipSessionStorage);
+            if (xdmInfoValue) {
+                var items = OSF.OUtil.getInfoItems(xdmInfoValue);
+                if (items != undefined && items.length >= 3) {
+                    switch (xdmFieldName) {
+                        case "ConversationUrl":
+                            fieldValue = items[2];
+                            break;
+                        case "AppId":
+                            fieldValue = items[1];
+                            break;
+                    }
+                }
+            }
+            return fieldValue;
+        }
+        OUtil.getXdmFieldValue = getXdmFieldValue;
+        function _reOrderTabbableElements(elements) {
+            var bucket0 = [];
+            var bucketPositive = [];
+            var i;
+            var len = elements.length;
+            var ele;
+            for (i = 0; i < len; i++) {
+                ele = elements[i];
+                if (ele.tabIndex) {
+                    if (ele.tabIndex > 0) {
+                        bucketPositive.push(ele);
+                    }
+                    else if (ele.tabIndex === 0) {
+                        bucket0.push(ele);
+                    }
+                }
+                else {
+                    bucket0.push(ele);
+                }
+            }
+            bucketPositive = bucketPositive.sort(function (left, right) {
+                var diff = left.tabIndex - right.tabIndex;
+                if (diff === 0) {
+                    diff = bucketPositive.indexOf(left) - bucketPositive.indexOf(right);
+                }
+                return diff;
+            });
+            return [].concat(bucketPositive, bucket0);
+        }
+        ;
+        function focusToFirstTabbable(all, backward) {
+            var next;
+            var focused = false;
+            var candidate;
+            var setFlag = function (e) {
+                focused = true;
+            };
+            var findNextPos = function (allLen, currPos, backward) {
+                if (currPos < 0 || currPos > allLen) {
+                    return -1;
+                }
+                else if (currPos === 0 && backward) {
+                    return -1;
+                }
+                else if (currPos === allLen - 1 && !backward) {
+                    return -1;
+                }
+                if (backward) {
+                    return currPos - 1;
+                }
+                else {
+                    return currPos + 1;
+                }
+            };
+            all = _reOrderTabbableElements(all);
+            next = backward ? all.length - 1 : 0;
+            if (all.length === 0) {
+                return null;
+            }
+            while (!focused && next >= 0 && next < all.length) {
+                candidate = all[next];
+                window.focus();
+                candidate.addEventListener('focus', setFlag);
+                candidate.focus();
+                candidate.removeEventListener('focus', setFlag);
+                next = findNextPos(all.length, next, backward);
+                if (!focused && candidate === document.activeElement) {
+                    focused = true;
+                }
+            }
+            if (focused) {
+                return candidate;
+            }
+            else {
+                return null;
+            }
+        }
+        OUtil.focusToFirstTabbable = focusToFirstTabbable;
+        function focusToNextTabbable(all, curr, shift) {
+            var currPos;
+            var next;
+            var focused = false;
+            var candidate;
+            var setFlag = function (e) {
+                focused = true;
+            };
+            var findCurrPos = function (all, curr) {
+                var i = 0;
+                for (; i < all.length; i++) {
+                    if (all[i] === curr) {
+                        return i;
+                    }
+                }
+                return -1;
+            };
+            var findNextPos = function (allLen, currPos, shift) {
+                if (currPos < 0 || currPos > allLen) {
+                    return -1;
+                }
+                else if (currPos === 0 && shift) {
+                    return -1;
+                }
+                else if (currPos === allLen - 1 && !shift) {
+                    return -1;
+                }
+                if (shift) {
+                    return currPos - 1;
+                }
+                else {
+                    return currPos + 1;
+                }
+            };
+            all = _reOrderTabbableElements(all);
+            currPos = findCurrPos(all, curr);
+            next = findNextPos(all.length, currPos, shift);
+            if (next < 0) {
+                return null;
+            }
+            while (!focused && next >= 0 && next < all.length) {
+                candidate = all[next];
+                candidate.addEventListener('focus', setFlag);
+                candidate.focus();
+                candidate.removeEventListener('focus', setFlag);
+                next = findNextPos(all.length, next, shift);
+                if (!focused && candidate === document.activeElement) {
+                    focused = true;
+                }
+            }
+            if (focused) {
+                return candidate;
+            }
+            else {
+                return null;
+            }
+        }
+        OUtil.focusToNextTabbable = focusToNextTabbable;
+    })(OUtil = OSF.OUtil || (OSF.OUtil = {}));
+})(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
     var ParameterNames;
@@ -2821,330 +2870,25 @@ var OSF;
             return DefaultDialogSetRequirement;
         }(DefaultSetRequirement));
         Requirement.DefaultDialogSetRequirement = DefaultDialogSetRequirement;
-        var ExcelClientDefaultSetRequirement = (function (_super) {
-            __extends(ExcelClientDefaultSetRequirement, _super);
-            function ExcelClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "documentevents": 1.1,
-                    "excelapi": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return ExcelClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.ExcelClientDefaultSetRequirement = ExcelClientDefaultSetRequirement;
-        var ExcelClientV1DefaultSetRequirement = (function (_super) {
-            __extends(ExcelClientV1DefaultSetRequirement, _super);
-            function ExcelClientV1DefaultSetRequirement() {
-                var _this = _super.call(this) || this;
-                _this._addSetMap({
-                    "imagecoercion": 1.1
-                });
-                return _this;
-            }
-            return ExcelClientV1DefaultSetRequirement;
-        }(ExcelClientDefaultSetRequirement));
-        Requirement.ExcelClientV1DefaultSetRequirement = ExcelClientV1DefaultSetRequirement;
-        var OutlookClientDefaultSetRequirement = (function (_super) {
-            __extends(OutlookClientDefaultSetRequirement, _super);
-            function OutlookClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "mailbox": 1.3
-                }) || this;
-            }
-            return OutlookClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.OutlookClientDefaultSetRequirement = OutlookClientDefaultSetRequirement;
-        var WordClientDefaultSetRequirement = (function (_super) {
-            __extends(WordClientDefaultSetRequirement, _super);
-            function WordClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "compressedfile": 1.1,
-                    "customxmlparts": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "htmlcoercion": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "ooxmlcoercion": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1,
-                    "textfile": 1.1,
-                    "wordapi": 1.1
-                }) || this;
-            }
-            return WordClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.WordClientDefaultSetRequirement = WordClientDefaultSetRequirement;
-        var WordClientV1DefaultSetRequirement = (function (_super) {
-            __extends(WordClientV1DefaultSetRequirement, _super);
-            function WordClientV1DefaultSetRequirement() {
-                var _this = _super.call(this) || this;
-                _this._addSetMap({
-                    "customxmlparts": 1.2,
-                    "wordapi": 1.2,
-                    "imagecoercion": 1.1
-                });
-                return _this;
-            }
-            return WordClientV1DefaultSetRequirement;
-        }(WordClientDefaultSetRequirement));
-        Requirement.WordClientV1DefaultSetRequirement = WordClientV1DefaultSetRequirement;
-        var PowerpointClientDefaultSetRequirement = (function (_super) {
-            __extends(PowerpointClientDefaultSetRequirement, _super);
-            function PowerpointClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "activeview": 1.1,
-                    "compressedfile": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return PowerpointClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.PowerpointClientDefaultSetRequirement = PowerpointClientDefaultSetRequirement;
-        var PowerpointClientV1DefaultSetRequirement = (function (_super) {
-            __extends(PowerpointClientV1DefaultSetRequirement, _super);
-            function PowerpointClientV1DefaultSetRequirement() {
-                var _this = _super.call(this) || this;
-                _this._addSetMap({
-                    "imagecoercion": 1.1
-                });
-                return _this;
-            }
-            return PowerpointClientV1DefaultSetRequirement;
-        }(PowerpointClientDefaultSetRequirement));
-        Requirement.PowerpointClientV1DefaultSetRequirement = PowerpointClientV1DefaultSetRequirement;
-        var ProjectClientDefaultSetRequirement = (function (_super) {
-            __extends(ProjectClientDefaultSetRequirement, _super);
-            function ProjectClientDefaultSetRequirement() {
-                return _super.call(this, {
-                    "selection": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return ProjectClientDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.ProjectClientDefaultSetRequirement = ProjectClientDefaultSetRequirement;
-        var ExcelWebDefaultSetRequirement = (function (_super) {
-            __extends(ExcelWebDefaultSetRequirement, _super);
-            function ExcelWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "documentevents": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1,
-                    "file": 1.1
-                }) || this;
-            }
-            return ExcelWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.ExcelWebDefaultSetRequirement = ExcelWebDefaultSetRequirement;
-        var WordWebDefaultSetRequirement = (function (_super) {
-            __extends(WordWebDefaultSetRequirement, _super);
-            function WordWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "compressedfile": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "imagecoercion": 1.1,
-                    "matrixcoercion": 1.1,
-                    "ooxmlcoercion": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textcoercion": 1.1,
-                    "textfile": 1.1
-                }) || this;
-            }
-            return WordWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.WordWebDefaultSetRequirement = WordWebDefaultSetRequirement;
-        var PowerpointWebDefaultSetRequirement = (function (_super) {
-            __extends(PowerpointWebDefaultSetRequirement, _super);
-            function PowerpointWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "activeview": 1.1,
-                    "settings": 1.1
-                }) || this;
-            }
-            return PowerpointWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.PowerpointWebDefaultSetRequirement = PowerpointWebDefaultSetRequirement;
-        var OutlookWebDefaultSetRequirement = (function (_super) {
-            __extends(OutlookWebDefaultSetRequirement, _super);
-            function OutlookWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "mailbox": 1.3
-                }) || this;
-            }
-            return OutlookWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.OutlookWebDefaultSetRequirement = OutlookWebDefaultSetRequirement;
-        var SwayWebDefaultSetRequirement = (function (_super) {
-            __extends(SwayWebDefaultSetRequirement, _super);
-            function SwayWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "activeview": 1.1,
-                    "documentevents": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return SwayWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.SwayWebDefaultSetRequirement = SwayWebDefaultSetRequirement;
-        var AccessWebDefaultSetRequirement = (function (_super) {
-            __extends(AccessWebDefaultSetRequirement, _super);
-            function AccessWebDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "partialtablebindings": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1
-                }) || this;
-            }
-            return AccessWebDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.AccessWebDefaultSetRequirement = AccessWebDefaultSetRequirement;
-        var ExcelIOSDefaultSetRequirement = (function (_super) {
-            __extends(ExcelIOSDefaultSetRequirement, _super);
-            function ExcelIOSDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "documentevents": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return ExcelIOSDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.ExcelIOSDefaultSetRequirement = ExcelIOSDefaultSetRequirement;
-        var WordIOSDefaultSetRequirement = (function (_super) {
-            __extends(WordIOSDefaultSetRequirement, _super);
-            function WordIOSDefaultSetRequirement() {
-                return _super.call(this, {
-                    "bindingevents": 1.1,
-                    "compressedfile": 1.1,
-                    "customxmlparts": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "htmlcoercion": 1.1,
-                    "matrixbindings": 1.1,
-                    "matrixcoercion": 1.1,
-                    "ooxmlcoercion": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "tablebindings": 1.1,
-                    "tablecoercion": 1.1,
-                    "textbindings": 1.1,
-                    "textcoercion": 1.1,
-                    "textfile": 1.1
-                }) || this;
-            }
-            return WordIOSDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.WordIOSDefaultSetRequirement = WordIOSDefaultSetRequirement;
-        var WordIOSV1DefaultSetRequirement = (function (_super) {
-            __extends(WordIOSV1DefaultSetRequirement, _super);
-            function WordIOSV1DefaultSetRequirement() {
-                var _this = _super.call(this) || this;
-                _this._addSetMap({
-                    "customxmlparts": 1.2,
-                    "wordapi": 1.2
-                });
-                return _this;
-            }
-            return WordIOSV1DefaultSetRequirement;
-        }(WordIOSDefaultSetRequirement));
-        Requirement.WordIOSV1DefaultSetRequirement = WordIOSV1DefaultSetRequirement;
-        var PowerpointIOSDefaultSetRequirement = (function (_super) {
-            __extends(PowerpointIOSDefaultSetRequirement, _super);
-            function PowerpointIOSDefaultSetRequirement() {
-                return _super.call(this, {
-                    "activeview": 1.1,
-                    "compressedfile": 1.1,
-                    "documentevents": 1.1,
-                    "file": 1.1,
-                    "pdffile": 1.1,
-                    "selection": 1.1,
-                    "settings": 1.1,
-                    "textcoercion": 1.1
-                }) || this;
-            }
-            return PowerpointIOSDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.PowerpointIOSDefaultSetRequirement = PowerpointIOSDefaultSetRequirement;
-        var OutlookIOSDefaultSetRequirement = (function (_super) {
-            __extends(OutlookIOSDefaultSetRequirement, _super);
-            function OutlookIOSDefaultSetRequirement() {
-                return _super.call(this, {
-                    "mailbox": 1.1
-                }) || this;
-            }
-            return OutlookIOSDefaultSetRequirement;
-        }(DefaultSetRequirement));
-        Requirement.OutlookIOSDefaultSetRequirement = OutlookIOSDefaultSetRequirement;
         var RequirementsMatrixFactory = (function () {
             function RequirementsMatrixFactory() {
             }
             RequirementsMatrixFactory.getDefaultRequirementMatrix = function (appContext) {
-                this.initializeDefaultSetMatrix();
                 var defaultRequirementMatrix = undefined;
                 var clientRequirement = appContext.get_requirementMatrix();
-                if (clientRequirement != undefined && clientRequirement.length > 0 && typeof (JSON) !== "undefined") {
+                if (clientRequirement != undefined && clientRequirement.length > 0) {
                     var matrixItem = JSON.parse(appContext.get_requirementMatrix().toLowerCase());
                     defaultRequirementMatrix = new RequirementMatrix(new DefaultSetRequirement(matrixItem));
                 }
                 else {
-                    var appLocator = RequirementsMatrixFactory.getClientFullVersionString(appContext);
-                    if (RequirementsMatrixFactory.DefaultSetArrayMatrix != undefined && RequirementsMatrixFactory.DefaultSetArrayMatrix[appLocator] != undefined) {
-                        defaultRequirementMatrix = new RequirementMatrix(RequirementsMatrixFactory.DefaultSetArrayMatrix[appLocator]);
-                    }
-                    else {
-                        defaultRequirementMatrix = new RequirementMatrix(new DefaultSetRequirement({}));
-                    }
+                    defaultRequirementMatrix = new RequirementMatrix(new DefaultSetRequirement({}));
                 }
                 return defaultRequirementMatrix;
             };
             RequirementsMatrixFactory.getDefaultDialogRequirementMatrix = function (appContext) {
                 var defaultRequirementMatrix = undefined;
                 var clientRequirement = appContext.get_dialogRequirementMatrix();
-                if (clientRequirement != undefined && clientRequirement.length > 0 && typeof (JSON) !== "undefined") {
+                if (clientRequirement != undefined && clientRequirement.length > 0) {
                     var matrixItem = JSON.parse(appContext.get_requirementMatrix().toLowerCase());
                     defaultRequirementMatrix = new RequirementMatrix(new DefaultSetRequirement(matrixItem));
                 }
@@ -3153,80 +2897,6 @@ var OSF;
                 }
                 return defaultRequirementMatrix;
             };
-            RequirementsMatrixFactory.getClientFullVersionString = function (appContext) {
-                var appMinorVersion = appContext.get_appMinorVersion();
-                var appMinorVersionString = "";
-                var appFullVersion = "";
-                var appName = appContext.get_appName();
-                var isIOSClient = appName == 1024 ||
-                    appName == 4096 ||
-                    appName == 8192 ||
-                    appName == 65536;
-                if (isIOSClient && appContext.get_appVersion() == 1) {
-                    if (appName == 4096 && appMinorVersion >= 15) {
-                        appFullVersion = "16.00.01";
-                    }
-                    else {
-                        appFullVersion = "16.00";
-                    }
-                }
-                else if (appContext.get_appName() == 64) {
-                    appFullVersion = appContext.get_appVersion();
-                }
-                else {
-                    if (appMinorVersion < 10) {
-                        appMinorVersionString = "0" + appMinorVersion;
-                    }
-                    else {
-                        appMinorVersionString = "" + appMinorVersion;
-                    }
-                    appFullVersion = appContext.get_appVersion() + "." + appMinorVersionString;
-                }
-                return appContext.get_appName() + "-" + appFullVersion;
-            };
-            RequirementsMatrixFactory.initializeDefaultSetMatrix = function () {
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Excel_RCLIENT_1600] = new ExcelClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_RCLIENT_1600] = new WordClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.PowerPoint_RCLIENT_1600] = new PowerpointClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Excel_RCLIENT_1601] = new ExcelClientV1DefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_RCLIENT_1601] = new WordClientV1DefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.PowerPoint_RCLIENT_1601] = new PowerpointClientV1DefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Outlook_RCLIENT_1600] = new OutlookClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Excel_WAC_1600] = new ExcelWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_WAC_1600] = new WordWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Outlook_WAC_1600] = new OutlookWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Outlook_WAC_1601] = new OutlookWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Project_RCLIENT_1600] = new ProjectClientDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Access_WAC_1600] = new AccessWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.PowerPoint_WAC_1600] = new PowerpointWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Excel_IOS_1600] = new ExcelIOSDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.SWAY_WAC_1600] = new SwayWebDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_IOS_1600] = new WordIOSDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Word_IOS_16001] = new WordIOSV1DefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.PowerPoint_IOS_1600] = new PowerpointIOSDefaultSetRequirement();
-                RequirementsMatrixFactory.DefaultSetArrayMatrix[RequirementsMatrixFactory.Outlook_IOS_1600] = new OutlookIOSDefaultSetRequirement();
-            };
-            RequirementsMatrixFactory.Excel_RCLIENT_1600 = "1-16.00";
-            RequirementsMatrixFactory.Excel_RCLIENT_1601 = "1-16.01";
-            RequirementsMatrixFactory.Word_RCLIENT_1600 = "2-16.00";
-            RequirementsMatrixFactory.Word_RCLIENT_1601 = "2-16.01";
-            RequirementsMatrixFactory.PowerPoint_RCLIENT_1600 = "4-16.00";
-            RequirementsMatrixFactory.PowerPoint_RCLIENT_1601 = "4-16.01";
-            RequirementsMatrixFactory.Outlook_RCLIENT_1600 = "8-16.00";
-            RequirementsMatrixFactory.Excel_WAC_1600 = "16-16.00";
-            RequirementsMatrixFactory.Word_WAC_1600 = "32-16.00";
-            RequirementsMatrixFactory.Outlook_WAC_1600 = "64-16.00";
-            RequirementsMatrixFactory.Outlook_WAC_1601 = "64-16.01";
-            RequirementsMatrixFactory.Project_RCLIENT_1600 = "128-16.00";
-            RequirementsMatrixFactory.Access_WAC_1600 = "256-16.00";
-            RequirementsMatrixFactory.PowerPoint_WAC_1600 = "512-16.00";
-            RequirementsMatrixFactory.Excel_IOS_1600 = "1024-16.00";
-            RequirementsMatrixFactory.SWAY_WAC_1600 = "2048-16.00";
-            RequirementsMatrixFactory.Word_IOS_1600 = "4096-16.00";
-            RequirementsMatrixFactory.Word_IOS_16001 = "4096-16.00.01";
-            RequirementsMatrixFactory.PowerPoint_IOS_1600 = "8192-16.00";
-            RequirementsMatrixFactory.Outlook_IOS_1600 = "65536-16.00";
-            RequirementsMatrixFactory.DefaultSetArrayMatrix = {};
             return RequirementsMatrixFactory;
         }());
         Requirement.RequirementsMatrixFactory = RequirementsMatrixFactory;
@@ -3376,11 +3046,13 @@ var OSF;
                         this._osfControlContext = window.external.GetContext();
                     }
                     else {
+                        console.error("There is no window.external.");
                         OSF.Utility.trace(warningText);
                         return null;
                     }
                 }
                 catch (e) {
+                    console.error("Error when call window.external.GetContext() :" + JSON.stringify(e));
                     OSF.Utility.trace(warningText);
                     return null;
                 }
@@ -3412,39 +3084,40 @@ var OSF;
             catch (ex) {
             }
             var correlationId;
-            if (typeof context.GetCorrelationId !== "undefined") {
+            var externalNativeFunctionExists = OSF.Utility.externalNativeFunctionExists;
+            if (externalNativeFunctionExists(typeof context.GetCorrelationId)) {
                 correlationId = context.GetCorrelationId();
             }
             var appInstanceId;
-            if (typeof context.GetInstanceId !== "undefined") {
+            if (externalNativeFunctionExists(typeof context.GetInstanceId)) {
                 appInstanceId = context.GetInstanceId();
             }
             var touchEnabled;
-            if (typeof context.GetTouchEnabled !== "undefined") {
+            if (externalNativeFunctionExists(typeof context.GetTouchEnabled)) {
                 touchEnabled = context.GetTouchEnabled();
             }
             var commerceAllowed;
-            if (typeof context.GetCommerceAllowed !== "undefined") {
+            if (externalNativeFunctionExists(typeof context.GetCommerceAllowed)) {
                 commerceAllowed = context.GetCommerceAllowed();
             }
             var requirementMatrix;
-            if (typeof context.GetSupportedMatrix !== "undefined") {
+            if (externalNativeFunctionExists(typeof context.GetSupportedMatrix)) {
                 requirementMatrix = context.GetSupportedMatrix();
             }
             var hostCustomMessage;
-            if (typeof context.GetHostCustomMessage !== "undefined") {
+            if (externalNativeFunctionExists(typeof context.GetHostCustomMessage)) {
                 hostCustomMessage = context.GetHostCustomMessage();
             }
             var hostFullVersion;
-            if (typeof context.GetHostFullVersion !== "undefined") {
+            if (externalNativeFunctionExists(typeof context.GetHostFullVersion)) {
                 hostFullVersion = context.GetHostFullVersion();
             }
             var dialogRequirementMatrix;
-            if (typeof context.GetDialogRequirementMatrix != "undefined") {
+            if (externalNativeFunctionExists(typeof context.GetDialogRequirementMatrix)) {
                 dialogRequirementMatrix = context.GetDialogRequirementMatrix();
             }
             var sdxFeatureGates;
-            if (typeof context.GetFeaturesForSolution != "undefined") {
+            if (externalNativeFunctionExists(typeof context.GetFeaturesForSolution)) {
                 try {
                     var sdxFeatureGatesJson = context.GetFeaturesForSolution();
                     if (sdxFeatureGatesJson) {
@@ -3455,10 +3128,14 @@ var OSF;
                     OSF.Utility.trace("Exception while creating the SDX FeatureGates object. Details: " + ex);
                 }
             }
+            var initialDisplayMode = 0;
+            if (externalNativeFunctionExists(typeof context.GetInitialDisplayMode)) {
+                initialDisplayMode = context.GetInitialDisplayMode();
+            }
             eToken = eToken ? eToken.toString() : "";
-            var settingsFunc = function () { return _this.initializeSettings(); };
+            var settingsFunc = function () { return _this.getSerializedSettings(); };
             var officeThemeFunc = function () { return _this.getOfficeTheme(); };
-            var returnedContext = new OSF.OfficeAppContext(id, appType, version, UILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, undefined, undefined, undefined, undefined, dialogRequirementMatrix, sdxFeatureGates, officeThemeFunc);
+            var returnedContext = new OSF.OfficeAppContext(id, appType, version, UILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, undefined, undefined, undefined, undefined, dialogRequirementMatrix, sdxFeatureGates, officeThemeFunc, initialDisplayMode);
             onSuccess(returnedContext);
             return;
         };
@@ -3476,6 +3153,26 @@ var OSF;
         RichClientInitializationHelper.prototype.createAsyncMethodExecutor = function () {
             return new OSF.SafeArrayAsyncMethodExecutor(this._clientHostController);
         };
+        RichClientInitializationHelper.prototype.createClientSettingsManager = function () {
+            var manager = new OSF.RichClientSettingsManager(this.getOsfControlContext());
+            return manager;
+        };
+        RichClientInitializationHelper.prototype.getSerializedSettings = function () {
+            var osfControlContext = this.getOsfControlContext();
+            var keys = [];
+            var values = [];
+            if (typeof OsfOMToken != 'undefined' && OsfOMToken) {
+                osfControlContext.GetSettings(OsfOMToken).Read(keys, values);
+            }
+            else {
+                osfControlContext.GetSettings().Read(keys, values);
+            }
+            var serializedSettings = {};
+            for (var index = 0; index < keys.length; index++) {
+                serializedSettings[keys[index]] = values[index];
+            }
+            return serializedSettings;
+        };
         RichClientInitializationHelper.prototype.initializeSettings = function () {
             var osfControlContext = this.getOsfControlContext();
             var keys = [];
@@ -3490,7 +3187,7 @@ var OSF;
             for (var index = 0; index < keys.length; index++) {
                 serializedSettings[keys[index]] = values[index];
             }
-            return this.deserializeSettings(serializedSettings);
+            return this.createSettings(serializedSettings);
         };
         RichClientInitializationHelper.prototype.getOfficeTheme = function () {
             var osfControlContext = this.getOsfControlContext();
@@ -3507,6 +3204,57 @@ var OSF;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
+    var RichClientSettingsManager = (function () {
+        function RichClientSettingsManager(_osfClientContext) {
+            this._osfClientContext = _osfClientContext;
+        }
+        RichClientSettingsManager.prototype.read = function (onComplete) {
+            var keys = [];
+            var values = [];
+            var osfControlContext = this._osfClientContext;
+            if (typeof OsfOMToken != 'undefined' && OsfOMToken) {
+                osfControlContext.GetSettings(OsfOMToken).Read(keys, values);
+            }
+            else {
+                osfControlContext.GetSettings().Read(keys, values);
+            }
+            var serializedSettings = {};
+            for (var index = 0; index < keys.length; index++) {
+                serializedSettings[keys[index]] = values[index];
+            }
+            if (onComplete) {
+                onComplete(0, serializedSettings);
+            }
+        };
+        RichClientSettingsManager.prototype.write = function (serializedSettings, onComplete) {
+            var keys = [];
+            var values = [];
+            for (var key in serializedSettings) {
+                keys.push(key);
+                values.push(serializedSettings[key]);
+            }
+            var osfControlContext = this._osfClientContext;
+            var settingObj;
+            if (typeof OsfOMToken != 'undefined' && OsfOMToken) {
+                settingObj = osfControlContext.GetSettings(OsfOMToken);
+            }
+            else {
+                settingObj = osfControlContext.GetSettings();
+            }
+            if (typeof settingObj.WriteAsync != 'undefined') {
+                settingObj.WriteAsync(keys, values, onComplete);
+            }
+            else {
+                settingObj.Write(keys, values);
+                onComplete(0);
+            }
+        };
+        return RichClientSettingsManager;
+    }());
+    OSF.RichClientSettingsManager = RichClientSettingsManager;
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
     var SafeArrayAsyncMethodExecutor = (function (_super) {
         __extends(SafeArrayAsyncMethodExecutor, _super);
         function SafeArrayAsyncMethodExecutor(_clientHostController) {
@@ -3514,17 +3262,6 @@ var OSF;
             _this._clientHostController = _clientHostController;
             return _this;
         }
-        SafeArrayAsyncMethodExecutor.prototype.fromSafeArray = function (value) {
-            var ret = value;
-            if (value != null && value.toArray) {
-                var arrayResult = value.toArray();
-                ret = new Array(arrayResult.length);
-                for (var i = 0; i < arrayResult.length; i++) {
-                    ret[i] = this.fromSafeArray(arrayResult[i]);
-                }
-            }
-            return ret;
-        };
         SafeArrayAsyncMethodExecutor.prototype.executeAsync = function (id, dataTransform, callback) {
             var _this = this;
             try {
@@ -3532,7 +3269,7 @@ var OSF;
                 this._clientHostController.execute(id, dataTransform.toSafeArrayHost(), function (hostResponseArgsNative, resultCode) {
                     var result;
                     var status;
-                    var hostResponseArgs = _this.fromSafeArray(hostResponseArgsNative);
+                    var hostResponseArgs = OSF.Utility.fromSafeArray(hostResponseArgsNative);
                     if (typeof hostResponseArgs === "number") {
                         result = [];
                         status = hostResponseArgs;
@@ -3594,13 +3331,13 @@ var OSF;
             var _this = this;
             try {
                 this._clientHostController.registerEvent(id, eventType, targetId, function (eventDispId, payload) {
-                    var eventPayload = _this.fromSafeArray(payload);
+                    var eventPayload = OSF.Utility.fromSafeArray(payload);
                     var eventArgs = dataTransform.fromSafeArrayHost(eventPayload);
                     handler(eventArgs);
                 }, function (hostResponseArgsNative) {
                     var result;
                     var status;
-                    var hostResponseArgs = _this.fromSafeArray(hostResponseArgsNative);
+                    var hostResponseArgs = OSF.Utility.fromSafeArray(hostResponseArgsNative);
                     if (typeof hostResponseArgs === "number") {
                         result = [];
                         status = hostResponseArgs;
@@ -3623,7 +3360,7 @@ var OSF;
                 this._clientHostController.unregisterEvent(id, eventType, targetId, function (hostResponseArgsNative, resultCode) {
                     var result;
                     var status;
-                    var hostResponseArgs = _this.fromSafeArray(hostResponseArgsNative);
+                    var hostResponseArgs = OSF.Utility.fromSafeArray(hostResponseArgsNative);
                     if (typeof hostResponseArgs === "number") {
                         result = [];
                         status = hostResponseArgs;
@@ -3736,9 +3473,30 @@ var OSF;
 var Office;
 (function (Office) {
     var Settings = (function () {
-        function Settings(settings) {
+        function Settings(settings, _clientSettingsManager) {
+            var _this = this;
+            this._clientSettingsManager = _clientSettingsManager;
             settings = settings || {};
             this._settings = settings;
+            this._eventDispatch = new OSF.EventDispatch([
+                {
+                    id: 1,
+                    type: OSF.EventType.SettingsChanged,
+                    getTargetId: function () { return ''; },
+                    fromSafeArrayHost: function (payload) {
+                        return {
+                            type: OSF.EventType.SettingsChanged,
+                            settings: _this
+                        };
+                    },
+                    fromWebHost: function (payload) {
+                        return {
+                            type: OSF.EventType.SettingsChanged,
+                            settings: _this
+                        };
+                    }
+                }
+            ]);
         }
         Settings.prototype.cacheSessionSettings = function (settings) {
             var osfSessionStorage = OSF.OUtil.getSessionStorage();
@@ -3761,10 +3519,34 @@ var Office;
             this.cacheSessionSettings(this._settings);
         };
         Settings.prototype.saveAsync = function (callback) {
-            throw OSF.Utility.createNotImplementedException();
+            var settingsManager = this._clientSettingsManager;
+            var serializedSettings = OSF.OUtil.serializeSettings(this._settings);
+            settingsManager.write(serializedSettings, function (errorCode) {
+                var result = OSF.Utility.asyncResultFromErrorCode(errorCode);
+                if (callback) {
+                    callback(result);
+                }
+            });
         };
         Settings.prototype.refreshAsync = function (callback) {
-            throw OSF.Utility.createNotImplementedException();
+            var _this = this;
+            var settingsManager = this._clientSettingsManager;
+            settingsManager.read(function (errorCode, serializedSettings) {
+                var result = OSF.Utility.asyncResultFromErrorCode(errorCode);
+                if (result.status === Office.AsyncResultStatus.succeeded) {
+                    _this._settings = OSF.OUtil.deserializeSettings(serializedSettings);
+                    result.value = _this;
+                }
+                if (callback) {
+                    callback(result);
+                }
+            });
+        };
+        Settings.prototype.addHandlerAsync = function (eventType, handler, callback) {
+            OSF.EventHelper.addEventHandler(eventType, handler, callback, this._eventDispatch);
+        };
+        Settings.prototype.removeHandlerAsync = function (eventType, handler, callback) {
+            OSF.EventHelper.removeEventHandler(eventType, handler, callback, this._eventDispatch);
         };
         Settings.prototype.toJSON = function () {
             return this._settings;
@@ -3822,7 +3604,7 @@ var OSF;
         }
         Utility.compareVersions = compareVersions;
         function getQueryStringValue(paramName) {
-            if (window.location.search) {
+            if (typeof (window) !== 'undefined' && window.location && window.location.search) {
                 var regex = new RegExp('[?&]' + paramName + '=([^&]*)');
                 var match = regex.exec(window.location.search);
                 if (match) {
@@ -3860,6 +3642,10 @@ var OSF;
             return (value.length === 0);
         }
         Utility.isNullOrEmpty = isNullOrEmpty;
+        function externalNativeFunctionExists(type) {
+            return type === 'unknown' || type !== 'undefined';
+        }
+        Utility.externalNativeFunctionExists = externalNativeFunctionExists;
         function stringEndsWith(value, subString) {
             if (isNullOrUndefined(value)) {
                 throw createArgumentException("value");
@@ -3876,6 +3662,34 @@ var OSF;
             return false;
         }
         Utility.stringEndsWith = stringEndsWith;
+        function fromSafeArray(value) {
+            var ret = value;
+            if (value != null && value.toArray) {
+                var arrayResult = value.toArray();
+                ret = new Array(arrayResult.length);
+                for (var i = 0; i < arrayResult.length; i++) {
+                    ret[i] = fromSafeArray(arrayResult[i]);
+                }
+            }
+            return ret;
+        }
+        Utility.fromSafeArray = fromSafeArray;
+        function asyncResultFromErrorCode(errorCode) {
+            if (errorCode === 0) {
+                return {
+                    status: Office.AsyncResultStatus.succeeded
+                };
+            }
+            else {
+                return {
+                    status: Office.AsyncResultStatus.failed,
+                    error: {
+                        code: errorCode
+                    }
+                };
+            }
+        }
+        Utility.asyncResultFromErrorCode = asyncResultFromErrorCode;
         Utility._DebugXdm = false;
     })(Utility = OSF.Utility || (OSF.Utility = {}));
 })(OSF || (OSF = {}));
@@ -3937,6 +3751,9 @@ var OSF;
         WebClientHostController.prototype.execute = function (id, params, callback) {
             var _this = this;
             var hostCallArgs = params;
+            if (!hostCallArgs) {
+                hostCallArgs = {};
+            }
             hostCallArgs.DdaMethod = {
                 ControlId: this._webAppState.id,
                 DispatchId: id,
@@ -4046,6 +3863,91 @@ var OSF;
         return WebClientHostController;
     }());
     OSF.WebClientHostController = WebClientHostController;
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
+    var WebClientSettingsManager = (function () {
+        function WebClientSettingsManager() {
+        }
+        WebClientSettingsManager.prototype.read = function (onComplete) {
+            var asyncMethodExecutor = OSF._OfficeAppFactory.getAsyncMethodExecutor();
+            var dataTransform = {
+                toSafeArrayHost: function () {
+                    return [];
+                },
+                fromSafeArrayHost: function (payload) {
+                    return null;
+                },
+                toWebHost: function () {
+                    return {};
+                },
+                fromWebHost: function (payload) {
+                    return payload.Properties.Settings;
+                }
+            };
+            var callback = function (result) {
+                if (result.status === Office.AsyncResultStatus.succeeded) {
+                    var serializedSettings = {};
+                    for (var i = 0; i < result.value.length; i++) {
+                        var entry = result.value[i];
+                        if (Array.isArray(entry)) {
+                            serializedSettings[entry[0]] = entry[1];
+                        }
+                        else {
+                            serializedSettings[entry.Name] = entry.Value;
+                        }
+                    }
+                    onComplete(0, serializedSettings);
+                }
+                else {
+                    var errorCode = result.error.code;
+                    onComplete(errorCode, {});
+                }
+            };
+            asyncMethodExecutor.executeAsync(75, dataTransform, callback);
+        };
+        WebClientSettingsManager.prototype.write = function (serializedSettings, onComplete) {
+            var asyncMethodExecutor = OSF._OfficeAppFactory.getAsyncMethodExecutor();
+            var properties = [];
+            for (var key in serializedSettings) {
+                var entry = [];
+                entry.push(key);
+                entry.push(serializedSettings[key]);
+                properties.push(entry);
+            }
+            var dataTransform = {
+                toSafeArrayHost: function () {
+                    return null;
+                },
+                fromSafeArrayHost: function (payload) {
+                    return null;
+                },
+                toWebHost: function () {
+                    return {
+                        DdaSettingsMethod: {
+                            OverwriteIfStale: true,
+                            Properties: properties
+                        }
+                    };
+                },
+                fromWebHost: function (payload) {
+                    return null;
+                }
+            };
+            var callback = function (result) {
+                if (result.status === Office.AsyncResultStatus.succeeded) {
+                    onComplete(0);
+                }
+                else {
+                    var errorCode = result.error.code;
+                    onComplete(errorCode);
+                }
+            };
+            asyncMethodExecutor.executeAsync(76, dataTransform, callback);
+        };
+        return WebClientSettingsManager;
+    }());
+    OSF.WebClientSettingsManager = WebClientSettingsManager;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
@@ -4216,9 +4118,9 @@ var OSF;
                     }
                     appContext.eToken = appContext.eToken ? appContext.eToken : "";
                     var settingsFunc = function () {
-                        return _this.deserializeSettings(_this._serializedSettings);
+                        return _this._serializedSettings;
                     };
-                    var returnedContext = new OSF.OfficeAppContext(appContext._id, appContext._appName, appContext._appVersion, appContext._appUILocale, appContext._dataLocale, appContext._docUrl, appContext._clientMode, settingsFunc, appContext._reason, appContext._osfControlType, appContext._eToken, appContext._correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, appContext._hostCustomMessage, appContext._hostFullVersion, appContext._clientWindowHeight, appContext._clientWindowWidth, appContext._addinName, appContext._appDomains, appContext._dialogRequirementMatrix, appContext._featureGates);
+                    var returnedContext = new OSF.OfficeAppContext(appContext._id, appContext._appName, appContext._appVersion, appContext._appUILocale, appContext._dataLocale, appContext._docUrl, appContext._clientMode, settingsFunc, appContext._reason, appContext._osfControlType, appContext._eToken, appContext._correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, appContext._hostCustomMessage, appContext._hostFullVersion, appContext._clientWindowHeight, appContext._clientWindowWidth, appContext._addinName, appContext._appDomains, appContext._dialogRequirementMatrix, appContext._featureGates, undefined, appContext._initialDisplayMode);
                     onSuccess(returnedContext);
                 }
                 else {
@@ -4258,6 +4160,9 @@ var OSF;
         };
         WebInitializationHelper.prototype.createAsyncMethodExecutor = function () {
             return new OSF.WebAsyncMethodExecutor(this._clientHostController);
+        };
+        WebInitializationHelper.prototype.createClientSettingsManager = function () {
+            return new OSF.WebClientSettingsManager();
         };
         WebInitializationHelper.prototype.addOrRemoveEventListenersForWindow = function (isAdd) {
             var me = this;
@@ -4346,6 +4251,51 @@ var OSF;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
+    var WebkitClientSettingsManager = (function () {
+        function WebkitClientSettingsManager(_initializationHelper, _scriptMessager) {
+            this._initializationHelper = _initializationHelper;
+            this._scriptMessager = _scriptMessager;
+        }
+        WebkitClientSettingsManager.prototype.read = function (onComplete) {
+            var keys = [];
+            var values = [];
+            var initializationHelper = this._initializationHelper;
+            var onGetAppContextSuccess = function (appContext) {
+                if (onComplete) {
+                    var serializedSettings = appContext.get_settingsFunc()();
+                    onComplete(0, serializedSettings);
+                }
+            };
+            var onGetAppContextError = function (e) {
+                if (onComplete) {
+                    onComplete(5001, {});
+                }
+            };
+            initializationHelper.getAppContext(null, onGetAppContextSuccess, onGetAppContextError);
+        };
+        WebkitClientSettingsManager.prototype.write = function (serializedSettings, onComplete) {
+            var hostParams = {};
+            var keys = [];
+            var values = [];
+            for (var key in serializedSettings) {
+                keys.push(key);
+                values.push(serializedSettings[key]);
+            }
+            hostParams["keys"] = keys;
+            hostParams["values"] = values;
+            var onWriteCompleted = function onWriteCompleted(status) {
+                if (onComplete) {
+                    onComplete(status[0]);
+                }
+            };
+            this._scriptMessager.invokeMethod(OSF.Webkit.MessageHandlerName, OSF.Webkit.MethodId.WriteSettings, hostParams, onWriteCompleted);
+        };
+        return WebkitClientSettingsManager;
+    }());
+    OSF.WebkitClientSettingsManager = WebkitClientSettingsManager;
+})(OSF || (OSF = {}));
+var OSF;
+(function (OSF) {
     var Webkit;
     (function (Webkit) {
         Webkit.MessageHandlerName = "Agave";
@@ -4375,6 +4325,7 @@ var OSF;
             AppContextProperties[AppContextProperties["RequirementMatrix"] = 20] = "RequirementMatrix";
             AppContextProperties[AppContextProperties["HostCustomMessage"] = 21] = "HostCustomMessage";
             AppContextProperties[AppContextProperties["HostFullVersion"] = 22] = "HostFullVersion";
+            AppContextProperties[AppContextProperties["InitialDisplayMode"] = 23] = "InitialDisplayMode";
         })(AppContextProperties = Webkit.AppContextProperties || (Webkit.AppContextProperties = {}));
         var MethodId;
         (function (MethodId) {
@@ -4567,11 +4518,11 @@ var OSF;
                 var appContextProperties = OSF.Webkit.AppContextProperties;
                 var appType = appContext[appContextProperties.AppType];
                 var hostSettings = appContext[appContextProperties.Settings];
-                var serializedSettings = {};
+                _this._serializedSettings = {};
                 var keys = hostSettings[0];
                 var values = hostSettings[1];
                 for (var index = 0; index < keys.length; index++) {
-                    serializedSettings[keys[index]] = values[index];
+                    _this._serializedSettings[keys[index]] = values[index];
                 }
                 var id = appContext[appContextProperties.SolutionReferenceId];
                 var version = appContext[appContextProperties.MajorVersion];
@@ -4591,10 +4542,11 @@ var OSF;
                 var requirementMatrix = appContext[appContextProperties.RequirementMatrix];
                 var hostCustomMessage = appContext[appContextProperties.HostCustomMessage];
                 var hostFullVersion = appContext[appContextProperties.HostFullVersion];
+                var initialDisplayMode = appContext[appContextProperties.InitialDisplayMode];
                 var settingsFunc = function () {
-                    return _this.deserializeSettings(serializedSettings);
+                    return _this._serializedSettings;
                 };
-                returnedContext = new OSF.OfficeAppContext(id, appType, version, UILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, undefined, undefined, undefined, undefined, undefined, undefined);
+                returnedContext = new OSF.OfficeAppContext(id, appType, version, UILocale, dataLocale, docUrl, clientMode, settingsFunc, reason, osfControlType, eToken, correlationId, appInstanceId, touchEnabled, commerceAllowed, minorVersion, requirementMatrix, hostCustomMessage, hostFullVersion, undefined, undefined, undefined, undefined, undefined, undefined, undefined, initialDisplayMode);
                 onSuccess(returnedContext);
             };
             var handler;
@@ -4614,6 +4566,9 @@ var OSF;
         };
         WebkitInitializationHelper.prototype.createAsyncMethodExecutor = function () {
             return new OSF.SafeArrayAsyncMethodExecutor(this.createClientHostController());
+        };
+        WebkitInitializationHelper.prototype.createClientSettingsManager = function () {
+            return new OSF.WebkitClientSettingsManager(this, OSF.ScriptMessaging.GetScriptMessenger());
         };
         return WebkitInitializationHelper;
     }(OSF.InitializationHelper));
@@ -5873,15 +5828,23 @@ var OSF;
 })(OSF || (OSF = {}));
 var OSF;
 (function (OSF) {
-    OSF._OfficeAppFactory.bootstrap(function () { }, function (e) {
-        console.error(JSON.stringify(e));
-    });
-    window.addEventListener('DOMContentLoaded', function (event) {
-        OSFPerformance.hostSpecificFileName = OSF.LoadScriptHelper.getHostBundleJsName();
-        Office.onReadyInternal(function () {
-            OSFPerfUtil.sendPerformanceTelemetry();
+    var isBrowser = new Function("try { return typeof(window) !== 'undefined' && this===window; } catch(e) { return false; }");
+    if (isBrowser()) {
+        OSF._OfficeAppFactory.bootstrap(function () { }, function (e) {
+            if (e instanceof Error) {
+                console.warn(e.message);
+            }
+            else {
+                console.warn(JSON.stringify(e));
+            }
         });
-    });
+        window.addEventListener('DOMContentLoaded', function (event) {
+            OSFPerformance.hostSpecificFileName = OSF.LoadScriptHelper.getHostBundleJsName();
+            Office.onReadyInternal(function () {
+                OSFPerfUtil.sendPerformanceTelemetry();
+            });
+        });
+    }
 })(OSF || (OSF = {}));
 
 
@@ -12037,6 +12000,16 @@ var OfficeCore;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(RequestContext.prototype, "ribbon", {
+            get: function () {
+                if (!this.m_ribbon) {
+                    this.m_ribbon = OfficeCore.DynamicRibbon.newObject(this);
+                }
+                return this.m_ribbon;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(RequestContext.prototype, "bi", {
             get: function () {
                 if (!this.m_biShim) {
@@ -12112,7 +12085,7 @@ var OfficeCore;
         "apiSets": [],
         "strings": ["Skill", "registerHostSkillEvent", "unregisterHostSkillEvent"],
         "enumTypes": [],
-        "clientObjectTypes": [[1, 0, 0, 0, [["executeAction", 3, 2, 0, 5], ["notifyPaneEvent", 2, 2, 0, 5], [2, 0, 0, 0, 1], [3, 0, 0, 0, 1], ["testFireEvent", 0, 0, 0, 1]], 0, 0, 0, [["HostSkillEvent", 2, 0, "RichApiMessageEventType.skillRichApiMessageEvent", "", 2, 3]], "Microsoft.SkillApi.Skill", 4]] };
+        "clientObjectTypes": [[1, 0, 0, 0, [["executeAction", 3, 2, 0, 5], ["notifyPaneEvent", 2, 2, 0, 5], [2, 0, 0, 0, 1], [3, 0, 0, 0, 1], ["testFireEvent", 0, 0, 0, 1]], 0, 0, 0, [["HostSkillEvent", 2, 0, "65538", "", 2, 3]], "Microsoft.SkillApi.Skill", 4]] };
     var _builder = new OfficeExtension.LibraryBuilder({ metadata: _libraryMetadataSkillApi, targetNamespaceObject: OfficeCore });
 })(OfficeCore || (OfficeCore = {}));
 var OfficeCore;
@@ -12456,7 +12429,7 @@ var OfficeFirstPartyAuth;
         }
     }
     function loadWebAuthForReplyPage() {
-        if (!window.sessionStorage) {
+        if (typeof (window) === "undefined" || !window.sessionStorage) {
             return;
         }
         var webAuthRedirectUrls = sessionStorage.getItem(WebAuthReplyUrlsStorageKey);
@@ -12464,7 +12437,7 @@ var OfficeFirstPartyAuth;
             load();
         }
     }
-    if (window.OSF) {
+    if (typeof (window) !== "undefined" && window.OSF) {
         loadWebAuthForReplyPage();
     }
 })(OfficeFirstPartyAuth || (OfficeFirstPartyAuth = {}));
@@ -12852,6 +12825,7 @@ var OfficeCore;
         ErrorCodes["controlIdNotFound"] = "ControlIdNotFound";
         ErrorCodes["entryIdRequired"] = "EntryIdRequired";
         ErrorCodes["generalException"] = "GeneralException";
+        ErrorCodes["hostRestartNeeded"] = "HostRestartNeeded";
         ErrorCodes["instanceNotFound"] = "InstanceNotFound";
         ErrorCodes["interactiveFlowAborted"] = "InteractiveFlowAborted";
         ErrorCodes["invalidArgument"] = "InvalidArgument";
@@ -12861,6 +12835,7 @@ var OfficeCore;
         ErrorCodes["objectNotFound"] = "ObjectNotFound";
         ErrorCodes["resourceNotSupported"] = "ResourceNotSupported";
         ErrorCodes["serverError"] = "ServerError";
+        ErrorCodes["serviceUrlNotFound"] = "ServiceUrlNotFound";
         ErrorCodes["ticketInvalidParams"] = "TicketInvalidParams";
         ErrorCodes["ticketNetworkError"] = "TicketNetworkError";
         ErrorCodes["ticketUnauthorized"] = "TicketUnauthorized";
@@ -12878,57 +12853,70 @@ var OfficeCore;
         "defaultApiSetName": "OfficeSharedApi",
         "hostName": "Office",
         "apiSets": [["1.2", "FirstPartyAuthentication"], ["1.3", "FirstPartyAuthentication"]],
-        "strings": ["AuthenticationService", "RoamingSetting", "RoamingSettingCollection", "LinkedIn", "NetworkUsage", "DynamicRibbon", "RibbonTab", "RibbonButton", "RibbonButtonCollection", "OfficeServicesManagerApi", "Comment", "CommentCollection", "MemberInfoList", "PersonaActions", "PersonaInfoSource", "PersonaInfo", "PersonaUnifiedCommunicationInfo", "PersonaPhotoInfo", "PersonaCollection", "PersonaOrganizationInfo", "UnifiedGroupInfo", "Persona", "PersonaLifetime", "LokiTokenProvider", "LokiTokenProviderFactory", "ServiceContext", "Tap", "AppRuntimePersistenceService", "AppRuntimeService", "null", "id", "getItem", "getCount", "isWarmedUp", "isWarmingUp", "displayName", "email", "emailAddresses", "sipAddresses", "birthday", "birthdays", "title", "jobInfoDepartment", "companyName", "office", "linkedTitles", "linkedDepartments", "linkedCompanyNames", "linkedOffices", "webSites", "notes", "getImageUri", "instanceId", "dispose", "_RegisterPersonaUpdatedEvent", "_UnregisterPersonaUpdatedEvent", "this.instanceId", "_RegisterLokiTokenAvailableEvent", "_UnregisterLokiTokenAvailableEvent", "_RegisterIdentityUniqueIdAvailableEvent", "_UnregisterIdentityUniqueIdAvailableEvent", "getLokiTokenProvider"],
+        "strings": ["AuthenticationService", "RoamingSetting", "RoamingSettingCollection", "ServiceUrlProvider", "LinkedIn", "NetworkUsage", "DynamicRibbon", "RibbonTab", "RibbonButton", "RibbonButtonCollection", "LocaleApi", "OfficeServicesManagerApi", "Comment", "CommentCollection", "MemberInfoList", "PersonaActions", "PersonaInfoSource", "PersonaInfo", "PersonaUnifiedCommunicationInfo", "PersonaPhotoInfo", "PersonaCollection", "PersonaOrganizationInfo", "UnifiedGroupInfo", "Persona", "PersonaLifetime", "LokiTokenProvider", "LokiTokenProviderFactory", "ServiceContext", "Tap", "AppRuntimePersistenceService", "AppRuntimeService", "License", "LicenseFeature", "null", "id", "getItem", "getCount", "isWarmedUp", "isWarmingUp", "displayName", "email", "emailAddresses", "sipAddresses", "birthday", "birthdays", "title", "jobInfoDepartment", "companyName", "office", "linkedTitles", "linkedDepartments", "linkedCompanyNames", "linkedOffices", "webSites", "notes", "getImageUri", "setPlaceholderColor", "getPlaceholderUri", "instanceId", "dispose", "_RegisterPersonaUpdatedEvent", "_UnregisterPersonaUpdatedEvent", "this.instanceId", "_RegisterLokiTokenAvailableEvent", "_UnregisterLokiTokenAvailableEvent", "_RegisterIdentityUniqueIdAvailableEvent", "_UnregisterIdentityUniqueIdAvailableEvent", "getLokiTokenProvider"],
         "enumTypes": [["IdentityType", ["organizationAccount", "microsoftAccount", "unsupported"]],
+            ["ServiceProvider", ["ariaBrowserPipeUrl", "ariaUploadUrl", "ariaVNextUploadUrl"]],
+            ["TimeStringFormat", ["shortTime", "longTime", "shortDate", "longDate"]],
             ["CommentTextFormat", ["plain", "markdown", "delta"]],
             ["PersonaCardPerfPoint", ["placeHolderRendered", "initialCardRendered"]],
             ["MessageType", [], { "personaLifetimePersonaUpdatedEvent": 3502, "lokiTokenProviderLokiTokenAvailableEvent": 3503, "lokiTokenProviderIdentityUniqueIdAvailableEvent": 3504 }],
             ["UnifiedCommunicationAvailability", ["notSet", "free", "idle", "busy", "idleBusy", "doNotDisturb", "unalertable", "unavailable"]],
             ["UnifiedCommunicationStatus", ["online", "notOnline", "away", "busy", "beRightBack", "onThePhone", "outToLunch", "inAMeeting", "outOfOffice", "doNotDisturb", "inAConference", "getting", "notABuddy", "disconnected", "notInstalled", "urgentInterruptionsOnly", "mayBeAvailable", "idle", "inPresentation"]],
+            ["UnifiedCommunicationPresence", ["free", "busy", "idle", "doNotDistrub", "blocked", "notSet", "outOfOffice"]],
             ["FreeBusyCalendarState", ["unknown", "free", "busy", "elsewhere", "tentative", "outOfOffice"]],
             ["PersonaType", ["unknown", "enterprise", "contact", "bot", "phoneOnly", "oneOff", "distributionList", "personalDistributionList", "anonymous", "unifiedGroup"]],
             ["PhoneType", ["workPhone", "homePhone", "mobilePhone", "businessFax", "otherPhone"]],
             ["AddressType", ["workAddress", "homeAddress", "otherAddress"]],
             ["MemberType", ["unknown", "individual", "group"]],
-            ["PersonaDataUpdated", ["hostId", "type", "photo", "personaInfo", "unifiedCommunicationInfo", "organization", "unifiedGroupInfo", "members", "membership", "capabilities", "customizations", "viewableSources"]],
+            ["PersonaDataUpdated", ["hostId", "type", "photo", "personaInfo", "unifiedCommunicationInfo", "organization", "unifiedGroupInfo", "members", "membership", "capabilities", "customizations", "viewableSources", "placeholder"]],
             ["CustomizedData", ["email", "workPhone", "workPhone2", "workFax", "mobilePhone", "homePhone", "homePhone2", "otherPhone", "sipAddress", "profile", "office", "company", "workAddress", "homeAddress", "otherAddress", "birthday"]],
             ["ObjectType", ["unknown", "chart", "smartArt", "table", "image", "slide", "text"], { "ole": "OLE" }],
             ["AppRuntimeState", ["inactive", "background", "visible"]],
-            ["Visibility", ["hidden", "visible"]]],
-        "clientObjectTypes": [[1, 4, 0, [["roamingSettings", 3, 2, 0, 0, 4]], [["getAccessToken", 2, 2, 0, 5], ["getPrimaryIdentityInfo", 0, 2, 1, 5], ["getIdentities", 0, 2, 2, 5]], 0, 0, 0, [["TokenReceived", 2, 1, 3001, "this._targetId", 30, 30]], "Microsoft.Authentication.AuthenticationService", 4],
-            [2, 0, [[31, 3], ["value", 1]]],
-            [3, 0, 0, 0, 0, [[32, 2, 1, 2, 0, 4], ["getItemOrNullObject", 2, 1, 2, 0, 4]]],
-            [4, 0, 0, 0, [["isEnabledForOffice"], ["recordLinkedInSettingsCompliance", 2]], 0, 0, 0, 0, "Microsoft.DesktopCompliance.LinkedIn", 4],
-            [5, 0, 0, 0, [["isInOnlineMode"]], 0, 0, 0, 0, "Microsoft.DesktopCompliance.NetworkUsage", 4],
-            [6, 0, 0, [["buttons", 9, 19, 0, 0, 4]], 0, [["getButton", 8, 1], ["getTab", 7, 1], ["executeRequestUpdate", 8, 1]], 0, 0, 0, "Microsoft.DynamicRibbon.DynamicRibbon", 4],
-            [7, 0, [[31, 3]], 0, [["setVisibility", 1]]],
-            [8, 0, [[31, 3], ["enabled", 1], ["label", 3]], 0, [["setEnabled", 1]]],
-            [9, 1, 0, 0, [[33, 0, 2, 0, 4]], [[32, 8, 1, 18, 0, 4]], 0, 8],
-            [10, 0, 0, 0, [["bindServiceToProfile", 2]], 0, 0, 0, 0, "Microsoft.OfficeServicesManager.OfficeServicesManagerApi", 4],
-            [11, 0, [[31, 3], ["text", 1], ["created", 11], ["level", 3], ["resolved", 1], ["author", 3], ["mentions", 3]], [["parent", 11, 2, 0, 0, 4], ["parentOrNullObject", 11, 2, 0, 0, 4], ["replies", 12, 19, 0, 0, 4]], [["getRichText", 1, 2, 0, 4], ["setRichText", 2], ["delete"]], [["getParentOrSelf", 11, 0, 2, 0, 4], ["reply", 11, 2]]],
-            [12, 1, 0, 0, [[33, 0, 2, 0, 4]], [[32, 11, 1, 18, 0, 4]], 0, 11],
-            [13, 0, [[34, 3], [35, 3]], 0, [["items"]], [["getPersonaForMember", 22, 1]]],
-            [14, 0, 0, 0, [["addContact"], ["editContact"], ["composeEmail", 1], ["composeInstantMessage", 1], ["callPhoneNumber", 1], ["pinPersonaToQuickContacts"], ["toggleTagForAlerts"], ["scheduleMeeting"], ["openLinkContactUx"], ["editContactByIdentifier", 1], ["showHoverCardForPersona", 6], ["hideHoverCardForPersona"], ["showContextMenu", 6], ["showContactCard", 6], ["showExpandedCard", 6]]],
-            [15, 0, [[36, 3], [37, 3], [38, 3], [39, 3], [40, 3], [41, 3], [42, 3], [43, 3], [44, 3], [45, 3], [46, 3], [47, 3], [48, 3], [49, 3], ["phones", 3], ["addresses", 3], [50, 3], [51, 3]]],
-            [16, 0, [[36, 3], [37, 3], [38, 3], [39, 3], [40, 11], [41, 11], [42, 3], [43, 3], [44, 3], [45, 3], [46, 3], [47, 3], [48, 3], [49, 3], [50, 3], [51, 3], ["isPersonResolved", 3]], [["sources", 15, 3, 0, 0, 4]], [["getPhones", 0, 2, 0, 4], ["getAddresses", 0, 2, 0, 4]]],
-            [17, 0, [["availability", 3], ["status", 3], ["isSelf", 3], ["isTagged", 3], ["customStatusString", 3], ["isBlocked", 3], ["presenceTooltip", 3], ["isOutOfOffice", 3], ["outOfOfficeNote", 3], ["timezone", 3], ["meetingLocation", 3], ["meetingSubject", 3], ["timezoneBias", 3], ["idleStartTime", 11], ["overallCapability", 3], ["isOnBuddyList", 3], ["presenceNote", 3], ["voiceMailUri", 3], ["availabilityText", 3], ["availabilityTooltip", 3], ["isDurationInAvailabilityText", 3], ["freeBusyStatus", 3], ["calendarState", 3]]],
-            [18, 0, 0, 0, [[52, 1, 0, 0, 0, 52]]],
-            [19, 1, 0, 0, [[33, 0, 2, 0, 4]], [[32, 22, 1, 18, 0, 4]], 0, 22],
-            [20, 0, [[34, 3], [35, 3]], [["hierarchy", 19, 18, 0, 0, 4], ["manager", 22, 2, 0, 0, 4], ["directReports", 19, 18, 0, 0, 4]]],
-            [21, 0, [["description", 1], ["oneDrive", 1], ["oneNote", 1], ["isPublic", 1], ["amIOwner", 1], ["amIMember", 1], ["amISubscribed", 1], ["memberCount", 1], ["ownerCount", 1], ["hasGuests", 1], ["site", 1], ["planner", 1], ["classification", 1], ["subscriptionEnabled", 1]]],
-            [22, 4, [["hostId", 3], ["type", 3], ["capabilities", 3], ["diagnosticId", 3], [53, 3]], [["photo", 18, 3, 0, 0, 4], ["personaInfo", 16, 3, 0, 0, 4], ["unifiedCommunicationInfo", 17, 3, 0, 0, 4], ["organization", 20, 3, 0, 0, 4], ["unifiedGroupInfo", 21, 35, 0, 0, 4], ["actions", 14, 2, 0, 0, 4]], [["getCustomizations"], ["warmup", 1], [54], ["getViewableSources"], ["reportTimeForRender", 2]], [["getMembers", 13], ["getMembership", 13]]],
-            [23, 0, [[53, 3]], 0, [["getPolicies"], [55], [56]], [["getPersona", 22, 1], ["getPersonaForOrgEntry", 22, 4], ["getPersonaForOrgByEntryId", 22, 4]], 0, 0, [["PersonaUpdated", 0, 0, "MessageType.personaLifetimePersonaUpdatedEvent", 57, 55, 56]]],
-            [24, 0, [["emailOrUpn", 3], [53, 3]], 0, [["requestToken"], [58], [59], ["requestIdentityUniqueId"], [60], [61]], 0, 0, 0, [["IdentityUniqueIdAvailable", 0, 0, "MessageType.lokiTokenProviderIdentityUniqueIdAvailableEvent", 57, 60, 61], ["LokiTokenAvailable", 0, 0, "MessageType.lokiTokenProviderLokiTokenAvailableEvent", 57, 58, 59]]],
-            [25, 0, 0, 0, 0, [[62, 24, 1]], 0, 0, 0, "Microsoft.People.LokiTokenProviderFactory", 4],
-            [26, 0, 0, 0, [[54, 1], ["accountEmailOrUpn", 1], ["getPersonaPolicies"]], [[62, 24, 1], ["getPersonaLifetime", 23, 1], ["getInitialPersona", 22, 1]], 0, 0, 0, "Microsoft.People.ServiceContext", 4],
-            [27, 0, 0, 0, [["getEnterpriseUserInfo", 0, 2, 0, 5], ["getMruFriendlyPath", 1, 2, 0, 5], ["launchFileUrlInOfficeApp", 2, 2, 0, 5], ["performLocalSearch", 4, 2, 0, 5], ["readSearchCache", 3, 2, 0, 5], ["writeSearchCache", 3, 2, 0, 5]], 0, 0, 0, 0, "Microsoft.TapRichApi.Tap", 4],
-            [28, 0, 0, 0, [["setAppRuntimeStartState", 1], ["getAppRuntimeStartState", 0, 2, 0, 4]], 0, 0, 0, 0, "Microsoft.AppRuntime.AppRuntimePersistenceService", 4],
-            [29, 0, 0, 0, [["setAppRuntimeState", 1], ["getAppRuntimeState", 0, 2, 0, 4]], 0, 0, 0, [["VisibilityChanged", 2, 0, "65539", "", 30, 30]], "Microsoft.AppRuntime.AppRuntimeService", 4]] };
+            ["Visibility", ["hidden", "visible"]],
+            ["LicenseFeatureTier", ["unknown", "basic", "premium"]],
+            ["LicenseEventType", [], { "featureStateChanged": 1 }]],
+        "clientObjectTypes": [[1, 4, 0, [["roamingSettings", 3, 2, 0, 0, 4]], [["getAccessToken", 2, 2, 0, 5], ["getPrimaryIdentityInfo", 0, 2, 1, 5], ["getIdentities", 0, 2, 2, 5]], 0, 0, 0, [["TokenReceived", 2, 1, "3001", "this._targetId", 34, 34]], "Microsoft.Authentication.AuthenticationService", 4],
+            [2, 0, [[35, 3], ["value", 1]]],
+            [3, 0, 0, 0, 0, [[36, 2, 1, 2, 0, 4], ["getItemOrNullObject", 2, 1, 2, 0, 4]]],
+            [4, 0, 0, 0, [["getServiceUrl", 2]], 0, 0, 0, 0, "Microsoft.DesktopCompliance.ServiceUrlProvider", 4],
+            [5, 0, 0, 0, [["isEnabledForOffice"], ["recordLinkedInSettingsCompliance", 2]], 0, 0, 0, 0, "Microsoft.DesktopCompliance.LinkedIn", 4],
+            [6, 0, 0, 0, [["isInOnlineMode"]], 0, 0, 0, 0, "Microsoft.DesktopCompliance.NetworkUsage", 4],
+            [7, 0, 0, [["buttons", 10, 19, 0, 0, 4]], 0, [["getButton", 9, 1], ["getTab", 8, 1], ["executeRequestUpdate", 9, 1]], 0, 0, 0, "Microsoft.DynamicRibbon.DynamicRibbon", 4],
+            [8, 0, [[35, 3]], 0, [["setVisibility", 1]]],
+            [9, 0, [[35, 3], ["enabled", 1], ["label", 3]], 0, [["setEnabled", 1]]],
+            [10, 1, 0, 0, [[37, 0, 2, 0, 4]], [[36, 9, 1, 18, 0, 4]], 0, 9],
+            [11, 0, 0, 0, [["getLocaleDateTimeFormattingInfo", 1], ["formatDateTimeString", 3]], 0, 0, 0, 0, "Microsoft.LocaleApi.LocaleApi", 4],
+            [12, 0, 0, 0, [["bindServiceToProfile", 2]], 0, 0, 0, 0, "Microsoft.OfficeServicesManager.OfficeServicesManagerApi", 4],
+            [13, 0, [[35, 3], ["text", 1], ["created", 11], ["level", 3], ["resolved", 1], ["author", 3], ["mentions", 3]], [["parent", 13, 2, 0, 0, 4], ["parentOrNullObject", 13, 2, 0, 0, 4], ["replies", 14, 19, 0, 0, 4]], [["getRichText", 1, 2, 0, 4], ["setRichText", 2], ["delete"]], [["getParentOrSelf", 13, 0, 2, 0, 4], ["reply", 13, 2]]],
+            [14, 1, 0, 0, [[37, 0, 2, 0, 4]], [[36, 13, 1, 18, 0, 4]], 0, 13],
+            [15, 0, [[38, 3], [39, 3]], 0, [["items"]], [["getPersonaForMember", 24, 1]]],
+            [16, 0, 0, 0, [["addContact"], ["editContact"], ["composeEmail", 1], ["composeInstantMessage", 1], ["callPhoneNumber", 1], ["pinPersonaToQuickContacts"], ["toggleTagForAlerts"], ["scheduleMeeting"], ["openLinkContactUx"], ["editContactByIdentifier", 1], ["showHoverCardForPersona", 6], ["hideHoverCardForPersona"], ["showContextMenu", 6], ["showContactCard", 6], ["showExpandedCard", 6], ["openGroupCalendar"], ["subscribeToGroup"], ["unsubscribeFromGroup"]]],
+            [17, 0, [[40, 3], [41, 3], [42, 3], [43, 3], [44, 3], [45, 3], [46, 3], [47, 3], [48, 3], [49, 3], [50, 3], [51, 3], [52, 3], [53, 3], ["phones", 3], ["addresses", 3], [54, 3], [55, 3]]],
+            [18, 0, [[40, 3], [41, 3], [42, 3], [43, 3], [44, 11], [45, 11], [46, 3], [47, 3], [48, 3], [49, 3], [50, 3], [51, 3], [52, 3], [53, 3], [54, 3], [55, 3], ["isPersonResolved", 3]], [["sources", 17, 3, 0, 0, 4]], [["getPhones", 0, 2, 0, 4], ["getAddresses", 0, 2, 0, 4]]],
+            [19, 0, [["availability", 3], ["status", 3], ["isSelf", 3], ["isTagged", 3], ["customStatusString", 3], ["isBlocked", 3], ["presenceTooltip", 3], ["isOutOfOffice", 3], ["outOfOfficeNote", 3], ["timezone", 3], ["meetingLocation", 3], ["meetingSubject", 3], ["timezoneBias", 3], ["idleStartTime", 11], ["overallCapability", 3], ["isOnBuddyList", 3], ["presenceNote", 3], ["voiceMailUri", 3], ["availabilityText", 3], ["availabilityTooltip", 3], ["isDurationInAvailabilityText", 3], ["freeBusyStatus", 3], ["calendarState", 3], ["presence", 3]]],
+            [20, 0, 0, 0, [[56, 1, 0, 0, 0, 56], [57, 1, 0, 0, 0, 57], [58, 1, 0, 0, 0, 58]]],
+            [21, 1, 0, 0, [[37, 0, 2, 0, 4]], [[36, 24, 1, 18, 0, 4]], 0, 24],
+            [22, 0, [[38, 3], [39, 3]], [["hierarchy", 21, 18, 0, 0, 4], ["manager", 24, 2, 0, 0, 4], ["directReports", 21, 18, 0, 0, 4]]],
+            [23, 0, [["description", 1], ["oneDrive", 1], ["oneNote", 1], ["isPublic", 1], ["amIOwner", 1], ["amIMember", 1], ["amISubscribed", 1], ["memberCount", 1], ["ownerCount", 1], ["hasGuests", 1], ["site", 1], ["planner", 1], ["classification", 1], ["subscriptionEnabled", 1]]],
+            [24, 4, [["hostId", 3], ["type", 3], ["capabilities", 3], ["diagnosticId", 3], [59, 3]], [["photo", 20, 3, 0, 0, 4], ["personaInfo", 18, 3, 0, 0, 4], ["unifiedCommunicationInfo", 19, 3, 0, 0, 4], ["organization", 22, 3, 0, 0, 4], ["unifiedGroupInfo", 23, 35, 0, 0, 4], ["actions", 16, 2, 0, 0, 4]], [["getCustomizations"], ["warmup", 1], [60], ["getViewableSources"], ["reportTimeForRender", 2]], [["getMembers", 15], ["getMembership", 15]]],
+            [25, 0, [[59, 3]], 0, [["getPolicies"], [61], [62]], [["getPersona", 24, 1], ["getPersonaForOrgEntry", 24, 4], ["getPersonaForOrgByEntryId", 24, 4]], 0, 0, [["PersonaUpdated", 0, 0, "MessageType.personaLifetimePersonaUpdatedEvent", 63, 61, 62]]],
+            [26, 0, [["emailOrUpn", 3], [59, 3]], 0, [["requestToken"], [64], [65], ["requestIdentityUniqueId"], [66], [67]], 0, 0, 0, [["IdentityUniqueIdAvailable", 0, 0, "MessageType.lokiTokenProviderIdentityUniqueIdAvailableEvent", 63, 66, 67], ["LokiTokenAvailable", 0, 0, "MessageType.lokiTokenProviderLokiTokenAvailableEvent", 63, 64, 65]]],
+            [27, 0, 0, 0, 0, [[68, 26, 1]], 0, 0, 0, "Microsoft.People.LokiTokenProviderFactory", 4],
+            [28, 0, 0, 0, [[60, 1], ["accountEmailOrUpn", 1], ["getPersonaPolicies"]], [[68, 26, 1], ["getPersonaLifetime", 25, 1], ["getInitialPersona", 24, 1]], 0, 0, 0, "Microsoft.People.ServiceContext", 4],
+            [29, 0, 0, 0, [["getEnterpriseUserInfo", 0, 2, 0, 5], ["getMruFriendlyPath", 1, 2, 0, 5], ["launchFileUrlInOfficeApp", 2, 2, 0, 5], ["performLocalSearch", 4, 2, 0, 5], ["readSearchCache", 3, 2, 0, 5], ["writeSearchCache", 3, 2, 0, 5]], 0, 0, 0, 0, "Microsoft.TapRichApi.Tap", 4],
+            [30, 0, 0, 0, [["setAppRuntimeStartState", 1], ["getAppRuntimeStartState", 0, 2, 0, 4]], 0, 0, 0, 0, "Microsoft.AppRuntime.AppRuntimePersistenceService", 4],
+            [31, 0, 0, 0, [["setAppRuntimeState", 1], ["getAppRuntimeState", 0, 2, 0, 4]], 0, 0, 0, [["VisibilityChanged", 2, 0, "65539", "", 34, 34]], "Microsoft.AppRuntime.AppRuntimeService", 4],
+            [32, 0, 0, 0, [["isFeatureEnabled", 2, 2, 0, 4], ["getFeatureTier", 2, 2, 0, 4], ["isFreemiumUpsellEnabled", 0, 2, 0, 4], ["launchUpsellExperience", 1, 2, 0, 4], ["_TestFireStateChangedEvent", 1, 0, 0, 1]], [["getLicenseFeature", 33, 1, 2, 0, 4]], 0, 0, 0, "Microsoft.Office.Licensing.License", 4],
+            [33, 0, [[35, 3]], 0, [["_RegisterStateChange", 0, 2, 0, 4], ["_UnregisterStateChange", 0, 2, 0, 4]]]] };
     var _builder = new OfficeExtension.LibraryBuilder({ metadata: _libraryMetadataOfficeSharedApi, targetNamespaceObject: OfficeCore });
 })(OfficeCore || (OfficeCore = {}));
 var Office;
 (function (Office) {
-    Office.Visibility = OfficeCore.Visibility;
+    var VisibilityMode;
+    (function (VisibilityMode) {
+        VisibilityMode["hidden"] = "Hidden";
+        VisibilityMode["taskpane"] = "Taskpane";
+    })(VisibilityMode = Office.VisibilityMode || (Office.VisibilityMode = {}));
     var StartupBehavior;
     (function (StartupBehavior) {
         StartupBehavior["none"] = "None";
@@ -12936,7 +12924,6 @@ var Office;
     })(StartupBehavior = Office.StartupBehavior || (Office.StartupBehavior = {}));
     var addin;
     (function (addin) {
-        var _this = this;
         function _createRequestContext(wacPartition) {
             var context = new OfficeCore.RequestContext();
             context._requestFlagModifier |= 64;
@@ -13038,36 +13025,50 @@ var Office;
             }
             return _appRuntimeEvent;
         }
-        addin.onVisibilityChanged = {
-            add: function (handler) { return __awaiter(_this, void 0, void 0, function () {
-                var eventService, registrationToken;
+        function _convertVisibilityToVisibilityMode(visibility) {
+            if (visibility === OfficeCore.Visibility.visible) {
+                return VisibilityMode.taskpane;
+            }
+            return VisibilityMode.hidden;
+        }
+        function onVisibilityModeChanged(listener) {
+            return __awaiter(this, void 0, void 0, function () {
+                var eventService, registrationToken, ret;
                 var _this = this;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
                             eventService = _getAppRuntimeEventService();
-                            registrationToken = eventService.onVisibilityChanged.add(handler);
+                            registrationToken = eventService.onVisibilityChanged.add(function (args) {
+                                if (listener) {
+                                    var msg = {
+                                        visibilityMode: _convertVisibilityToVisibilityMode(args.visibility)
+                                    };
+                                    listener(msg);
+                                }
+                                return null;
+                            });
                             return [4, eventService.context.sync()];
                         case 1:
                             _a.sent();
-                            return [2, {
-                                    remove: function () { return __awaiter(_this, void 0, void 0, function () {
-                                        return __generator(this, function (_a) {
-                                            switch (_a.label) {
-                                                case 0:
-                                                    registrationToken.remove();
-                                                    return [4, eventService.context.sync()];
-                                                case 1:
-                                                    _a.sent();
-                                                    return [2];
-                                            }
-                                        });
-                                    }); }
-                                }];
+                            ret = function () { return __awaiter(_this, void 0, void 0, function () {
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0:
+                                            registrationToken.remove();
+                                            return [4, eventService.context.sync()];
+                                        case 1:
+                                            _a.sent();
+                                            return [2];
+                                    }
+                                });
+                            }); };
+                            return [2, ret];
                     }
                 });
-            }); }
-        };
+            });
+        }
+        addin.onVisibilityModeChanged = onVisibilityModeChanged;
     })(addin = Office.addin || (Office.addin = {}));
 })(Office || (Office = {}));
 
@@ -14346,9 +14347,15 @@ var Excel;
         "name": "Excel",
         "defaultApiSetName": "ExcelApi",
         "hostName": "Excel",
-        "apiSets": [["1.8"], ["1.9"], ["1.11"], ["1.6"], ["1.7"], ["1.12"], ["1.2"], ["1.3"], ["1.4"], ["1.5"], ["1.10"], ["1.1", "CustomFunctions"], ["1.1", "WACOperationEvents"], ["1.1", "ExcelApiOnline"], ["99.9"]],
-        "strings": ["Runtime", "Application", "IterativeCalculation", "Workbook", "WorkbookProtection", "WorkbookCreated", "Worksheet", "WorksheetCollection", "WorksheetProtection", "WorksheetFreezePanes", "Range", "RangeAreas", "RangeView", "RangeViewCollection", "SettingCollection", "Setting", "NamedItemCollection", "NamedItem", "NamedItemArrayValues", "Binding", "BindingCollection", "TableCollection", "TableScopedCollection", "Table", "TableColumnCollection", "TableColumn", "TableRowCollection", "TableRow", "DataValidation", "RemoveDuplicatesResult", "RangeFormat", "FormatProtection", "RangeFill", "RangeBorder", "RangeBorderCollection", "RangeFont", "ChartCollection", "Chart", "ChartPivotOptions", "ChartAreaFormat", "ChartSeriesCollection", "ChartSeries", "ChartSeriesFormat", "ChartPointsCollection", "ChartPoint", "ChartPointFormat", "ChartAxes", "ChartAxis", "ChartAxisFormat", "ChartAxisTitle", "ChartAxisTitleFormat", "ChartDataLabels", "ChartDataLabel", "ChartDataLabelFormat", "ChartErrorBars", "ChartErrorBarsFormat", "ChartGridlines", "ChartGridlinesFormat", "ChartLegend", "ChartLegendEntry", "ChartLegendEntryCollection", "ChartLegendFormat", "ChartMapOptions", "ChartTitle", "ChartFormatString", "ChartTitleFormat", "ChartFill", "ChartBorder", "ChartBinOptions", "ChartBoxwhiskerOptions", "ChartLineFormat", "ChartFont", "ChartTrendline", "ChartTrendlineCollection", "ChartTrendlineFormat", "ChartTrendlineLabel", "ChartTrendlineLabelFormat", "ChartPlotArea", "ChartPlotAreaFormat", "VisualCollection", "Visual", "VisualProperty", "VisualPropertyCollection", "DataControllerClient", "RangeSort", "TableSort", "Filter", "AutoFilter", "CultureInfo", "NumberFormatInfo", "CustomXmlPartScopedCollection", "CustomXmlPartCollection", "CustomXmlPart", "_V1Api", "PivotTableCollection", "PivotTable", "PivotLayout", "PivotHierarchyCollection", "PivotHierarchy", "RowColumnPivotHierarchyCollection", "RowColumnPivotHierarchy", "FilterPivotHierarchyCollection", "FilterPivotHierarchy", "DataPivotHierarchyCollection", "DataPivotHierarchy", "PivotFieldCollection", "PivotField", "PivotItemCollection", "PivotItem", "WorksheetCustomProperty", "WorksheetCustomPropertyCollection", "DocumentProperties", "CustomProperty", "CustomPropertyCollection", "ConditionalFormatCollection", "ConditionalFormat", "DataBarConditionalFormat", "ConditionalDataBarPositiveFormat", "ConditionalDataBarNegativeFormat", "CustomConditionalFormat", "ConditionalFormatRule", "IconSetConditionalFormat", "ColorScaleConditionalFormat", "TopBottomConditionalFormat", "PresetCriteriaConditionalFormat", "TextConditionalFormat", "CellValueConditionalFormat", "ConditionalRangeFormat", "ConditionalRangeFont", "ConditionalRangeFill", "ConditionalRangeBorder", "ConditionalRangeBorderCollection", "NumberFormattingService", "NumberFormatter", "CustomFunctionManager", "Style", "StyleCollection", "TableStyleCollection", "TableStyle", "PivotTableStyleCollection", "PivotTableStyle", "SlicerStyleCollection", "SlicerStyle", "TimelineStyleCollection", "TimelineStyle", "InternalTest", "PageLayout", "HeaderFooter", "HeaderFooterGroup", "PageBreak", "PageBreakCollection", "DataConnectionCollection", "RangeCollection", "CommentCollection", "Comment", "CommentReplyCollection", "CommentReply", "ShapeCollection", "Shape", "GeometricShape", "Image", "ShapeGroup", "GroupShapeCollection", "Line", "ShapeFill", "ShapeLineFormat", "TextFrame", "TextRange", "ShapeFont", "Slicer", "SlicerCollection", "SlicerItem", "SlicerItemCollection", "Ribbon", "FunctionResult", "Functions", "calculationEngineVersion", "calculate", "_GetWorkbookCreatedById", "enabled", "name", "readOnly", "names", "tables", "pivotTables", "properties", "protection", "comments", "slicers", "_RegisterAutoSaveSettingChangedEvent", "_UnregisterAutoSaveSettingChangedEvent", "_RegisterWACOperationEvent", "_UnregisterWACOperationEvent", "OfficeExtension.Constants.eventWorkbookId", "SelectionChanged", "", "protected", "protect", "unprotect", "id", "position", "shapes", "autoFilter", "delete", "activate", "_RegisterDataChangedEvent", "_UnregisterDataChangedEvent", "_RegisterActivatedEvent", "_UnregisterActivatedEvent", "_RegisterDeactivatedEvent", "_UnregisterDeactivatedEvent", "_RegisterSelectionChangedEvent", "_UnregisterSelectionChangedEvent", "_RegisterCalculatedEvent", "_UnregisterCalculatedEvent", "replaceAll", "_RegisterFilteredEvent", "_UnregisterFilteredEvent", "_RegisterFormatChangedEvent", "_UnregisterFormatChangedEvent", "_RegisterRowSortedEvent", "_UnregisterRowSortedEvent", "_RegisterColumnSortedEvent", "_UnregisterColumnSortedEvent", "_RegisterSingleClickedEvent", "_UnregisterSingleClickedEvent", "_RegisterRowHiddenChangedEvent", "_UnregisterRowHiddenChangedEvent", "getRange", "getUsedRange", "getCell", "getUsedRangeOrNullObject", "_GetSheetById", "_GetAnotherWorksheetById", "getRanges", "Activated", "MessageType.worksheetActivatedEvent", "this.id", "Calculated", "MessageType.worksheetCalculatedEvent", "Changed", "MessageType.worksheetDataChangedEvent", "ColumnSorted", "MessageType.worksheetColumnSortedEvent", "Deactivated", "MessageType.worksheetDeactivatedEvent", "Filtered", "MessageType.worksheetFilteredEvent", "FormatChanged", "MessageType.worksheetFormatChangedEvent", "RowHiddenChanged", "MessageType.worksheetRowHiddenChangedEvent", "RowSorted", "MessageType.worksheetRowSortedEvent", "MessageType.worksheetSelectionChangedEvent", "SingleClicked", "MessageType.worksheetSingleClickedEvent", "getCount", "_RegisterAddedEvent", "_UnregisterAddedEvent", "_RegisterDeletedEvent", "_UnregisterDeletedEvent", "getItem", "add", "getItemOrNullObject", "getFirst", "Added", "Deleted", "options", "getLocation", "numberFormat", "numberFormatLocal", "values", "text", "formulas", "formulasLocal", "rowIndex", "columnIndex", "rowCount", "columnCount", "address", "addressLocal", "cellCount", "_ReferenceId", "valueTypes", "formulasR1C1", "isEntireColumn", "isEntireRow", "hyperlink", "style", "top", "left", "height", "width", "format", "worksheet", "sort", "conditionalFormats", "dataValidation", "clear", "select", "_KeepReference", "getImage", "copyFrom", "convertToLinkedDataType", "convertDataTypeToText", "setDirty", "showTeachingCallout", "group", "ungroup", "getEntireColumn", "getEntireRow", "getIntersection", "getIntersectionOrNullObject", "getTables", "find", "getSpecialCells", "getSpecialCellsOrNullObject", "areas", "index", "rows", "getItemAt", "key", "value", "_Id", "type", "visible", "formula", "getRangeOrNullObject", "count", "this._ParentObject ? this._ParentObject.id : OfficeExtension.Constants.eventWorkbookId", "MessageType.tableDataChangedEvent", "MessageType.tableFilteredEvent", "columns", "clearFilters", "setStyle", "getHeaderRowRange", "getDataBodyRange", "getTotalRowRange", "rule", "wrapText", "horizontalAlignment", "verticalAlignment", "rowHeight", "textOrientation", "readingOrder", "shrinkToFit", "indentLevel", "autoIndent", "fill", "font", "borders", "locked", "formulaHidden", "color", "tintAndShade", "sideIndex", "weight", "size", "italic", "bold", "underline", "strikethrough", "_GetItem", "MessageType.chartActivatedEvent", "this._ParentObject.id", "MessageType.chartDeactivatedEvent", "chartType", "title", "dataLabels", "border", "markerSize", "markerStyle", "showShadow", "markerBackgroundColor", "markerForegroundColor", "axisGroup", "line", "linkNumberFormat", "setFormula", "showValue", "showSeriesName", "showCategoryName", "showLegendKey", "showPercentage", "showBubbleSize", "separator", "autoText", "overlay", "level", "getSubstring", "setSolidColor", "lineStyle", "null", "_RegisterChangeEvent", "_UnregisterChangeEvent", "min", "max", "apply", "fields", "reapply", "criteria", "remove", "refreshAll", "setToDefault", "creationDate", "custom", "fillColor", "borderColor", "right", "isText", "setDefault", "getDefault", "duplicate", "_RegisterTestEvent", "_UnregisterTestEvent", "_RegisterTest1Event", "_UnregisterTest1Event", "_RegisterCustomFunctionExecutionBeginEvent", "_UnregisterCustomFunctionExecutionBeginEvent", "_RegisterCustomFunctionExecutionEndEvent", "_UnregisterCustomFunctionExecutionEndEvent", "orientation", "leftMargin", "rightMargin", "topMargin", "bottomMargin", "content", "authorName", "authorEmail", "resolved", "richContent", "mentions", "contentType", "updateMentions", "_GetShapeById", "shape", "connectorType", "transparency", "_RegisterCommandExecutedEvent", "_UnregisterCommandExecutedEvent"],
-        "enumTypes": [["BuiltInPivotTableStyle", ["none", "light1", "light2", "light3", "light4", "light5", "light6", "light7", "light8", "light9", "light10", "light11", "light12", "light13", "light14", "light15", "light16", "light17", "light18", "light19", "light20", "light21", "light22", "light23", "light24", "light25", "light26", "light27", "light28", "medium1", "medium2", "medium3", "medium4", "medium5", "medium6", "medium7", "medium8", "medium9", "medium10", "medium11", "medium12", "medium13", "medium14", "medium15", "medium16", "medium17", "medium18", "medium19", "medium20", "medium21", "medium22", "medium23", "medium24", "medium25", "medium26", "medium27", "medium28", "dark1", "dark2", "dark3", "dark4", "dark5", "dark6", "dark7", "dark8", "dark9", "dark10", "dark11", "dark12", "dark13", "dark14", "dark15", "dark16", "dark17", "dark18", "dark19", "dark20", "dark21", "dark22", "dark23", "dark24", "dark25", "dark26", "dark27", "dark28"]],
+        "apiSets": [["1.8"], ["1.9"], ["1.11"], ["1.6"], ["1.7"], ["1.12"], ["1.2"], ["1.3"], ["1.4"], ["1.5"], ["1.10"], ["1.1", "CustomFunctions"], ["1.1", "WACOperationEvents"], ["99.9"], ["1.1", "ExcelApiOnline"]],
+        "strings": ["DataConnection", "Runtime", "Application", "IterativeCalculation", "Workbook", "WorkbookProtection", "WorkbookCreated", "Worksheet", "WorksheetCollection", "WorksheetProtection", "WorksheetFreezePanes", "Range", "RangeAreas", "RangeView", "RangeViewCollection", "SettingCollection", "Setting", "NamedItemCollection", "NamedItem", "NamedItemArrayValues", "Binding", "BindingCollection", "TableCollection", "TableScopedCollection", "Table", "TableColumnCollection", "TableColumn", "TableRowCollection", "TableRow", "DataValidation", "RemoveDuplicatesResult", "RangeFormat", "FormatProtection", "RangeFill", "RangeBorder", "RangeBorderCollection", "RangeFont", "ChartCollection", "Chart", "ChartPivotOptions", "ChartAreaFormat", "ChartSeriesCollection", "ChartSeries", "ChartSeriesFormat", "ChartPointsCollection", "ChartPoint", "ChartPointFormat", "ChartAxes", "ChartAxis", "ChartAxisFormat", "ChartAxisTitle", "ChartAxisTitleFormat", "ChartDataLabels", "ChartDataLabel", "ChartDataLabelFormat", "ChartErrorBars", "ChartErrorBarsFormat", "ChartGridlines", "ChartGridlinesFormat", "ChartLegend", "ChartLegendEntry", "ChartLegendEntryCollection", "ChartLegendFormat", "ChartMapOptions", "ChartTitle", "ChartFormatString", "ChartTitleFormat", "ChartFill", "ChartBorder", "ChartBinOptions", "ChartBoxwhiskerOptions", "ChartLineFormat", "ChartFont", "ChartTrendline", "ChartTrendlineCollection", "ChartTrendlineFormat", "ChartTrendlineLabel", "ChartTrendlineLabelFormat", "ChartPlotArea", "ChartPlotAreaFormat", "VisualCollection", "Visual", "VisualProperty", "VisualPropertyCollection", "DataControllerClient", "RangeSort", "TableSort", "Filter", "AutoFilter", "CultureInfo", "NumberFormatInfo", "DatetimeFormatInfo", "CustomXmlPartScopedCollection", "CustomXmlPartCollection", "CustomXmlPart", "_V1Api", "PivotTableScopedCollection", "PivotTableCollection", "PivotTable", "PivotLayout", "PivotHierarchyCollection", "PivotHierarchy", "RowColumnPivotHierarchyCollection", "RowColumnPivotHierarchy", "FilterPivotHierarchyCollection", "FilterPivotHierarchy", "DataPivotHierarchyCollection", "DataPivotHierarchy", "PivotFieldCollection", "PivotField", "PivotItemCollection", "PivotItem", "WorksheetCustomProperty", "WorksheetCustomPropertyCollection", "DocumentProperties", "CustomProperty", "CustomPropertyCollection", "ConditionalFormatCollection", "ConditionalFormat", "DataBarConditionalFormat", "ConditionalDataBarPositiveFormat", "ConditionalDataBarNegativeFormat", "CustomConditionalFormat", "ConditionalFormatRule", "IconSetConditionalFormat", "ColorScaleConditionalFormat", "TopBottomConditionalFormat", "PresetCriteriaConditionalFormat", "TextConditionalFormat", "CellValueConditionalFormat", "ConditionalRangeFormat", "ConditionalRangeFont", "ConditionalRangeFill", "ConditionalRangeBorder", "ConditionalRangeBorderCollection", "NumberFormattingService", "NumberFormatter", "CustomFunctionManager", "Style", "StyleCollection", "TableStyleCollection", "TableStyle", "PivotTableStyleCollection", "PivotTableStyle", "SlicerStyleCollection", "SlicerStyle", "TimelineStyleCollection", "TimelineStyle", "InternalTest", "PageLayout", "HeaderFooter", "HeaderFooterGroup", "PageBreak", "PageBreakCollection", "DataConnectionCollection", "RangeCollection", "CommentCollection", "Comment", "CommentReplyCollection", "CommentReply", "ShapeCollection", "Shape", "GeometricShape", "Image", "ShapeGroup", "GroupShapeCollection", "Line", "ShapeFill", "ShapeLineFormat", "TextFrame", "TextRange", "ShapeFont", "Slicer", "SlicerCollection", "SlicerItem", "SlicerItemCollection", "Ribbon", "SheetView", "SheetViewCollection", "FunctionResult", "Functions", "name", "calculationEngineVersion", "calculate", "_GetWorkbookCreatedById", "enabled", "readOnly", "names", "tables", "pivotTables", "properties", "protection", "comments", "slicers", "_RegisterAutoSaveSettingChangedEvent", "_UnregisterAutoSaveSettingChangedEvent", "_RegisterWACOperationEvent", "_UnregisterWACOperationEvent", "OfficeExtension.Constants.eventWorkbookId", "SelectionChanged", "", "protected", "protect", "unprotect", "id", "position", "shapes", "autoFilter", "delete", "activate", "_RegisterDataChangedEvent", "_UnregisterDataChangedEvent", "_RegisterActivatedEvent", "_UnregisterActivatedEvent", "_RegisterDeactivatedEvent", "_UnregisterDeactivatedEvent", "_RegisterSelectionChangedEvent", "_UnregisterSelectionChangedEvent", "_RegisterCalculatedEvent", "_UnregisterCalculatedEvent", "replaceAll", "_RegisterFilteredEvent", "_UnregisterFilteredEvent", "_RegisterFormatChangedEvent", "_UnregisterFormatChangedEvent", "_RegisterRowSortedEvent", "_UnregisterRowSortedEvent", "_RegisterColumnSortedEvent", "_UnregisterColumnSortedEvent", "_RegisterSingleClickedEvent", "_UnregisterSingleClickedEvent", "_RegisterRowHiddenChangedEvent", "_UnregisterRowHiddenChangedEvent", "getRange", "getUsedRange", "getCell", "getUsedRangeOrNullObject", "_GetSheetById", "_GetAnotherWorksheetById", "getRanges", "Activated", "MessageType.worksheetActivatedEvent", "this.id", "Calculated", "MessageType.worksheetCalculatedEvent", "Changed", "MessageType.worksheetDataChangedEvent", "ColumnSorted", "MessageType.worksheetColumnSortedEvent", "Deactivated", "MessageType.worksheetDeactivatedEvent", "Filtered", "MessageType.worksheetFilteredEvent", "FormatChanged", "MessageType.worksheetFormatChangedEvent", "RowHiddenChanged", "MessageType.worksheetRowHiddenChangedEvent", "RowSorted", "MessageType.worksheetRowSortedEvent", "MessageType.worksheetSelectionChangedEvent", "SingleClicked", "MessageType.worksheetSingleClickedEvent", "getCount", "_RegisterAddedEvent", "_UnregisterAddedEvent", "_RegisterDeletedEvent", "_UnregisterDeletedEvent", "getItem", "add", "getItemOrNullObject", "getFirst", "Added", "Deleted", "options", "getLocation", "numberFormat", "numberFormatLocal", "values", "text", "formulas", "formulasLocal", "rowIndex", "columnIndex", "rowCount", "columnCount", "address", "addressLocal", "cellCount", "_ReferenceId", "valueTypes", "formulasR1C1", "isEntireColumn", "isEntireRow", "hyperlink", "style", "top", "left", "height", "width", "format", "worksheet", "sort", "conditionalFormats", "dataValidation", "clear", "select", "_KeepReference", "getImage", "copyFrom", "convertToLinkedDataType", "convertDataTypeToText", "setDirty", "showTeachingCallout", "group", "ungroup", "getEntireColumn", "getEntireRow", "getIntersection", "getIntersectionOrNullObject", "getTables", "find", "getSpecialCells", "getSpecialCellsOrNullObject", "areas", "index", "rows", "getItemAt", "key", "value", "_Id", "type", "visible", "formula", "getRangeOrNullObject", "count", "this._ParentObject ? this._ParentObject.id : OfficeExtension.Constants.eventWorkbookId", "MessageType.tableDataChangedEvent", "MessageType.tableFilteredEvent", "columns", "clearFilters", "setStyle", "getHeaderRowRange", "getDataBodyRange", "getTotalRowRange", "rule", "wrapText", "horizontalAlignment", "verticalAlignment", "rowHeight", "textOrientation", "readingOrder", "shrinkToFit", "indentLevel", "autoIndent", "fill", "font", "borders", "locked", "formulaHidden", "color", "tintAndShade", "sideIndex", "weight", "size", "italic", "bold", "underline", "strikethrough", "_GetItem", "MessageType.chartActivatedEvent", "this._ParentObject.id", "MessageType.chartDeactivatedEvent", "chartType", "title", "dataLabels", "border", "markerSize", "markerStyle", "showShadow", "markerBackgroundColor", "markerForegroundColor", "axisGroup", "line", "linkNumberFormat", "setFormula", "showValue", "showSeriesName", "showCategoryName", "showLegendKey", "showPercentage", "showBubbleSize", "separator", "autoText", "overlay", "level", "getSubstring", "setSolidColor", "lineStyle", "null", "_RegisterChangeEvent", "_UnregisterChangeEvent", "min", "max", "apply", "fields", "reapply", "criteria", "remove", "refreshAll", "setToDefault", "creationDate", "custom", "fillColor", "borderColor", "right", "isText", "setDefault", "getDefault", "duplicate", "_RegisterTestEvent", "_UnregisterTestEvent", "_RegisterTest1Event", "_UnregisterTest1Event", "_RegisterCustomFunctionExecutionBeginEvent", "_UnregisterCustomFunctionExecutionBeginEvent", "_RegisterCustomFunctionExecutionEndEvent", "_UnregisterCustomFunctionExecutionEndEvent", "orientation", "leftMargin", "rightMargin", "topMargin", "bottomMargin", "content", "authorName", "authorEmail", "resolved", "richContent", "mentions", "contentType", "updateMentions", "_GetShapeById", "shape", "connectorType", "transparency", "_RegisterCommandExecutedEvent", "_UnregisterCommandExecutedEvent"],
+        "enumTypes": [["DataSourceType", ["unknown", "cube"]],
+            ["DateFilterCondition", ["unknown", "equals", "before", "beforeOrEqualTo", "after", "afterOrEqualTo", "between", "tomorrow", "today", "yesterday", "nextWeek", "thisWeek", "lastWeek", "nextMonth", "thisMonth", "lastMonth", "nextQuarter", "thisQuarter", "lastQuarter", "nextYear", "thisYear", "lastYear", "yearToDate", "allDatesInPeriodQuarter1", "allDatesInPeriodQuarter2", "allDatesInPeriodQuarter3", "allDatesInPeriodQuarter4", "allDatesInPeriodJanuary", "allDatesInPeriodFebruary", "allDatesInPeriodMarch", "allDatesInPeriodApril", "allDatesInPeriodMay", "allDatesInPeriodJune", "allDatesInPeriodJuly", "allDatesInPeriodAugust", "allDatesInPeriodSeptember", "allDatesInPeriodOctober", "allDatesInPeriodNovember", "allDatesInPeriodDecember"]],
+            ["LabelFilterCondition", ["unknown", "equals", "beginsWith", "endsWith", "contains", "greaterThan", "greaterThanOrEqualTo", "lessThan", "lessThanOrEqualTo", "between"]],
+            ["PivotFilterType", ["unknown", "value", "manual", "label", "date"]],
+            ["TopBottomSelectionType", ["items", "percent", "sum"]],
+            ["ValueFilterCondition", ["unknown", "equals", "greaterThan", "greaterThanOrEqualTo", "lessThan", "lessThanOrEqualTo", "between", "topN", "bottomN"]],
+            ["BuiltInPivotTableStyle", ["none", "light1", "light2", "light3", "light4", "light5", "light6", "light7", "light8", "light9", "light10", "light11", "light12", "light13", "light14", "light15", "light16", "light17", "light18", "light19", "light20", "light21", "light22", "light23", "light24", "light25", "light26", "light27", "light28", "medium1", "medium2", "medium3", "medium4", "medium5", "medium6", "medium7", "medium8", "medium9", "medium10", "medium11", "medium12", "medium13", "medium14", "medium15", "medium16", "medium17", "medium18", "medium19", "medium20", "medium21", "medium22", "medium23", "medium24", "medium25", "medium26", "medium27", "medium28", "dark1", "dark2", "dark3", "dark4", "dark5", "dark6", "dark7", "dark8", "dark9", "dark10", "dark11", "dark12", "dark13", "dark14", "dark15", "dark16", "dark17", "dark18", "dark19", "dark20", "dark21", "dark22", "dark23", "dark24", "dark25", "dark26", "dark27", "dark28"]],
             ["BuiltInSlicerStyle", ["light1", "light2", "light3", "light4", "light5", "light6", "other1", "other2", "dark1", "dark2", "dark3", "dark4", "dark5", "dark6"]],
             ["BuiltInTableStyle", ["light1", "light2", "light3", "light4", "light5", "light6", "light7", "light8", "light9", "light10", "light11", "light12", "light13", "light14", "light15", "light16", "light17", "light18", "light19", "light20", "light21", "medium1", "medium2", "medium3", "medium4", "medium5", "medium6", "medium7", "medium8", "medium9", "medium10", "medium11", "medium12", "medium13", "medium14", "medium15", "medium16", "medium17", "medium18", "medium19", "medium20", "medium21", "medium22", "medium23", "medium24", "medium25", "medium26", "medium27", "medium28", "dark1", "dark2", "dark3", "dark4", "dark5", "dark6", "dark7", "dark8", "dark9", "dark10", "dark11"]],
             ["ChartSeriesDimension", ["categories", "values"], { "xvalues": "XValues", "yvalues": "YValues" }],
@@ -14465,7 +14472,7 @@ var Excel;
             ["SortDataOption", ["normal", "textAsNumber"]],
             ["SortMethod", ["pinYin", "strokeCount"]],
             ["VerticalAlignment", ["top", "center", "bottom", "justify", "distributed"]],
-            ["MessageCategory", [], { "none": 0, "customFunction": 1, "event": 65536 }],
+            ["MessageCategory", [], { "none": 0, "customFunction": 1, "action": 2, "event": 65536 }],
             ["MessageType", [], { "none": 0, "testEvent": 1, "test1Event": 2, "worksheetDataChangedEvent": 10, "worksheetActivatedEvent": 11, "worksheetDeactivatedEvent": 12, "worksheetAddedEvent": 13, "worksheetSelectionChangedEvent": 14, "worksheetDeletedEvent": 15, "worksheetCalculatedEvent": 16, "worksheetFilteredEvent": 17, "worksheetFormatChangedEvent": 18, "worksheetRowSortedEvent": 19, "worksheetColumnSortedEvent": 20, "worksheetSingleClickedEvent": 21, "worksheetRowHiddenChangedEvent": 22, "chartAddedEvent": 50, "chartActivatedEvent": 51, "chartDeactivatedEvent": 52, "chartDeletedEvent": 53, "tableSelectionChangedEvent": 100, "tableDataChangedEvent": 101, "tableAddedEvent": 102, "tableDeletedEvent": 103, "tableFilteredEvent": 104, "agaveVisualUpdateEvent": 150, "customFunctionExecutionBeginEvent": 200, "customFunctionExecutionEndEvent": 201, "invocationMessage": 1000, "cancellationMessage": 1001, "metadataMessage": 1002, "visualSelectionChangedEvent": 2000, "visualChangeEvent": 2001, "shapeSelectionChangedEvent": 2100, "shapeActivatedEvent": 2101, "shapeDeactivatedEvent": 2102, "workbookAutoSaveSettingChangedEvent": 2200, "wacoperationEvent": 2201, "ribbonCommandExecutedEvent": 2300, "appRuntimeVisibilityChangedEvent": 65539 }],
             ["DocumentPropertyType", ["number", "boolean", "date", "string", "float"]],
             ["EventSource", ["local", "remote"]],
@@ -14509,182 +14516,187 @@ var Excel;
             ["SlicerSortType", ["dataSourceOrder", "ascending", "descending"]],
             ["RibbonTab", ["others", "home", "insert", "draw", "pageLayout", "formulas", "data", "review", "view", "developer", "addIns", "help"]],
             ["NumberFormatCategory", ["general", "number", "currency", "accounting", "date", "time", "percentage", "fraction", "scientific", "text", "special", "custom"]]],
-        "clientObjectTypes": [[1, 0, [["enableEvents", 1, 1]]],
-            [2, 0, [["calculationMode", 1], [177, 3, 2], ["calculationState", 3, 2], ["decimalSeparator", 3, 3], ["thousandsSeparator", 3, 3], ["useSystemSeparators", 3, 3]], [["iterativeCalculation", 3, 35, 2, 0, 4], ["ribbon", 174, 35, 2, 0, 4], ["cultureInfo", 89, 3, 3, 0, 4]], [[178, 1], ["suspendApiCalculationUntilNextSync", 0, 1, 4], ["suspendScreenUpdatingUntilNextSync", 0, 0, 2]], [["createWorkbook", 6, 1, 10, 1, 0, 0, 179], [179, 6, 1, 2, 1, 4]]],
-            [3, 0, [[180, 1], ["maxIteration", 1], ["maxChange", 1]]],
-            [4, 0, [[181, 3, 5], [182, 3, 1], ["isDirty", 1, 2], ["use1904DateSystem", 1, 6], ["chartDataPointTrack", 1, 2], ["usePrecisionAsDisplayed", 1, 2], [177, 3, 2], ["autoSave", 3, 2], ["previouslySaved", 3, 2]], [["worksheets", 8, 19, 0, 0, 4], [183, 17, 19, 0, 0, 4], [184, 22, 19, 0, 0, 4], ["application", 2, 2, 0, 0, 4], ["bindings", 21, 19, 0, 0, 4], ["functions", 176, 2, 7, 0, 4], [94, 94, 2, 8, 0, 4], [185, 95, 19, 8, 0, 4], ["settings", 15, 19, 9, 0, 4], ["customXmlParts", 92, 19, 10, 0, 4], ["internalTest", 146, 2, 4, 0, 4], [186, 112, 35, 5, 0, 4], ["styles", 137, 19, 5, 0, 4], [187, 5, 3, 5, 0, 4], ["dataConnections", 152, 3, 5, 0, 4], ["_Runtime", 1, 2, 10, 0, 4], [188, 154, 19, 11, 0, 4], [189, 171, 19, 11, 0, 4], ["tableStyles", 138, 19, 11, 0, 4], ["pivotTableStyles", 140, 19, 11, 0, 4], ["slicerStyles", 142, 19, 11, 0, 4], ["timelineStyles", 144, 19, 11, 0, 4]], [["_RemoveReference", 1, 2], ["_GetObjectByReferenceId", 1, 2, 0, 4], ["_GetObjectTypeNameByReferenceId", 1, 2, 0, 4], ["_RemoveAllReferences", 0, 2], ["_GetReferenceCount", 0, 2, 0, 4], ["getIsActiveCollabSession", 0, 0, 2], ["registerCustomFunctions", 7, 0, 12, 8], ["_SetOsfControlContainerReadyForCustomFunctions", 0, 0, 12], ["close", 1, 0, 3], ["save", 1, 0, 3], [190, 0, 0, 2], [191, 0, 0, 2], [192, 0, 0, 13], [193, 0, 0, 13]], [["getSelectedRange", 11, 0, 10, 0, 4], ["getActiveCell", 11, 0, 10, 5, 4], ["_GetRangeForEventByReferenceId", 11, 1, 2, 0, 4], ["_GetRangeOrNullObjectForEventByReferenceId", 11, 1, 2, 0, 4], ["getActiveChart", 38, 0, 2, 2, 4], ["getActiveChartOrNullObject", 38, 0, 2, 2, 4], ["getSelectedRanges", 12, 0, 10, 2, 4], ["_GetRangesForEventByReferenceId", 12, 1, 2, 2, 4], ["_GetRangesOrNullObjectForEventByReferenceId", 12, 1, 2, 2, 4], ["getActiveSlicer", 170, 0, 2, 11, 4], ["getActiveSlicerOrNullObject", 170, 0, 2, 11, 4]], 0, 0, [["AutoSaveSettingChanged", 0, 2, "MessageType.workbookAutoSaveSettingChangedEvent", 194, 190, 191], [195, 3, 8, "_CC.office10EventIdDocumentSelectionChangedEvent", 196, 196, 196], ["WACOperationEvent", 2, 13, "MessageType.wacoperationEvent", 194, 192, 193], ["_Message", 3, 5, "_CC.office10EventIdRichApiMessageEvent", 196, 196, 196]]],
-            [5, 0, [[197, 3]], 0, [[198, 1], [199, 1]]],
-            [6, 0, [[200, 3]], 0, [["open", 0, 2, 0, 4]]],
-            [7, 0, [[181, 1], [200, 3], [201, 1], ["visibility", 1], ["tabColor", 1, 5], ["standardWidth", 1, 5], ["standardHeight", 3, 5], ["showGridlines", 5, 1], ["showHeadings", 5, 1], ["enableCalculation", 1, 2]], [["charts", 37, 83, 0, 0, 4], [184, 22, 83, 0, 0, 4], [187, 9, 3, 7, 0, 4], [185, 95, 19, 8, 0, 4], [183, 17, 19, 9, 0, 4], ["freezePanes", 10, 3, 5, 0, 4], ["pageLayout", 147, 35, 2, 0, 4], ["visuals", 80, 83, 11, 0, 4], [202, 158, 19, 2, 0, 4], ["horizontalPageBreaks", 151, 19, 2, 0, 4], ["verticalPageBreaks", 151, 19, 2, 0, 4], [203, 88, 3, 2, 0, 4], [189, 171, 19, 11, 0, 4], [188, 154, 19, 11, 0, 4], ["customProperties", 111, 19, 6, 0, 4]], [[204], [205, 0, 2], [178, 1, 0, 4], [206, 0, 0, 5], [207, 0, 0, 5], [208, 0, 0, 5], [209, 0, 0, 5], [210, 0, 0, 5], [211, 0, 0, 5], [212, 0, 0, 5], [213, 0, 0, 5], [214, 0, 0, 1], [215, 0, 0, 1], [216, 3, 0, 2], [217, 0, 0, 6], [218, 0, 0, 6], [219, 0, 0, 2], [220, 0, 0, 2], [221, 0, 0, 11], [222, 0, 0, 11], [223, 0, 0, 11], [224, 0, 0, 11], [225, 0, 0, 11], [226, 0, 0, 11], [227, 0, 0, 3], [228, 0, 0, 3], ["showOutlineLevels", 2, 0, 11]], [[229, 11, 1, 10, 0, 4], [230, 11, 1, 10, 0, 4], [231, 11, 2, 10, 0, 4], [232, 11, 1, 10, 9, 4], ["getRangeByIndexes", 11, 4, 10, 5, 4], ["getPrevious", 7, 1, 10, 10, 4, 0, 233], ["getPreviousOrNullObject", 7, 1, 10, 10, 4, 0, 233], ["getNext", 7, 1, 10, 10, 4, 0, 233], ["getNextOrNullObject", 7, 1, 10, 10, 4, 0, 233], [233, 7, 1, 2, 5, 4], ["copy", 7, 2, 0, 5, 0, 0, 234], [234, 7, 1, 0, 5], ["findAll", 12, 2, 10, 2, 4], ["findAllOrNullObject", 12, 2, 10, 2, 4], [235, 12, 1, 10, 2, 4]], "workbook.worksheets", 0, [[236, 0, 5, 237, 238, 208, 209], [239, 0, 1, 240, 238, 214, 215], [241, 2, 5, 242, 238, 206, 207], [243, 0, 11, 244, 238, 223, 224], [245, 0, 5, 246, 238, 210, 211], [247, 0, 6, 248, 238, 217, 218], [249, 2, 2, 250, 238, 219, 220], [251, 0, 3, 252, 238, 227, 228], [253, 0, 11, 254, 238, 221, 222], [195, 0, 5, 255, 238, 212, 213], [256, 0, 11, 257, 238, 225, 226]]],
-            [8, 1, 0, 0, [[258, 1, 2, 9, 4], [259, 0, 0, 5], [260, 0, 0, 5], [208, 0, 2, 5], [209, 0, 0, 5], [210, 0, 0, 5], [211, 0, 0, 5], [261, 0, 0, 5], [262, 0, 0, 5], [214, 0, 0, 1], [215, 0, 0, 1], [206, 0, 0, 2], [207, 0, 0, 2], [212, 0, 0, 2], [213, 0, 0, 2], ["addFromBase64", 4, 0, 6], [217, 0, 0, 6], [218, 0, 0, 6], [219, 0, 0, 2], [220, 0, 0, 2], [221, 0, 0, 11], [222, 0, 0, 11], [223, 0, 0, 11], [224, 0, 0, 11], [225, 0, 0, 11], [226, 0, 0, 11], [227, 0, 0, 3], [228, 0, 0, 3]], [[263, 7, 1, 18, 0, 4], [264, 7, 1, 8], ["getActiveWorksheet", 7, 0, 2, 0, 4], [265, 7, 1, 2, 9, 4], [266, 7, 1, 10, 10, 4], ["getLast", 7, 1, 10, 10, 4]], 0, 7, [[236, 0, 5, 237, 194, 208, 209], [267, 0, 5, "MessageType.worksheetAddedEvent", 194, 259, 260], [239, 0, 1, 240, 194, 214, 215], [241, 2, 2, 242, 194, 206, 207], [243, 0, 11, 244, 194, 223, 224], [245, 0, 5, 246, 194, 210, 211], [268, 0, 5, "MessageType.worksheetDeletedEvent", 194, 261, 262], [247, 0, 6, 248, 194, 217, 218], [249, 2, 2, 250, 194, 219, 220], [251, 0, 3, 252, 194, 227, 228], [253, 0, 11, 254, 194, 221, 222], [195, 0, 2, 255, 194, 212, 213], [256, 0, 11, 257, 194, 225, 226]]],
-            [9, 0, [[197, 3], [269, 3]], 0, [[198, 2, 1], [199, 1]]],
-            [10, 0, 0, 0, [["unfreeze"], ["freezeAt", 1], ["freezeRows", 1], ["freezeColumns", 1]], [[270, 11, 0, 10, 0, 4], ["getLocationOrNullObject", 11, 0, 10, 0, 4]]],
-            [11, 14, [[271, 5], [272, 1, 5], [273, 5], [274, 3], [275, 5], [276, 5], [277, 3], [278, 3], [279, 3], [280, 3], [281, 3], [282, 3], [283, 3], [284, 2], [285, 3], [286, 5, 7], ["hidden", 3, 7], ["rowHidden", 1, 7], ["columnHidden", 1, 7], [287, 3, 5], [288, 3, 5], [289, 1, 5], [290, 1, 5], ["linkedDataTypeState", 3, 2], ["hasSpill", 3, 6], [291, 3, 11], [292, 3, 11], [293, 3, 11], [294, 3, 11], ["savedAsArray", 3, 6], ["numberFormatCategories", 3, 6]], [[295, 31, 35, 0, 0, 4], [296, 7, 2, 0, 0, 4], [297, 85, 3, 7, 0, 4], [298, 115, 19, 4, 0, 4], [299, 29, 35, 1, 0, 4]], [[300, 1], [204, 1], [301, 0, 2], [302, 0, 2], ["merge", 1, 0, 7], ["unmerge", 0, 0, 7], ["_ValidateArraySize", 2, 2, 8, 4], [178, 0, 0, 4], ["showCard", 0, 0, 5], [303, 0, 2, 5, 4], [216, 3, 0, 2], [304, 4, 0, 2], [305, 2, 0, 2], [306, 0, 0, 2], [307, 0, 0, 2], ["getCellProperties", 1, 0, 2], ["getRowProperties", 1, 0, 2], ["getColumnProperties", 1, 0, 2], ["setCellProperties", 1, 0, 2], ["setRowProperties", 1, 0, 2], ["setColumnProperties", 1, 0, 2], ["autoFill", 2, 0, 2], [308, 2, 0, 2], ["flashFill", 0, 0, 2], [309, 1, 0, 11], [310, 1, 0, 11], ["showGroupDetails", 1, 0, 11], ["hideGroupDetails", 1, 0, 11], ["moveTo", 1, 0, 14]], [[231, 11, 2, 10, 0, 4], [230, 11, 1, 10, 0, 4], ["insert", 11, 1, 8], [311, 11, 0, 10, 0, 4], [312, 11, 0, 10, 0, 4], ["getOffsetRange", 11, 2, 10, 0, 4], ["getRow", 11, 1, 10, 0, 4], ["getColumn", 11, 1, 10, 0, 4], [313, 11, 1, 10, 0, 4], ["getBoundingRect", 11, 1, 10, 0, 4], ["getLastCell", 11, 0, 10, 0, 4], ["getLastColumn", 11, 0, 10, 0, 4], ["getLastRow", 11, 0, 10, 0, 4], [314, 11, 1, 10, 9, 4], ["getRowsAbove", 11, 1, 11, 8, 4], ["getRowsBelow", 11, 1, 11, 8, 4], ["getColumnsBefore", 11, 1, 11, 8, 4], ["getColumnsAfter", 11, 1, 11, 8, 4], ["getResizedRange", 11, 2, 11, 8, 4], ["getVisibleView", 13, 0, 2, 8, 4], [232, 11, 1, 10, 9, 4], ["getSurroundingRegion", 11, 0, 10, 5, 4], ["getAbsoluteResizedRange", 11, 2, 10, 5, 4], [315, 23, 1, 6, 2, 4], [316, 11, 2, 10, 2, 4], ["findOrNullObject", 11, 2, 10, 2, 4], ["removeDuplicates", 30, 2, 8, 2], [317, 12, 2, 10, 2, 4], [318, 12, 2, 10, 2, 4], ["getSpillingToRange", 11, 0, 10, 6, 4], ["getSpillParent", 11, 0, 10, 6, 4], ["getSpillingToRangeOrNullObject", 11, 0, 10, 6, 4], ["getSpillParentOrNullObject", 11, 0, 10, 6, 4], ["getMergedAreas", 12, 0, 10, 6, 4]]],
-            [12, 2, [[284, 2], [281, 3], [282, 3], ["areaCount", 3], [283, 3], [287, 3], [288, 3], [290, 1]], [[319, 153, 19, 0, 0, 4], [298, 115, 19, 0, 0, 4], [295, 31, 35, 0, 0, 4], [299, 29, 35, 0, 0, 4], [296, 7, 2, 0, 0, 4]], [[302, 0, 2], [178], [300, 1], [307], [304, 4], [305, 2], [306], [301, 0, 2, 6]], [[311, 12, 0, 10, 0, 4], [312, 12, 0, 10, 0, 4], [313, 12, 1, 10, 0, 4], [314, 12, 1, 10, 0, 4], ["getOffsetRangeAreas", 12, 2, 10, 0, 4], ["getUsedRangeAreas", 12, 1, 10, 0, 4], ["getUsedRangeAreasOrNullObject", 12, 1, 10, 0, 4], [315, 23, 1, 6, 0, 4], [317, 12, 2, 10, 0, 4], [318, 12, 2, 10, 0, 4]]],
-            [13, 0, [[271, 1], [273, 1], [274, 3], [275, 1], [276, 1], [286, 1], [285, 3], [279, 3], [280, 3], ["cellAddresses", 3], [320, 3]], [[321, 14, 19, 0, 0, 4]], 0, [[229, 11, 0, 10, 0, 4]]],
-            [14, 1, 0, 0, [[258, 0, 2, 9, 4]], [[322, 13, 1, 2, 0, 4]], 0, 13],
-            [15, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 16, 1, 18, 0, 4], [264, 16, 2, 9], [265, 16, 1, 2, 0, 4]], 0, 16, [["SettingsChanged", 3, 0, "_CC.office10EventIdSettingsChangedEvent", 196, 196, 196]]],
-            [16, 8, [[323, 3], [324, 5], [325, 2]], 0, [[204]]],
-            [17, 1, 0, 0, [[258, 0, 2, 9, 4]], [[263, 18, 1, 18, 0, 4], [265, 18, 1, 2, 9, 4], [264, 18, 3, 8, 9], ["addFormulaLocal", 18, 3, 0, 9]], 0, 18],
-            [18, 0, [[181, 3], [326, 3], [324, 3], [327, 1], [325, 2], ["comment", 1, 9], ["scope", 3, 9], [328, 1, 5]], [[296, 7, 2, 9, 0, 4], ["worksheetOrNullObject", 7, 2, 9, 0, 4], ["arrayValues", 19, 3, 5, 0, 4]], [[204, 0, 0, 9]], [[229, 11, 0, 10, 0, 4], [329, 11, 0, 10, 9, 4]]],
-            [19, 0, [[273, 3], ["types", 3]]],
-            [20, 0, [[200, 3], [326, 3]], 0, [["getText", 0, 2, 0, 4], [204, 0, 0, 8]], [["getTable", 24, 0, 2, 0, 4], [229, 11, 0, 2, 0, 4]], 0, 0, [["DataChanged", 3, 8, "_CC.office10EventIdBindingDataChangedEvent", 238, 196, 196], [195, 3, 8, "_CC.office10EventIdBindingSelectionChangedEvent", 238, 196, 196]]],
-            [21, 1, [[330, 3]], 0, [[258, 0, 2, 9, 4]], [[263, 20, 1, 18, 0, 4], [322, 20, 1, 2, 0, 4], [264, 20, 3, 8, 8], ["addFromNamedItem", 20, 3, 0, 8], ["addFromSelection", 20, 2, 0, 8], [265, 20, 1, 2, 9, 4]], 0, 20],
-            [22, 5, [[330, 3]], 0, [[258, 0, 2, 9, 4], [206, 0, 0, 5], [207, 0, 0, 5], [259, 0, 0, 2], [260, 0, 0, 2], [261, 0, 0, 2], [262, 0, 0, 2], [217, 0, 0, 6], [218, 0, 0, 6]], [[263, 24, 1, 18, 0, 4], [322, 24, 1, 2, 0, 4], [264, 24, 2, 8], [265, 24, 1, 2, 9, 4]], 0, 24, [[267, 0, 2, "MessageType.tableAddedEvent", 331, 259, 260], [241, 2, 5, 332, 331, 206, 207], [268, 0, 2, "MessageType.tableDeletedEvent", 331, 261, 262], [247, 0, 6, 333, 331, 217, 218]]],
-            [23, 1, 0, 0, [[258, 0, 2, 0, 4]], [[266, 24, 0, 10, 0, 4], [263, 24, 1, 18, 0, 4]], 0, 24],
-            [24, 24, [[200, 3], [181, 1], ["showHeaders", 1], ["showTotals", 1], [290, 1], ["highlightFirstColumn", 1, 8], ["highlightLastColumn", 1, 8], ["showBandedRows", 1, 8], ["showBandedColumns", 1, 8], ["showFilterButton", 1, 8], ["legacyId", 3, 1]], [[334, 25, 19, 0, 0, 4], [321, 27, 19, 0, 0, 4], [297, 86, 3, 7, 0, 4], [296, 7, 2, 7, 0, 4], [203, 88, 3, 2, 0, 4], ["tableStyle", 139, 35, 15, 0, 4]], [[204], [335, 0, 0, 7], ["reapplyFilters", 0, 0, 7], [212, 0, 0, 5], [213, 0, 0, 5], [206, 0, 0, 5], [207, 0, 0, 5], ["clearStyle", 0, 0, 6], [217, 0, 0, 6], [218, 0, 0, 6], [336, 1, 0, 15]], [[229, 11, 0, 10, 0, 4], [337, 11, 0, 10, 0, 4], [338, 11, 0, 10, 0, 4], [339, 11, 0, 10, 0, 4], ["convertToRange", 11, 0, 8, 7]], "workbook.tables", 0, [[241, 2, 5, 332, 238, 206, 207], [247, 0, 6, 333, 238, 217, 218], [195, 2, 5, "MessageType.tableSelectionChangedEvent", 238, 212, 213]]],
-            [25, 1, [[330, 3]], 0, [[258, 0, 2, 9, 4]], [[263, 26, 1, 18, 0, 4], [322, 26, 1, 2, 0, 4], [264, 26, 3, 8], [265, 26, 1, 2, 9, 4]], 0, 26],
-            [26, 0, [[200, 3], [320, 3], [273, 1], [181, 1]], [["filter", 87, 3, 7, 0, 4]], [[204]], [[229, 11, 0, 10, 0, 4], [337, 11, 0, 10, 0, 4], [338, 11, 0, 10, 0, 4], [339, 11, 0, 10, 0, 4]]],
-            [27, 1, [[330, 3]], 0, [[258, 0, 2, 9, 4]], [[322, 28, 1, 2, 0, 4], [264, 28, 2, 8]], 0, 28],
-            [28, 0, [[320, 3], [273, 1]], 0, [[204]], [[229, 11, 0, 10, 0, 4]]],
-            [29, 0, [[326, 3], [340, 1], ["prompt", 1], ["errorAlert", 1], ["ignoreBlanks", 1], ["valid", 3]], 0, [[300]], [["getInvalidCells", 12, 0, 10, 2, 4], ["getInvalidCellsOrNullObject", 12, 0, 10, 2, 4]]],
-            [30, 0, [["removed", 3], ["uniqueRemaining", 3]]],
-            [31, 0, [[341, 1], [342, 1], [343, 1], ["columnWidth", 1, 7], [344, 1, 7], [345, 1, 5], ["useStandardHeight", 1, 5], ["useStandardWidth", 1, 5], [346, 1, 2], [347, 1, 2], [348, 1, 2], [349, 1, 2]], [[350, 33, 35, 0, 0, 4], [351, 36, 35, 0, 0, 4], [352, 35, 51, 0, 0, 4], [187, 32, 35, 7, 0, 4]], [["autofitColumns", 0, 0, 7], ["autofitRows", 0, 0, 7], ["adjustIndent", 1, 0, 14]]],
-            [32, 0, [[353, 1], [354, 1]]],
-            [33, 0, [[355, 1], [356, 1, 2], ["patternTintAndShade", 1, 2], ["pattern", 1, 2], ["patternColor", 1, 2]], 0, [[300]]],
-            [34, 0, [[357, 3], [290, 1], [358, 1], [355, 1], [356, 1, 2]]],
-            [35, 1, [[330, 3], [356, 1, 2]], 0, 0, [[263, 34, 1, 18, 0, 4], [322, 34, 1, 2, 0, 4]], 0, 34],
-            [36, 0, [[181, 1], [359, 1], [355, 1], [360, 1], [361, 1], [362, 1], [363, 1, 2], ["subscript", 1, 2], ["superscript", 1, 2], [356, 1, 2]]],
-            [37, 5, [[330, 3]], 0, [[258, 0, 2, 9, 4], [259, 0, 0, 1], [260, 0, 0, 1], [208, 0, 0, 1], [209, 0, 0, 1], [210, 0, 0, 1], [211, 0, 0, 1], [261, 0, 0, 1], [262, 0, 0, 1]], [[264, 38, 3, 9], [322, 38, 1, 2, 0, 4], [364, 38, 1, 18, 0, 4], [263, 38, 1, 2, 0, 4], [265, 38, 1, 2, 9, 4]], 0, 38, [[236, 0, 1, 365, 366, 208, 209], [267, 0, 1, "MessageType.chartAddedEvent", 366, 259, 260], [245, 0, 1, 367, 366, 210, 211], [268, 0, 1, "MessageType.chartDeletedEvent", 366, 261, 262]]],
-            [38, 0, [[181, 1], [291, 1], [292, 1], [294, 1], [293, 1], [200, 3, 5], ["showAllFieldButtons", 1, 5], [368, 1, 5], ["showDataLabelsOverMaximum", 1, 1], ["categoryLabelLevel", 1, 1], [290, 1, 1], ["displayBlanksAs", 1, 1], ["plotBy", 1, 1], ["plotVisibleOnly", 1, 1], ["seriesNameLevel", 1, 1]], [[369, 64, 35, 0, 0, 4], [370, 52, 35, 0, 0, 4], ["legend", 59, 35, 0, 0, 4], ["series", 41, 19, 0, 0, 4], ["axes", 47, 35, 0, 0, 4], [295, 40, 35, 0, 0, 4], [296, 7, 2, 7, 0, 4], ["plotArea", 78, 35, 1, 0, 4], ["pivotOptions", 39, 35, 2, 0, 4]], [["setData", 2, 1], [204], ["setPosition", 2], [303, 3, 2, 7, 4], [208, 0, 0, 1], [209, 0, 0, 1], [210, 0, 0, 1], [211, 0, 0, 1], [205, 0, 2, 2]], 0, 0, 0, [[236, 0, 1, 365, 238, 208, 209], [245, 0, 1, 367, 238, 210, 211]]],
-            [39, 0, [["showAxisFieldButtons", 1], ["showLegendFieldButtons", 1], ["showReportFilterFieldButtons", 1], ["showValueFieldButtons", 1]]],
-            [40, 0, [["roundedCorners", 1, 2], ["colorScheme", 1, 2]], [[350, 67, 3, 0, 0, 4], [351, 72, 35, 0, 0, 4], [371, 68, 35, 5, 0, 4]]],
-            [41, 1, [[330, 3]], 0, [[258, 0, 2, 9, 4]], [[322, 42, 1, 2, 0, 4], [264, 42, 2, 8, 5]], 0, 42],
-            [42, 0, [[181, 1], [368, 1, 5], ["hasDataLabels", 1, 5], ["filtered", 1, 5], [372, 1, 5], [373, 1, 5], [374, 1, 5], [375, 1, 5], [376, 1, 5], ["smooth", 1, 5], ["plotOrder", 1, 5], ["gapWidth", 1, 5], ["doughnutHoleSize", 1, 5], [377, 1, 1], ["explosion", 1, 1], ["firstSliceAngle", 1, 1], ["invertIfNegative", 1, 1], ["bubbleScale", 1, 2], ["secondPlotSize", 1, 1], ["splitType", 1, 1], ["splitValue", 1, 2], ["varyByCategories", 1, 1], ["showLeaderLines", 1, 2], ["overlap", 1, 1], ["gradientStyle", 1, 2], ["gradientMinimumType", 1, 2], ["gradientMidpointType", 1, 2], ["gradientMaximumType", 1, 2], ["gradientMinimumValue", 1, 2], ["gradientMidpointValue", 1, 2], ["gradientMaximumValue", 1, 2], ["gradientMinimumColor", 1, 2], ["gradientMidpointColor", 1, 2], ["gradientMaximumColor", 1, 2], ["parentLabelStrategy", 1, 2], ["showConnectorLines", 1, 2], ["invertColor", 1, 2]], [["points", 44, 19, 0, 0, 4], [295, 43, 35, 0, 0, 4], ["trendlines", 74, 19, 5, 0, 4], ["xErrorBars", 55, 35, 2, 0, 4], ["yErrorBars", 55, 35, 2, 0, 4], [370, 52, 35, 1, 0, 4], ["binOptions", 69, 35, 2, 0, 4], ["mapOptions", 63, 35, 2, 0, 4], ["boxwhiskerOptions", 70, 35, 2, 0, 4]], [[204, 0, 0, 5], ["setXAxisValues", 1, 0, 5], ["setValues", 1, 0, 5], ["setBubbleSizes", 1, 0, 5], ["getDimensionValues", 1, 0, 6]]],
-            [43, 0, 0, [[350, 67, 3, 0, 0, 4], [378, 71, 35, 0, 0, 4]]],
-            [44, 1, [[330, 3]], 0, [[258, 0, 2, 9, 4]], [[322, 45, 1, 2, 0, 4]], 0, 45],
-            [45, 0, [[324, 3], ["hasDataLabel", 1, 5], [373, 1, 5], [372, 1, 5], [375, 1, 5], [376, 1, 5]], [[295, 46, 35, 0, 0, 4], ["dataLabel", 53, 35, 5, 0, 4]]],
-            [46, 0, 0, [[350, 67, 3, 0, 0, 4], [371, 68, 35, 5, 0, 4]]],
-            [47, 0, 0, [["categoryAxis", 48, 35, 0, 0, 4], ["seriesAxis", 48, 35, 0, 0, 4], ["valueAxis", 48, 35, 0, 0, 4]], 0, [[263, 48, 2, 2, 5, 4]]],
-            [48, 0, [["majorUnit", 1], ["maximum", 1], ["minimum", 1], ["minorUnit", 1], ["displayUnit", 1, 5], ["showDisplayUnitLabel", 1, 5], ["customDisplayUnit", 3, 5], [326, 3, 5], ["minorTimeUnitScale", 1, 5], ["majorTimeUnitScale", 1, 5], ["baseTimeUnit", 1, 5], ["categoryType", 1, 5], [377, 3, 5], ["scaleType", 1, 5], ["logBase", 1, 5], [292, 3, 5], [291, 3, 5], [293, 3, 5], [294, 3, 5], ["reversePlotOrder", 1, 5], ["crosses", 1, 5], ["crossesAt", 3, 5], [327, 1, 5], ["isBetweenCategories", 1, 1], ["majorTickMark", 1, 5], ["minorTickMark", 1, 5], ["tickMarkSpacing", 1, 5], ["tickLabelPosition", 1, 5], ["tickLabelSpacing", 1, 5], ["alignment", 1, 1], ["multiLevel", 1, 1], [271, 1, 1], [379, 1, 2], ["offset", 1, 1], [345, 1, 1], [201, 1, 1], ["positionAt", 3, 1]], [["majorGridlines", 57, 35, 0, 0, 4], ["minorGridlines", 57, 35, 0, 0, 4], [369, 50, 35, 0, 0, 4], [295, 49, 35, 0, 0, 4]], [["setCategoryNames", 1, 0, 5], ["setCustomDisplayUnit", 1, 0, 5], ["setCrossesAt", 1, 0, 5], ["setPositionAt", 1, 0, 1]]],
-            [49, 0, 0, [[351, 72, 35, 0, 0, 4], [378, 71, 35, 0, 0, 4], [350, 67, 3, 1, 0, 4]]],
-            [50, 0, [[274, 1], [327, 1], [345, 1, 6]], [[295, 51, 35, 0, 0, 4]], [[380, 1, 0, 1]]],
-            [51, 0, 0, [[351, 72, 35, 0, 0, 4], [350, 67, 3, 1, 0, 4], [371, 68, 35, 1, 0, 4]]],
-            [52, 0, [[201, 1], [381, 1], [382, 1], [383, 1], [384, 1], [385, 1], [386, 1], [387, 1], [271, 1, 1], [379, 1, 2], [345, 1, 1], [388, 1, 1], [342, 1, 1], [343, 1, 1]], [[295, 54, 35, 0, 0, 4]]],
-            [53, 0, [[201, 1], [381, 1], [382, 1], [383, 1], [384, 1], [385, 1], [386, 1], [387, 1], [291, 1, 1], [292, 1, 1], [294, 3, 1], [293, 3, 1], [328, 1, 1], [345, 1, 1], [342, 1, 1], [343, 1, 1], [274, 1, 1], [388, 1, 1], [271, 1, 1], [379, 1, 2]], [[295, 54, 35, 1, 0, 4]]],
-            [54, 0, 0, [[351, 72, 35, 0, 0, 4], [350, 67, 3, 0, 0, 4], [371, 68, 35, 1, 0, 4]]],
-            [55, 0, [["endStyleCap", 1], ["include", 1], [326, 1], [327, 1]], [[295, 56, 35, 0, 0, 4]]],
-            [56, 0, 0, [[378, 71, 35, 0, 0, 4]]],
-            [57, 0, [[327, 1]], [[295, 58, 35, 0, 0, 4]]],
-            [58, 0, 0, [[378, 71, 35, 0, 0, 4]]],
-            [59, 0, [[327, 1], [201, 1], [389, 1], [292, 1, 5], [291, 1, 5], [294, 1, 5], [293, 1, 5], [374, 1, 5]], [[295, 62, 35, 0, 0, 4], ["legendEntries", 61, 19, 5, 0, 4]]],
-            [60, 0, [[327, 1], [292, 3, 1], [291, 3, 1], [294, 3, 1], [293, 3, 1], [320, 3, 1]]],
-            [61, 1, 0, 0, [[258, 0, 2, 0, 4]], [[322, 60, 1, 2, 0, 4]], 0, 60],
-            [62, 0, 0, [[351, 72, 35, 0, 0, 4], [350, 67, 3, 0, 0, 4], [371, 68, 35, 1, 0, 4]]],
-            [63, 0, [[390, 1], ["labelStrategy", 1], ["projectionType", 1]]],
-            [64, 0, [[327, 1], [274, 1], [389, 1], [342, 1, 5], [291, 1, 5], [292, 1, 5], [294, 3, 5], [293, 3, 5], [343, 1, 5], [345, 1, 5], [201, 1, 5], [374, 1, 5]], [[295, 66, 35, 0, 0, 4]], [[380, 1, 0, 5]], [[391, 65, 2, 2, 5, 4]]],
-            [65, 0, 0, [[351, 72, 35, 0, 0, 4]]],
-            [66, 0, 0, [[351, 72, 35, 0, 0, 4], [350, 67, 3, 0, 0, 4], [371, 68, 35, 5, 0, 4]]],
-            [67, 4, 0, 0, [[392, 1], [300]]],
-            [68, 0, [[355, 1], [393, 1], [358, 1]], 0, [[300, 0, 0, 1]]],
-            [69, 0, [[326, 1], [294, 1], [330, 1], ["allowOverflow", 1], ["allowUnderflow", 1], ["overflowValue", 1], ["underflowValue", 1]]],
-            [70, 0, [["showInnerPoints", 1], ["showOutlierPoints", 1], ["showMeanMarker", 1], ["showMeanLine", 1], ["quartileCalculation", 1]]],
-            [71, 0, [[355, 1], [393, 1, 5], [358, 1, 5]], 0, [[300]]],
-            [72, 0, [[361, 1], [355, 1], [360, 1], [181, 1], [359, 1], [362, 1]]],
-            [73, 0, [[326, 1], ["polynomialOrder", 1], ["movingAveragePeriod", 1], [325, 2], ["showEquation", 1, 1], ["showRSquared", 1, 1], ["forwardPeriod", 1, 1], ["backwardPeriod", 1, 1], [181, 1], ["intercept", 1]], [[295, 75, 35, 0, 0, 4], ["label", 76, 35, 1, 0, 4]], [[204]]],
-            [74, 1, 0, 0, [[258, 0, 2, 0, 4]], [[264, 73, 1, 8], [263, 73, 1, 18, 0, 4]], 0, 73],
-            [75, 0, 0, [[378, 71, 35, 0, 0, 4]]],
-            [76, 0, [[291, 1], [292, 1], [294, 3], [293, 3], [328, 1], [345, 1], [342, 1], [343, 1], [274, 1], [388, 1], [271, 1], [379, 1, 2]], [[295, 77, 35, 0, 0, 4]]],
-            [77, 0, 0, [[350, 67, 3, 0, 0, 4], [371, 68, 35, 0, 0, 4], [351, 72, 35, 0, 0, 4]]],
-            [78, 0, [[292, 1], [291, 1], [294, 1], [293, 1], ["insideLeft", 1], ["insideTop", 1], ["insideWidth", 1], ["insideHeight", 1], [201, 1]], [[295, 79, 35, 0, 0, 4]]],
-            [79, 0, 0, [[371, 68, 35, 0, 0, 4], [350, 67, 3, 0, 0, 4]]],
-            [80, 5, 0, 0, [["getDefinitions", 0, 2, 0, 4], ["getPreview", 4, 2, 0, 4], ["bootstrapAgaveVisual", 0, 0, 0, 2], [258, 0, 2, 0, 4], [212, 0, 2], [213, 0, 2]], [[264, 81, 3, 8, 0, 2], [364, 81, 1, 18, 0, 4], ["getSelectedOrNullObject", 81, 0, 2, 0, 4]], 0, 81, [["AgaveVisualUpdate", 2, 0, "MessageType.agaveVisualUpdateEvent", 196, 394, 394], [195, 0, 0, "MessageType.visualSelectionChangedEvent", 366, 212, 213]]],
-            [81, 0, [[200, 3], ["isSupportedInVisualTaskpane", 3]], [[186, 83, 18, 0, 0, 4]], [[204, 0, 0, 0, 2], ["getProperty", 1, 2, 0, 4], ["setProperty", 2, 0, 0, 2], ["changeDataSource", 2, 0, 0, 2], ["getDataSource", 0, 2, 0, 4], ["setPropertyToDefault", 1, 0, 0, 2], [395, 0, 2], [396, 0, 2], ["serializeProperties", 0, 2, 0, 4], ["deserializeProperties", 1]], [["getChildProperties", 83, 2, 6, 0, 4], ["getDataControllerClient", 84, 0, 2, 0, 4], ["getElementChildProperties", 83, 3, 6, 0, 4]], 0, 0, [["ChangeNotification", 2, 0, "MessageType.visualChangeEvent", 238, 395, 396]]],
-            [82, 0, [[326, 3], [324, 3], [200, 3], ["localizedName", 3], [269, 3], ["localizedOptions", 3], ["hasDefault", 3], ["isDefault", 3], [397, 3], [398, 3], ["stepSize", 3], ["hideMeButShowChildrenUI", 3], ["expandableUI", 3], ["nextPropOnSameLine", 3], ["showResetUI", 3]], 0, [["getBoolMetaProperty", 1, 2, 0, 4]]],
-            [83, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 82, 1, 18, 0, 4], [322, 82, 1, 2, 0, 4]], 0, 82],
-            [84, 0, 0, 0, [["getWells", 0, 2, 0, 4], ["getAssociatedFields", 1, 2, 0, 4], ["getAvailableFields", 1, 2, 0, 4], ["addField", 3, 0, 0, 2], ["removeField", 2, 0, 0, 2], ["moveField", 3, 0, 0, 2]]],
-            [85, 0, 0, 0, [[399, 5]]],
-            [86, 0, [["matchCase", 3], ["method", 3], [400, 3]], 0, [[399, 3], [300], [401]]],
-            [87, 0, [[402, 3]], 0, [[399, 1], [300], ["applyBottomItemsFilter", 1], ["applyBottomPercentFilter", 1], ["applyCellColorFilter", 1], ["applyDynamicFilter", 1], ["applyFontColorFilter", 1], ["applyValuesFilter", 1], ["applyTopItemsFilter", 1], ["applyTopPercentFilter", 1], ["applyIconFilter", 1], ["applyCustomFilter", 3]]],
-            [88, 0, [[180, 3], ["isDataFiltered", 3], [402, 3]], 0, [[399, 3], [401], [403], ["clearCriteria"]], [[229, 11, 0, 10, 0, 4], [329, 11, 0, 10, 0, 4]]],
-            [89, 0, [[181, 3]], [[271, 90, 3, 0, 0, 4]]],
-            [90, 0, [["numberDecimalSeparator", 3], ["numberGroupSeparator", 3]]],
-            [91, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 93, 1, 18, 0, 4], [265, 93, 1, 2, 0, 4], ["getOnlyItem", 93, 0, 2, 0, 4], ["getOnlyItemOrNullObject", 93, 0, 2, 0, 4]], 0, 93],
-            [92, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 93, 1, 18, 0, 4], [264, 93, 1, 8], ["getByNamespace", 91, 1, 6, 0, 4], [265, 93, 1, 2, 0, 4]], 0, 93],
-            [93, 0, [[200, 3], ["namespaceUri", 3]], 0, [[204], ["getXml", 0, 2, 0, 4], ["setXml", 1]]],
-            [94, 0, 0, 0, [["bindingGetData", 1, 2, 0, 4], ["getSelectedData", 1, 2, 0, 4], ["gotoById", 1, 2, 0, 4], ["bindingAddFromSelection", 1, 2], ["bindingGetById", 1, 2, 0, 4], ["bindingReleaseById", 1, 2], ["bindingGetAll", 0, 2, 0, 4], ["bindingAddFromNamedItem", 1, 2], ["bindingAddFromPrompt", 1, 2], ["bindingDeleteAllDataValues", 1], ["setSelectedData", 1], ["bindingClearFormats", 1], ["bindingSetData", 1], ["bindingSetFormats", 1], ["bindingSetTableOptions", 1], ["bindingAddRows", 1], ["bindingAddColumns", 1], ["getFilePropertiesAsync", 0, 2, 4, 4]]],
-            [95, 1, 0, 0, [[404], [258, 0, 2, 9, 4]], [[263, 96, 1, 18, 0, 4], [265, 96, 1, 2, 9, 4], [264, 96, 3, 8, 1]], 0, 96],
-            [96, 0, [[181, 1], [200, 3, 10], ["useCustomSortLists", 1, 2], ["enableDataValueEditing", 1, 2]], [[296, 7, 2, 0, 0, 4], ["hierarchies", 98, 19, 1, 0, 4], ["rowHierarchies", 100, 19, 1, 0, 4], ["columnHierarchies", 100, 19, 1, 0, 4], ["dataHierarchies", 104, 19, 1, 0, 4], ["filterHierarchies", 102, 19, 1, 0, 4], ["layout", 97, 2, 1, 0, 4]], [["refresh"], [204, 0, 0, 1]]],
-            [97, 0, [["showColumnGrandTotals", 1], ["showRowGrandTotals", 1], ["enableFieldList", 1, 11], ["subtotalLocation", 1], ["layoutType", 1], ["autoFormat", 1, 2], ["preserveFormatting", 1, 2]], [["pivotStyle", 141, 35, 15, 0, 4]], [["getPivotItems", 2, 0, 2], ["setAutoSortOnCell", 2, 0, 2], [336, 1, 0, 15]], [[229, 11], ["getRowLabelRange", 11], ["getColumnLabelRange", 11], ["getFilterAxisRange", 11], [338, 11], [231, 11, 3, 0, 6], ["getDataHierarchy", 105, 1, 0, 2]]],
-            [98, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 99, 1, 18, 0, 4], [265, 99, 1, 2, 0, 4]], 0, 99],
-            [99, 0, [[200, 3], [181, 1]], [[400, 106, 19, 0, 0, 4]]],
-            [100, 1, 0, 0, [[258, 0, 2, 0, 4], [403, 1]], [[263, 101, 1, 18, 0, 4], [265, 101, 1, 2, 0, 4], [264, 101, 1, 8]], 0, 101],
-            [101, 0, [[200, 3], [181, 1], [201, 1]], [[400, 106, 19, 0, 0, 4]], [[405]]],
-            [102, 1, 0, 0, [[258, 0, 2, 0, 4], [403, 1]], [[263, 103, 1, 18, 0, 4], [265, 103, 1, 2, 0, 4], [264, 103, 1, 8]], 0, 103],
-            [103, 0, [[200, 3], [181, 1], [201, 1], ["enableMultipleFilterItems", 1]], [[400, 106, 19, 0, 0, 4]], [[405]]],
-            [104, 1, 0, 0, [[258, 0, 2, 0, 4], [403, 1]], [[263, 105, 1, 18, 0, 4], [265, 105, 1, 2, 0, 4], [264, 105, 1, 8]], 0, 105],
-            [105, 0, [[200, 3], [181, 1], [201, 1], [271, 1], ["summarizeBy", 1], ["showAs", 1]], [["field", 107, 35, 0, 0, 4]], [[405]]],
-            [106, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 107, 1, 18, 0, 4], [265, 107, 1, 2, 0, 4]], 0, 107],
-            [107, 0, [[200, 3], [181, 1], ["subtotals", 1], ["showAllItems", 1]], [["items", 108, 19, 0, 0, 4]], [["sortByLabels", 1, 1], ["sortByValues", 3, 0, 2]]],
-            [108, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 109, 1, 18, 0, 4], [265, 109, 1, 2, 0, 4]], 0, 109],
-            [109, 0, [[200, 3], [181, 1], ["isExpanded", 1], [327, 1]]],
-            [110, 0, [[323, 3], [324, 3]]],
-            [111, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 110, 1, 18, 0, 4], [265, 110, 1]], 0, 110],
-            [112, 0, [[369, 1], ["subject", 1], ["author", 1], ["keywords", 1], [188, 1], ["lastAuthor", 3], ["revisionNumber", 1], [406, 11], ["category", 1], ["manager", 1], ["company", 1]], [[407, 114, 19, 0, 0, 4]]],
-            [113, 0, [[323, 3], [324, 1], [326, 3]], 0, [[204]]],
-            [114, 1, 0, 0, [[258, 0, 2, 0, 4], ["deleteAll"]], [[265, 113, 1, 2, 0, 4], [264, 113, 2, 8], [263, 113, 1, 18, 0, 4]], 0, 113],
-            [115, 1, 0, 0, [[258, 0, 2, 0, 4], ["clearAll"]], [[322, 116, 1, 2, 0, 4], [264, 116, 1, 8], [263, 116, 1, 18, 0, 4]], 0, 116],
-            [116, 0, [["stopIfTrue", 1], ["priority", 1], [326, 3], [200, 3]], [["dataBarOrNullObject", 117, 35, 0, 0, 4], ["dataBar", 117, 35, 0, 0, 4], ["customOrNullObject", 120, 35, 0, 0, 4], [407, 120, 35, 0, 0, 4], ["iconSet", 122, 35, 0, 0, 4], ["iconSetOrNullObject", 122, 35, 0, 0, 4], ["colorScale", 123, 35, 0, 0, 4], ["colorScaleOrNullObject", 123, 35, 0, 0, 4], ["topBottom", 124, 35, 0, 0, 4], ["topBottomOrNullObject", 124, 35, 0, 0, 4], ["preset", 125, 35, 0, 0, 4], ["presetOrNullObject", 125, 35, 0, 0, 4], ["textComparison", 126, 35, 0, 0, 4], ["textComparisonOrNullObject", 126, 35, 0, 0, 4], ["cellValue", 127, 35, 0, 0, 4], ["cellValueOrNullObject", 127, 35, 0, 0, 4]], [[204]], [[229, 11, 0, 10, 0, 4], [329, 11, 0, 10, 0, 4], [235, 12, 0, 10, 2, 4]]],
-            [117, 0, [["showDataBarOnly", 1], ["barDirection", 1], ["axisFormat", 1], ["axisColor", 1], ["lowerBoundRule", 1], ["upperBoundRule", 1]], [["positiveFormat", 118, 35, 0, 0, 4], ["negativeFormat", 119, 35, 0, 0, 4]]],
-            [118, 0, [[408, 1], ["gradientFill", 1], [409, 1]]],
-            [119, 0, [[408, 1], ["matchPositiveFillColor", 1], [409, 1], ["matchPositiveBorderColor", 1]]],
-            [120, 0, 0, [[340, 121, 35, 0, 0, 4], [295, 128, 35, 0, 0, 4]]],
-            [121, 0, [[328, 1], ["formulaLocal", 1], ["formulaR1C1", 1]]],
-            [122, 0, [["reverseIconOrder", 1], ["showIconOnly", 1], [290, 1], [402, 1]]],
-            [123, 0, [["threeColorScale", 3], [402, 1]]],
-            [124, 0, [[340, 1]], [[295, 128, 35, 0, 0, 4]]],
-            [125, 0, [[340, 1]], [[295, 128, 35, 0, 0, 4]]],
-            [126, 0, [[340, 1]], [[295, 128, 35, 0, 0, 4]]],
-            [127, 0, [[340, 1]], [[295, 128, 35, 0, 0, 4]]],
-            [128, 0, [[271, 1]], [[350, 130, 35, 0, 0, 4], [351, 129, 35, 0, 0, 4], [352, 132, 51, 0, 0, 4]]],
-            [129, 0, [[355, 1], [360, 1], [361, 1], [362, 1], [363, 1]], 0, [[300]]],
-            [130, 0, [[355, 1]], 0, [[300]]],
-            [131, 0, [[357, 3], [290, 1], [355, 1]]],
-            [132, 1, [[330, 3]], [[291, 131, 35, 0, 0, 4], ["bottom", 131, 35, 0, 0, 4], [292, 131, 35, 0, 0, 4], [410, 131, 35, 0, 0, 4]], 0, [[263, 131, 1, 18, 0, 4], [322, 131, 1, 2, 0, 4]], 0, 131],
-            [133, 0, 0, 0, 0, [["getFormatter", 134, 1]], 0, 0, 0, "Microsoft.ExcelServices.NumberFormattingService", 4],
-            [134, 0, [["isDateTime", 3], ["isPercent", 3], ["isCurrency", 3], ["isNumeric", 3], [411, 3], ["hasYear", 3], ["hasMonth", 3], ["hasDayOfWeek", 3]], 0, [[295, 1]]],
-            [135, 36, [["status", 2]], 0, [["register", 2]], 0, 0, 0, 0, "Microsoft.ExcelServices.CustomFunctionManager", 4],
-            [136, 0, [["builtIn", 3], [354, 1], [342, 1], ["includeAlignment", 1], ["includeBorder", 1], ["includeFont", 1], ["includeNumber", 1], ["includePatterns", 1], ["includeProtection", 1], [348, 1], [353, 1], [181, 3], [271, 1], [272, 1], [346, 1], [347, 1], [343, 1], [341, 1], [345, 5, 1], [349, 1, 1]], [[352, 35, 51, 0, 0, 4], [351, 36, 35, 0, 0, 4], [350, 33, 35, 0, 0, 4]], [[204]]],
-            [137, 1, 0, 0, [[264, 1], [258, 0, 2, 2, 4]], [[263, 136, 1, 18, 0, 4], [322, 136, 1, 2, 2, 4]], 0, 136],
-            [138, 1, 0, 0, [[258, 0, 2, 0, 4], [412, 1]], [[263, 139, 1, 18, 0, 4], [265, 139, 1, 2, 0, 4], [264, 139, 2, 8], [413, 139]], 0, 139],
-            [139, 0, [[181, 1], [182, 3], [325, 2]], 0, [[204]], [[414, 139]]],
-            [140, 1, 0, 0, [[258, 0, 2, 0, 4], [412, 1]], [[263, 141, 1, 18, 0, 4], [265, 141, 1, 2, 0, 4], [264, 141, 2, 8], [413, 141]], 0, 141],
-            [141, 0, [[181, 1], [182, 3], [325, 2]], 0, [[204]], [[414, 141]]],
-            [142, 1, 0, 0, [[258, 0, 2, 0, 4], [412, 1]], [[263, 143, 1, 18, 0, 4], [265, 143, 1, 2, 0, 4], [264, 143, 2, 8], [413, 143]], 0, 143],
-            [143, 0, [[181, 1], [182, 3], [325, 2]], 0, [[204]], [[414, 143]]],
-            [144, 1, 0, 0, [[258, 0, 2, 0, 4], [412, 1]], [[263, 145, 1, 18, 0, 4], [265, 145, 1, 2, 0, 4], [264, 145, 2, 8], [413, 145]], 0, 145],
-            [145, 0, [[181, 1], [182, 3], [325, 2]], 0, [[204]], [[414, 145]]],
-            [146, 0, 0, 0, [["delay", 1], ["triggerMessage", 4, 0, 5], [415, 0, 0, 5], [416, 0, 0, 5], ["triggerTestEvent", 2, 0, 5], ["triggerPostProcess", 0, 0, 5], [417, 0, 0, 5], [418, 0, 0, 5], ["triggerTestEventWithFilter", 3, 0, 5], ["firstPartyMethod", 0, 2, 5, 5], [419, 0, 0, 12], [420, 0, 0, 12], [421, 0, 0, 12], [422, 0, 0, 12], ["unregisterAllCustomFunctionExecutionEvents", 0, 0, 12], ["saveWorkbookToTempFile", 1, 2, 15], ["compareTempFilesAreIdentical", 2, 2, 15], ["updateRangeValueOnCurrentSheet", 2, 0, 15, 2], ["triggerUserUndo", 0, 2, 15], ["triggerUserRedo", 0, 2, 15], ["enterCellEdit", 1, 0, 2], ["installCustomFunctionsFromCache", 0, 0, 2], ["recalc", 2, 0, 2], ["recalcBySolutionId", 1, 0, 2], ["safeForCellEditModeMethod", 1, 0, 2], ["exitCellEdit", 0, 0, 2], ["noPermissionMethod", 1, 0, 2], ["verifyCustomFunctionListExist", 0, 0, 2]], 0, 0, 0, [["CustomFunctionExecutionBeginEvent", 0, 12, "MessageType.customFunctionExecutionBeginEvent", 196, 419, 420], ["CustomFunctionExecutionEndEvent", 0, 12, "MessageType.customFunctionExecutionEndEvent", 196, 421, 422], ["Test1Event", 2, 5, "MessageType.test1Event", 196, 417, 418], ["TestEvent", 2, 5, "MessageType.testEvent", 196, 415, 416]], "Microsoft.ExcelServices.InternalTest", 4],
-            [147, 0, [[423, 1], ["paperSize", 1], ["blackAndWhite", 1], ["printErrors", 1], ["zoom", 1], ["centerHorizontally", 1], ["centerVertically", 1], ["printHeadings", 1], ["printGridlines", 1], [424, 1], [425, 1], [426, 1], [427, 1], ["headerMargin", 1], ["footerMargin", 1], ["printComments", 1], ["draftMode", 1], ["firstPageNumber", 1], ["printOrder", 1]], [["headersFooters", 149, 35, 0, 0, 4]], [["setPrintMargins", 2], ["setPrintArea", 1], ["setPrintTitleRows", 1], ["setPrintTitleColumns", 1]], [["getPrintArea", 12, 0, 10, 0, 4], ["getPrintAreaOrNullObject", 12, 0, 10, 0, 4], ["getPrintTitleRows", 11, 0, 10, 0, 4], ["getPrintTitleRowsOrNullObject", 11, 0, 10, 0, 4], ["getPrintTitleColumns", 11, 0, 10, 0, 4], ["getPrintTitleColumnsOrNullObject", 11, 0, 10, 0, 4]]],
-            [148, 0, [["leftHeader", 1], ["centerHeader", 1], ["rightHeader", 1], ["leftFooter", 1], ["centerFooter", 1], ["rightFooter", 1]]],
-            [149, 0, [["state", 1], ["useSheetMargins", 1], ["useSheetScale", 1]], [["defaultForAllPages", 148, 35, 0, 0, 4], ["firstPage", 148, 35, 0, 0, 4], ["evenPages", 148, 35, 0, 0, 4], ["oddPages", 148, 35, 0, 0, 4]]],
-            [150, 0, [[325, 2], [278, 3], [277, 3]], 0, [[204]], [["getCellAfterBreak", 11, 0, 10, 0, 4]]],
-            [151, 1, 0, 0, [["removePageBreaks"], [258, 0, 2, 0, 4]], [[263, 150, 1, 18, 0, 4], [264, 150, 1, 8]], 0, 150],
-            [152, 0, 0, 0, [[404]]],
-            [153, 1, 0, 0, [[258, 0, 2, 0, 4]], [[322, 11, 1, 2, 0, 4]], 0, 11],
-            [154, 1, 0, 0, [[258, 0, 2, 0, 4]], [[263, 155, 1, 18, 0, 4], [322, 155, 1, 2, 0, 4], [264, 155, 3, 8], ["getItemByReplyId", 155, 1, 2, 0, 4], ["getItemByCell", 155, 1, 2, 0, 4]], 0, 155],
-            [155, 0, [[200, 3], [428, 1], [429, 3], [430, 3], [406, 11], [431, 1, 3], [432, 3, 14], [433, 3, 14], [434, 3, 6]], [["replies", 156, 19, 0, 0, 4]], [[204], [435, 1, 0, 14]], [[270, 11, 0, 10, 0, 4]]],
-            [156, 1, 0, 0, [[258, 0, 2, 0, 4]], [[264, 157, 2, 8], [263, 157, 1, 18, 0, 4], [322, 157, 1, 2, 0, 4]], 0, 157],
-            [157, 0, [[200, 3], [428, 1], [429, 3], [430, 3], [406, 11], [431, 3, 3], [432, 3, 14], [433, 3, 14], [434, 3, 6]], 0, [[204], [435, 1, 0, 14]], [[270, 11, 0, 10, 0, 4], ["getParentComment", 155]]],
-            [158, 1, 0, 0, [[258, 0, 2, 0, 4]], [["addImage", 159, 1], [364, 159, 1, 18, 0, 4], ["addGeometricShape", 159, 1], ["addTextBox", 159, 1], ["addSvg", 159, 1, 0, 6], ["addGroup", 159, 1], [322, 159, 1, 2, 0, 4], [263, 159, 1, 2, 0, 4], ["addLine", 159, 5]], 0, 159],
-            [159, 0, [[200, 3], [181, 1], [292, 1], [291, 1], [294, 1], [293, 1], ["rotation", 1], ["zOrderPosition", 3], ["altTextTitle", 1], ["altTextDescription", 1], [326, 3], ["lockAspectRatio", 1], ["placement", 1, 11], ["geometricShapeType", 1], [327, 1], [390, 3], ["connectionSiteCount", 3]], [["geometricShape", 160, 2, 0, 0, 4], ["image", 161, 2, 0, 0, 4], ["textFrame", 167, 2, 0, 0, 4], [350, 165, 35, 0, 0, 4], [309, 162, 2, 0, 0, 4], ["parentGroup", 159, 2, 0, 0, 4], [378, 164, 2, 0, 0, 4], ["lineFormat", 166, 35, 0, 0, 4]], [["setZOrder", 1], ["incrementLeft", 1], ["incrementTop", 1], ["incrementRotation", 1], ["scaleHeight", 3], ["scaleWidth", 3], [204], ["getAsImage", 1], [208], [209], [210], [211]], [["copyTo", 159, 1, 8, 11, 0, 0, 436], [436, 159, 1, 2, 0, 4]], 0, 0, [[236, 0, 0, "MessageType.shapeActivatedEvent", 238, 208, 209], [245, 0, 0, "MessageType.shapeDeactivatedEvent", 238, 210, 211]]],
-            [160, 0, [[200, 3]], [[437, 159, 2, 0, 0, 4]]],
-            [161, 0, [[200, 3], [295, 3, 0, 295]], [[437, 159, 2, 0, 0, 4]]],
-            [162, 0, [[200, 3]], [[202, 163, 19, 0, 0, 4], [437, 159, 2, 0, 0, 4]], [[310]]],
-            [163, 1, 0, 0, [[258, 0, 2, 0, 4]], [[364, 159, 1, 18, 0, 4], [322, 159, 1, 2, 0, 4], [263, 159, 1, 2, 0, 4]], 0, 159],
-            [164, 0, [[200, 3], [438, 1, 0, 438], ["beginArrowheadLength", 1], ["beginArrowheadStyle", 1], ["beginArrowheadWidth", 1], ["endArrowheadLength", 1], ["endArrowheadStyle", 1], ["endArrowheadWidth", 1], ["isBeginConnected", 3], ["beginConnectedSite", 3], ["isEndConnected", 3], ["endConnectedSite", 3]], [[437, 159, 2, 0, 0, 4], ["beginConnectedShape", 159, 2, 0, 0, 4], ["endConnectedShape", 159, 2, 0, 0, 4]], [["connectBeginShape", 2], ["disconnectBeginShape"], ["connectEndShape", 2], ["disconnectEndShape"]]],
-            [165, 0, [["foregroundColor", 1], [326, 3], [439, 1]], 0, [[300], [392, 1]]],
-            [166, 0, [[327, 1], [355, 1], [290, 1], [358, 1], ["dashStyle", 1], [439, 1]]],
-            [167, 0, [[424, 1], [425, 1], [426, 1], [427, 1], [342, 1], ["horizontalOverflow", 1], [343, 1], ["verticalOverflow", 1], [423, 1], [346, 1], ["hasText", 3], ["autoSizeSetting", 1]], [["textRange", 168, 2, 0, 0, 4]], [["deleteText"]]],
-            [168, 0, [[274, 1]], [[351, 169, 35, 0, 0, 4]], 0, [[391, 168, 2]]],
-            [169, 0, [[359, 1], [181, 1], [355, 1], [361, 1], [360, 1], [362, 1]]],
-            [170, 0, [[200, 3], [181, 1], ["caption", 1], [292, 1], [291, 1], [294, 1], [293, 1], ["nameInFormula", 1, 3], ["isFilterCleared", 3], [290, 1], ["sortBy", 1], ["sortUsingCustomLists", 1, 15], [280, 1, 15], ["disableMoveResizeUI", 1, 15], ["displayHeader", 1, 15], [344, 1, 15]], [["slicerItems", 173, 19, 0, 0, 4], [296, 7, 35, 0, 0, 4], ["slicerStyle", 143, 35, 15, 0, 4]], [[204], [335], ["getSelectedItems"], ["selectItems", 1], [205, 0, 2, 15], [336, 1, 0, 15]]],
-            [171, 1, 0, 0, [[258, 0, 2, 0, 4]], [[264, 170, 3, 8], [322, 170, 1, 2, 0, 4], [263, 170, 1, 18, 0, 4], [265, 170, 1, 2, 0, 4]], 0, 170],
-            [172, 0, [[323, 3], [181, 3], ["isSelected", 1], ["hasData", 3]]],
-            [173, 1, 0, 0, [[258, 0, 2, 0, 4]], [[322, 172, 1, 2, 0, 4], [263, 172, 1, 18, 0, 4], [265, 172, 1, 2, 0, 4]], 0, 172],
-            [174, 0, [["activeTab", 1]], 0, [["executeCommand", 2], [308, 3], [440], [441]], 0, 0, 0, [["CommandExecuted", 0, 0, "MessageType.ribbonCommandExecutedEvent", 194, 440, 441]]],
-            [175, 0, [["error", 3], [324, 3]]],
-            [176, 0, 0, 0, 0, [[330, 175, 1, 72], ["if", 175, 3, 8], ["isNA", 175, 1, 8], ["isError", 175, 1, 8], ["sum", 175, 1, 72], ["average", 175, 1, 72], [397, 175, 1, 72], [398, 175, 1, 72], ["na", 175, 0, 8], ["npv", 175, 2, 72], ["dollar", 175, 2, 8], ["fixed", 175, 3, 8], ["sin", 175, 1, 8], ["cos", 175, 1, 8], ["tan", 175, 1, 8], ["atan", 175, 1, 8], ["pi", 175, 0, 8], ["sqrt", 175, 1, 8], ["exp", 175, 1, 8], ["ln", 175, 1, 8], ["log10", 175, 1, 8], ["abs", 175, 1, 8], ["int", 175, 1, 8], ["sign", 175, 1, 8], ["round", 175, 2, 8], ["lookup", 175, 3, 8], ["rept", 175, 2, 8], ["mid", 175, 3, 8], ["len", 175, 1, 8], [324, 175, 1, 8], ["true", 175, 0, 8], ["false", 175, 0, 8], ["and", 175, 1, 72], ["or", 175, 1, 72], ["not", 175, 1, 8], ["mod", 175, 2, 8], ["dcount", 175, 3, 8, 0, 0, "DCount"], ["dsum", 175, 3, 8, 0, 0, "DSum"], ["daverage", 175, 3, 8, 0, 0, "DAverage"], ["dmin", 175, 3, 8, 0, 0, "DMin"], ["dmax", 175, 3, 8, 0, 0, "DMax"], ["dstDev", 175, 3, 8, 0, 0, "DStDev"], ["dvar", 175, 3, 8, 0, 0, "DVar"], [274, 175, 2, 8], ["pv", 175, 5, 8], ["fv", 175, 5, 8], ["nper", 175, 5, 8, 0, 0, "NPer"], ["pmt", 175, 5, 8], ["rate", 175, 6, 8], ["mirr", 175, 3, 8, 0, 0, "MIrr"], ["irr", 175, 2, 8], ["rand", 175, 0, 8], ["match", 175, 3, 8], ["date", 175, 3, 8], ["time", 175, 3, 8], ["day", 175, 1, 8], ["month", 175, 1, 8], ["year", 175, 1, 8], ["weekday", 175, 2, 8], ["hour", 175, 1, 8], ["minute", 175, 1, 8], ["second", 175, 1, 8], ["now", 175, 0, 8], [319, 175, 1, 8], [321, 175, 1, 8], [334, 175, 1, 8], [326, 175, 1, 8], ["atan2", 175, 2, 8], ["asin", 175, 1, 8], ["acos", 175, 1, 8], ["choose", 175, 2, 72], ["hlookup", 175, 4, 8, 0, 0, "HLookup"], ["vlookup", 175, 4, 8, 0, 0, "VLookup"], ["isref", 175, 1, 8], ["log", 175, 2, 8], ["char", 175, 1, 8], ["lower", 175, 1, 8], ["upper", 175, 1, 8], ["proper", 175, 1, 8], [292, 175, 2, 8], [410, 175, 2, 8], ["exact", 175, 2, 8], ["trim", 175, 1, 8], ["replace", 175, 4, 8], ["substitute", 175, 4, 8], ["code", 175, 1, 8], [316, 175, 3, 8], ["isErr", 175, 1, 8], [411, 175, 1, 8], ["isNumber", 175, 1, 8], ["t", 175, 1, 8, 0, 0, "T"], ["n", 175, 1, 8, 0, 0, "N"], ["datevalue", 175, 1, 8], ["timevalue", 175, 1, 8], ["sln", 175, 3, 8], ["syd", 175, 4, 8], ["ddb", 175, 5, 8], ["clean", 175, 1, 8], ["ipmt", 175, 6, 8], ["ppmt", 175, 6, 8], ["countA", 175, 1, 72], ["product", 175, 1, 72], ["fact", 175, 1, 8], ["dproduct", 175, 3, 8, 0, 0, "DProduct"], ["isNonText", 175, 1, 8], ["dstDevP", 175, 3, 8, 0, 0, "DStDevP"], ["dvarP", 175, 3, 8, 0, 0, "DVarP"], ["trunc", 175, 2, 8], ["isLogical", 175, 1, 8], ["dcountA", 175, 3, 8, 0, 0, "DCountA"], ["usdollar", 175, 2, 8, 0, 0, "USDollar"], ["findB", 175, 3, 8], ["replaceB", 175, 4, 8], ["leftb", 175, 2, 8], ["rightb", 175, 2, 8], ["midb", 175, 3, 8], ["lenb", 175, 1, 8], ["roundUp", 175, 2, 8], ["roundDown", 175, 2, 8], ["asc", 175, 1, 8], ["dbcs", 175, 1, 8], ["days360", 175, 3, 8], ["today", 175, 0, 8], ["vdb", 175, 7, 8], ["median", 175, 1, 72], ["sinh", 175, 1, 8], ["cosh", 175, 1, 8], ["tanh", 175, 1, 8], ["asinh", 175, 1, 8], ["acosh", 175, 1, 8], ["atanh", 175, 1, 8], ["dget", 175, 3, 8, 0, 0, "DGet"], ["db", 175, 5, 8], ["error_Type", 175, 1, 8], ["aveDev", 175, 1, 72], ["gammaLn", 175, 1, 8], ["combin", 175, 2, 8], ["even", 175, 1, 8], ["fisher", 175, 1, 8], ["fisherInv", 175, 1, 8], ["standardize", 175, 3, 8], ["odd", 175, 1, 8], ["permut", 175, 2, 8], ["devSq", 175, 1, 72], ["geoMean", 175, 1, 72], ["harMean", 175, 1, 72], ["sumSq", 175, 1, 72], ["kurt", 175, 1, 72], ["skew", 175, 1, 72], ["large", 175, 2, 8], ["small", 175, 2, 8], ["trimMean", 175, 2, 8], ["concatenate", 175, 1, 72], ["power", 175, 2, 8], ["radians", 175, 1, 8], ["degrees", 175, 1, 8], ["subtotal", 175, 2, 72], ["sumIf", 175, 3, 8], ["countIf", 175, 2, 8], ["countBlank", 175, 1, 8], ["ispmt", 175, 4, 8], ["roman", 175, 2, 8], [289, 175, 2, 8], ["averageA", 175, 1, 72], ["maxA", 175, 1, 72], ["minA", 175, 1, 72], ["stDevPA", 175, 1, 72], ["varPA", 175, 1, 72], ["stDevA", 175, 1, 72], ["varA", 175, 1, 72], ["bahtText", 175, 1, 8], ["hex2Bin", 175, 2, 8], ["hex2Dec", 175, 1, 8], ["hex2Oct", 175, 2, 8], ["dec2Bin", 175, 2, 8], ["dec2Hex", 175, 2, 8], ["dec2Oct", 175, 2, 8], ["oct2Bin", 175, 2, 8], ["oct2Hex", 175, 2, 8], ["oct2Dec", 175, 1, 8], ["bin2Dec", 175, 1, 8], ["bin2Oct", 175, 2, 8], ["bin2Hex", 175, 2, 8], ["imSub", 175, 2, 8], ["imDiv", 175, 2, 8], ["imPower", 175, 2, 8], ["imAbs", 175, 1, 8], ["imSqrt", 175, 1, 8], ["imLn", 175, 1, 8], ["imLog2", 175, 1, 8], ["imLog10", 175, 1, 8], ["imSin", 175, 1, 8], ["imCos", 175, 1, 8], ["imExp", 175, 1, 8], ["imArgument", 175, 1, 8], ["imConjugate", 175, 1, 8], ["imaginary", 175, 1, 8], ["imReal", 175, 1, 8], ["complex", 175, 3, 8], ["imSum", 175, 1, 72], ["imProduct", 175, 1, 72], ["seriesSum", 175, 4, 8], ["factDouble", 175, 1, 8], ["sqrtPi", 175, 1, 8], ["quotient", 175, 2, 8], ["delta", 175, 2, 8], ["geStep", 175, 2, 8], ["isEven", 175, 1, 8], ["isOdd", 175, 1, 8], ["mround", 175, 2, 8, 0, 0, "MRound"], ["erf", 175, 2, 8], ["erfC", 175, 1, 8], ["besselJ", 175, 2, 8], ["besselK", 175, 2, 8], ["besselY", 175, 2, 8], ["besselI", 175, 2, 8], ["xirr", 175, 3, 8], ["xnpv", 175, 3, 8], ["priceMat", 175, 6, 8], ["yieldMat", 175, 6, 8], ["intRate", 175, 5, 8], ["received", 175, 5, 8], ["disc", 175, 5, 8], ["priceDisc", 175, 5, 8], ["yieldDisc", 175, 5, 8], ["tbillEq", 175, 3, 8, 0, 0, "TBillEq"], ["tbillPrice", 175, 3, 8, 0, 0, "TBillPrice"], ["tbillYield", 175, 3, 8, 0, 0, "TBillYield"], ["price", 175, 7, 8], ["yield", 175, 7, 8], ["dollarDe", 175, 2, 8], ["dollarFr", 175, 2, 8], ["nominal", 175, 2, 8], ["effect", 175, 2, 8], ["cumPrinc", 175, 6, 8], ["cumIPmt", 175, 6, 8], ["edate", 175, 2, 8, 0, 0, "EDate"], ["eoMonth", 175, 2, 8], ["yearFrac", 175, 3, 8], ["coupDayBs", 175, 4, 8], ["coupDays", 175, 4, 8], ["coupDaysNc", 175, 4, 8], ["coupNcd", 175, 4, 8], ["coupNum", 175, 4, 8], ["coupPcd", 175, 4, 8], ["duration", 175, 6, 8], ["mduration", 175, 6, 8, 0, 0, "MDuration"], ["oddLPrice", 175, 8, 8], ["oddLYield", 175, 8, 8], ["oddFPrice", 175, 9, 8], ["oddFYield", 175, 9, 8], ["randBetween", 175, 2, 8], ["weekNum", 175, 2, 8], ["amorDegrc", 175, 7, 8], ["amorLinc", 175, 7, 8], ["convert", 175, 3, 8], ["accrInt", 175, 8, 8], ["accrIntM", 175, 5, 8], ["workDay", 175, 3, 8], ["networkDays", 175, 3, 8], ["gcd", 175, 1, 72], ["multiNomial", 175, 1, 72], ["lcm", 175, 1, 72], ["fvschedule", 175, 2, 8, 0, 0, "FVSchedule"], ["countIfs", 175, 1, 72], ["sumIfs", 175, 2, 72], ["averageIf", 175, 3, 8], ["averageIfs", 175, 2, 72], ["binom_Dist", 175, 4, 8], ["binom_Inv", 175, 3, 8], ["confidence_Norm", 175, 3, 8], ["confidence_T", 175, 3, 8], ["expon_Dist", 175, 3, 8], ["gamma_Dist", 175, 4, 8], ["gamma_Inv", 175, 3, 8], ["norm_Dist", 175, 4, 8], ["norm_Inv", 175, 3, 8], ["percentile_Exc", 175, 2, 8], ["percentile_Inc", 175, 2, 8], ["percentRank_Exc", 175, 3, 8], ["percentRank_Inc", 175, 3, 8], ["poisson_Dist", 175, 3, 8], ["quartile_Exc", 175, 2, 8], ["quartile_Inc", 175, 2, 8], ["rank_Avg", 175, 3, 8], ["rank_Eq", 175, 3, 8], ["stDev_S", 175, 1, 72], ["stDev_P", 175, 1, 72], ["t_Dist", 175, 3, 8], ["t_Dist_2T", 175, 2, 8], ["t_Dist_RT", 175, 2, 8], ["t_Inv", 175, 2, 8], ["t_Inv_2T", 175, 2, 8], ["var_S", 175, 1, 72], ["var_P", 175, 1, 72], ["weibull_Dist", 175, 4, 8], ["networkDays_Intl", 175, 4, 8], ["workDay_Intl", 175, 4, 8], ["ecma_Ceiling", 175, 2, 8, 0, 0, "ECMA_Ceiling"], ["iso_Ceiling", 175, 2, 8, 0, 0, "ISO_Ceiling"], ["beta_Dist", 175, 6, 8], ["beta_Inv", 175, 5, 8], ["chiSq_Dist", 175, 3, 8], ["chiSq_Dist_RT", 175, 2, 8], ["chiSq_Inv", 175, 2, 8], ["chiSq_Inv_RT", 175, 2, 8], ["f_Dist", 175, 4, 8], ["f_Dist_RT", 175, 3, 8], ["f_Inv", 175, 3, 8], ["f_Inv_RT", 175, 3, 8], ["hypGeom_Dist", 175, 5, 8], ["logNorm_Dist", 175, 4, 8], ["logNorm_Inv", 175, 3, 8], ["negBinom_Dist", 175, 4, 8], ["norm_S_Dist", 175, 2, 8], ["norm_S_Inv", 175, 1, 8], ["z_Test", 175, 3, 8], ["erf_Precise", 175, 1, 8], ["erfC_Precise", 175, 1, 8], ["gammaLn_Precise", 175, 1, 8], ["ceiling_Precise", 175, 2, 8], ["floor_Precise", 175, 2, 8], ["acot", 175, 1, 8], ["acoth", 175, 1, 8], ["cot", 175, 1, 8], ["coth", 175, 1, 8], ["csc", 175, 1, 8], ["csch", 175, 1, 8], ["sec", 175, 1, 8], ["sech", 175, 1, 8], ["imTan", 175, 1, 8], ["imCot", 175, 1, 8], ["imCsc", 175, 1, 8], ["imCsch", 175, 1, 8], ["imSec", 175, 1, 8], ["imSech", 175, 1, 8], ["bitand", 175, 2, 8], ["bitor", 175, 2, 8], ["bitxor", 175, 2, 8], ["bitlshift", 175, 2, 8], ["bitrshift", 175, 2, 8], ["permutationa", 175, 2, 8], ["combina", 175, 2, 8], ["xor", 175, 1, 72], ["pduration", 175, 3, 8, 0, 0, "PDuration"], ["base", 175, 3, 8], ["decimal", 175, 2, 8], ["days", 175, 2, 8], ["binom_Dist_Range", 175, 4, 8], ["gamma", 175, 1, 8], ["skew_p", 175, 1, 72], ["gauss", 175, 1, 8], ["phi", 175, 1, 8], ["rri", 175, 3, 8], ["unichar", 175, 1, 8], ["unicode", 175, 1, 8], ["arabic", 175, 1, 8], ["isoWeekNum", 175, 1, 8], ["numberValue", 175, 3, 8], ["sheet", 175, 1, 8], ["sheets", 175, 1, 8], ["isFormula", 175, 1, 8], ["ceiling_Math", 175, 3, 8], ["floor_Math", 175, 3, 8], ["imSinh", 175, 1, 8], ["imCosh", 175, 1, 8]]]] };
+        "clientObjectTypes": [[1, 0, [["connectionString", 2], [182, 2], ["commandText", 2], ["dataSourceType", 2]]],
+            [2, 0, [["enableEvents", 1, 1]]],
+            [3, 0, [["calculationMode", 1], [183, 3, 2], ["calculationState", 3, 2], ["decimalSeparator", 3, 3], ["thousandsSeparator", 3, 3], ["useSystemSeparators", 3, 3]], [["iterativeCalculation", 4, 35, 2, 0, 4], ["ribbon", 177, 35, 2, 0, 4], ["cultureInfo", 90, 3, 3, 0, 4]], [[184, 1], ["suspendApiCalculationUntilNextSync", 0, 1, 4], ["suspendScreenUpdatingUntilNextSync", 0, 0, 2]], [["createWorkbook", 7, 1, 10, 1, 0, 0, 185], [185, 7, 1, 2, 1, 4]]],
+            [4, 0, [[186, 1], ["maxIteration", 1], ["maxChange", 1]]],
+            [5, 0, [[182, 3, 5], [187, 3, 1], ["isDirty", 1, 2], ["use1904DateSystem", 1, 6], ["chartDataPointTrack", 1, 2], ["usePrecisionAsDisplayed", 1, 2], [183, 3, 2], ["autoSave", 3, 2], ["previouslySaved", 3, 2]], [["worksheets", 9, 19, 0, 0, 4], [188, 18, 19, 0, 0, 4], [189, 23, 19, 0, 0, 4], ["application", 3, 2, 0, 0, 4], ["bindings", 22, 19, 0, 0, 4], ["functions", 181, 2, 7, 0, 4], [96, 96, 2, 8, 0, 4], [190, 98, 19, 8, 0, 4], ["settings", 16, 19, 9, 0, 4], ["customXmlParts", 94, 19, 10, 0, 4], ["internalTest", 149, 2, 4, 0, 4], [191, 115, 35, 5, 0, 4], ["styles", 140, 19, 5, 0, 4], [192, 6, 3, 5, 0, 4], ["dataConnections", 155, 3, 5, 0, 4], ["_Runtime", 2, 2, 10, 0, 4], [193, 157, 19, 11, 0, 4], [194, 174, 19, 11, 0, 4], ["tableStyles", 141, 19, 11, 0, 4], ["pivotTableStyles", 143, 19, 11, 0, 4], ["slicerStyles", 145, 19, 11, 0, 4], ["timelineStyles", 147, 19, 11, 0, 4]], [["_RemoveReference", 1, 2], ["_GetObjectByReferenceId", 1, 2, 0, 4], ["_GetObjectTypeNameByReferenceId", 1, 2, 0, 4], ["_RemoveAllReferences", 0, 2], ["_GetReferenceCount", 0, 2, 0, 4], ["getIsActiveCollabSession", 0, 0, 2], ["registerCustomFunctions", 7, 0, 12, 8], ["_SetOsfControlContainerReadyForCustomFunctions", 0, 0, 12], ["close", 1, 0, 3], ["save", 1, 0, 3], [195, 0, 0, 2], [196, 0, 0, 2], [197, 0, 0, 13], [198, 0, 0, 13]], [["getSelectedRange", 12, 0, 10, 0, 4], ["getActiveCell", 12, 0, 10, 5, 4], ["_GetRangeForEventByReferenceId", 12, 1, 2, 0, 4], ["_GetRangeOrNullObjectForEventByReferenceId", 12, 1, 2, 0, 4], ["getActiveChart", 39, 0, 2, 2, 4], ["getActiveChartOrNullObject", 39, 0, 2, 2, 4], ["getSelectedRanges", 13, 0, 10, 2, 4], ["_GetRangesForEventByReferenceId", 13, 1, 2, 2, 4], ["_GetRangesOrNullObjectForEventByReferenceId", 13, 1, 2, 2, 4], ["getActiveSlicer", 173, 0, 2, 11, 4], ["getActiveSlicerOrNullObject", 173, 0, 2, 11, 4]], 0, 0, [["AutoSaveSettingChanged", 0, 2, "MessageType.workbookAutoSaveSettingChangedEvent", 199, 195, 196], [200, 3, 8, "_CC.office10EventIdDocumentSelectionChangedEvent", 201, 201, 201], ["WACOperationEvent", 2, 13, "MessageType.wacoperationEvent", 199, 197, 198], ["_Message", 3, 5, "_CC.office10EventIdRichApiMessageEvent", 201, 201, 201]]],
+            [6, 0, [[202, 3]], 0, [[203, 1], [204, 1]]],
+            [7, 0, [[205, 3]], 0, [["open", 0, 2, 0, 4]]],
+            [8, 0, [[182, 1], [205, 3], [206, 1], ["visibility", 1], ["tabColor", 1, 5], ["standardWidth", 1, 5], ["standardHeight", 3, 5], ["showGridlines", 5, 1], ["showHeadings", 5, 1], ["enableCalculation", 1, 2]], [["charts", 38, 83, 0, 0, 4], [189, 23, 83, 0, 0, 4], [192, 10, 3, 7, 0, 4], [190, 98, 19, 8, 0, 4], [188, 18, 19, 9, 0, 4], ["freezePanes", 11, 3, 5, 0, 4], ["pageLayout", 150, 35, 2, 0, 4], ["visuals", 81, 83, 11, 0, 4], [207, 161, 19, 2, 0, 4], ["horizontalPageBreaks", 154, 19, 2, 0, 4], ["verticalPageBreaks", 154, 19, 2, 0, 4], [208, 89, 3, 2, 0, 4], [194, 174, 19, 11, 0, 4], [193, 157, 19, 11, 0, 4], ["customProperties", 114, 19, 6, 0, 4], ["sheetViews", 179, 18, 14, 0, 4]], [[209], [210, 0, 2], [184, 1, 0, 4], [211, 0, 0, 5], [212, 0, 0, 5], [213, 0, 0, 5], [214, 0, 0, 5], [215, 0, 0, 5], [216, 0, 0, 5], [217, 0, 0, 5], [218, 0, 0, 5], [219, 0, 0, 1], [220, 0, 0, 1], [221, 3, 0, 2], [222, 0, 0, 6], [223, 0, 0, 6], [224, 0, 0, 2], [225, 0, 0, 2], [226, 0, 0, 11], [227, 0, 0, 11], [228, 0, 0, 11], [229, 0, 0, 11], [230, 0, 0, 11], [231, 0, 0, 11], [232, 0, 0, 3], [233, 0, 0, 3], ["showOutlineLevels", 2, 0, 11]], [[234, 12, 1, 10, 0, 4], [235, 12, 1, 10, 0, 4], [236, 12, 2, 10, 0, 4], [237, 12, 1, 10, 9, 4], ["getRangeByIndexes", 12, 4, 10, 5, 4], ["getPrevious", 8, 1, 10, 10, 4, 0, 238], ["getPreviousOrNullObject", 8, 1, 10, 10, 4, 0, 238], ["getNext", 8, 1, 10, 10, 4, 0, 238], ["getNextOrNullObject", 8, 1, 10, 10, 4, 0, 238], [238, 8, 1, 2, 5, 4], ["copy", 8, 2, 0, 5, 0, 0, 239], [239, 8, 1, 0, 5], ["findAll", 13, 2, 10, 2, 4], ["findAllOrNullObject", 13, 2, 10, 2, 4], [240, 13, 1, 10, 2, 4]], "workbook.worksheets", 0, [[241, 0, 5, 242, 243, 213, 214], [244, 0, 1, 245, 243, 219, 220], [246, 2, 5, 247, 243, 211, 212], [248, 0, 11, 249, 243, 228, 229], [250, 0, 5, 251, 243, 215, 216], [252, 0, 6, 253, 243, 222, 223], [254, 2, 2, 255, 243, 224, 225], [256, 0, 3, 257, 243, 232, 233], [258, 0, 11, 259, 243, 226, 227], [200, 0, 5, 260, 243, 217, 218], [261, 0, 11, 262, 243, 230, 231]]],
+            [9, 1, 0, 0, [[263, 1, 2, 9, 4], [264, 0, 0, 5], [265, 0, 0, 5], [213, 0, 2, 5], [214, 0, 0, 5], [215, 0, 0, 5], [216, 0, 0, 5], [266, 0, 0, 5], [267, 0, 0, 5], [219, 0, 0, 1], [220, 0, 0, 1], [211, 0, 0, 2], [212, 0, 0, 2], [217, 0, 0, 2], [218, 0, 0, 2], ["addFromBase64", 4, 0, 6], [222, 0, 0, 6], [223, 0, 0, 6], [224, 0, 0, 2], [225, 0, 0, 2], [226, 0, 0, 11], [227, 0, 0, 11], [228, 0, 0, 11], [229, 0, 0, 11], [230, 0, 0, 11], [231, 0, 0, 11], [232, 0, 0, 3], [233, 0, 0, 3]], [[268, 8, 1, 18, 0, 4], [269, 8, 1, 8], ["getActiveWorksheet", 8, 0, 2, 0, 4], [270, 8, 1, 2, 9, 4], [271, 8, 1, 10, 10, 4], ["getLast", 8, 1, 10, 10, 4]], 0, 8, [[241, 0, 5, 242, 199, 213, 214], [272, 0, 5, "MessageType.worksheetAddedEvent", 199, 264, 265], [244, 0, 1, 245, 199, 219, 220], [246, 2, 2, 247, 199, 211, 212], [248, 0, 11, 249, 199, 228, 229], [250, 0, 5, 251, 199, 215, 216], [273, 0, 5, "MessageType.worksheetDeletedEvent", 199, 266, 267], [252, 0, 6, 253, 199, 222, 223], [254, 2, 2, 255, 199, 224, 225], [256, 0, 3, 257, 199, 232, 233], [258, 0, 11, 259, 199, 226, 227], [200, 0, 2, 260, 199, 217, 218], [261, 0, 11, 262, 199, 230, 231]]],
+            [10, 0, [[202, 3], [274, 3]], 0, [[203, 2, 1], [204, 1]]],
+            [11, 0, 0, 0, [["unfreeze"], ["freezeAt", 1], ["freezeRows", 1], ["freezeColumns", 1]], [[275, 12, 0, 10, 0, 4], ["getLocationOrNullObject", 12, 0, 10, 0, 4]]],
+            [12, 14, [[276, 5], [277, 1, 5], [278, 5], [279, 3], [280, 5], [281, 5], [282, 3], [283, 3], [284, 3], [285, 3], [286, 3], [287, 3], [288, 3], [289, 2], [290, 3], [291, 5, 7], ["hidden", 3, 7], ["rowHidden", 1, 7], ["columnHidden", 1, 7], [292, 3, 5], [293, 3, 5], [294, 1, 5], [295, 1, 5], ["linkedDataTypeState", 3, 2], ["hasSpill", 3, 6], [296, 3, 11], [297, 3, 11], [298, 3, 11], [299, 3, 11], ["savedAsArray", 3, 6], ["numberFormatCategories", 3, 6]], [[300, 32, 35, 0, 0, 4], [301, 8, 2, 0, 0, 4], [302, 86, 3, 7, 0, 4], [303, 118, 19, 4, 0, 4], [304, 30, 35, 1, 0, 4]], [[305, 1], [209, 1], [306, 0, 2], [307, 0, 2], ["merge", 1, 0, 7], ["unmerge", 0, 0, 7], ["_ValidateArraySize", 2, 2, 8, 4], [184, 0, 0, 4], ["showCard", 0, 0, 5], [308, 0, 2, 5, 4], [221, 3, 0, 2], [309, 4, 0, 2], [310, 2, 0, 2], [311, 0, 0, 2], [312, 0, 0, 2], ["getCellProperties", 1, 0, 2], ["getRowProperties", 1, 0, 2], ["getColumnProperties", 1, 0, 2], ["setCellProperties", 1, 0, 2], ["setRowProperties", 1, 0, 2], ["setColumnProperties", 1, 0, 2], ["autoFill", 2, 0, 2], [313, 2, 0, 2], ["flashFill", 0, 0, 2], [314, 1, 0, 11], [315, 1, 0, 11], ["showGroupDetails", 1, 0, 11], ["hideGroupDetails", 1, 0, 11], ["moveTo", 1, 0, 15]], [[236, 12, 2, 10, 0, 4], [235, 12, 1, 10, 0, 4], ["insert", 12, 1, 8], [316, 12, 0, 10, 0, 4], [317, 12, 0, 10, 0, 4], ["getOffsetRange", 12, 2, 10, 0, 4], ["getRow", 12, 1, 10, 0, 4], ["getColumn", 12, 1, 10, 0, 4], [318, 12, 1, 10, 0, 4], ["getBoundingRect", 12, 1, 10, 0, 4], ["getLastCell", 12, 0, 10, 0, 4], ["getLastColumn", 12, 0, 10, 0, 4], ["getLastRow", 12, 0, 10, 0, 4], [319, 12, 1, 10, 9, 4], ["getRowsAbove", 12, 1, 11, 8, 4], ["getRowsBelow", 12, 1, 11, 8, 4], ["getColumnsBefore", 12, 1, 11, 8, 4], ["getColumnsAfter", 12, 1, 11, 8, 4], ["getResizedRange", 12, 2, 11, 8, 4], ["getVisibleView", 14, 0, 2, 8, 4], [237, 12, 1, 10, 9, 4], ["getSurroundingRegion", 12, 0, 10, 5, 4], ["getAbsoluteResizedRange", 12, 2, 10, 5, 4], [320, 24, 1, 6, 2, 4], [321, 12, 2, 10, 2, 4], ["findOrNullObject", 12, 2, 10, 2, 4], ["removeDuplicates", 31, 2, 8, 2], [322, 13, 2, 10, 2, 4], [323, 13, 2, 10, 2, 4], ["getSpillingToRange", 12, 0, 10, 6, 4], ["getSpillParent", 12, 0, 10, 6, 4], ["getSpillingToRangeOrNullObject", 12, 0, 10, 6, 4], ["getSpillParentOrNullObject", 12, 0, 10, 6, 4], ["getMergedAreas", 13, 0, 10, 6, 4], ["getPivotTables", 97, 1, 6, 6, 4]]],
+            [13, 2, [[289, 2], [286, 3], [287, 3], ["areaCount", 3], [288, 3], [292, 3], [293, 3], [295, 1]], [[324, 156, 19, 0, 0, 4], [303, 118, 19, 0, 0, 4], [300, 32, 35, 0, 0, 4], [304, 30, 35, 0, 0, 4], [301, 8, 2, 0, 0, 4]], [[307, 0, 2], [184], [305, 1], [312], [309, 4], [310, 2], [311], [306, 0, 2, 6]], [[316, 13, 0, 10, 0, 4], [317, 13, 0, 10, 0, 4], [318, 13, 1, 10, 0, 4], [319, 13, 1, 10, 0, 4], ["getOffsetRangeAreas", 13, 2, 10, 0, 4], ["getUsedRangeAreas", 13, 1, 10, 0, 4], ["getUsedRangeAreasOrNullObject", 13, 1, 10, 0, 4], [320, 24, 1, 6, 0, 4], [322, 13, 2, 10, 0, 4], [323, 13, 2, 10, 0, 4]]],
+            [14, 0, [[276, 1], [278, 1], [279, 3], [280, 1], [281, 1], [291, 1], [290, 3], [284, 3], [285, 3], ["cellAddresses", 3], [325, 3]], [[326, 15, 19, 0, 0, 4]], 0, [[234, 12, 0, 10, 0, 4]]],
+            [15, 1, 0, 0, [[263, 0, 2, 9, 4]], [[327, 14, 1, 2, 0, 4]], 0, 14],
+            [16, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 17, 1, 18, 0, 4], [269, 17, 2, 9], [270, 17, 1, 2, 0, 4]], 0, 17, [["SettingsChanged", 3, 0, "_CC.office10EventIdSettingsChangedEvent", 201, 201, 201]]],
+            [17, 8, [[328, 3], [329, 5], [330, 2]], 0, [[209]]],
+            [18, 1, 0, 0, [[263, 0, 2, 9, 4]], [[268, 19, 1, 18, 0, 4], [270, 19, 1, 2, 9, 4], [269, 19, 3, 8, 9], ["addFormulaLocal", 19, 3, 0, 9]], 0, 19],
+            [19, 0, [[182, 3], [331, 3], [329, 3], [332, 1], [330, 2], ["comment", 1, 9], ["scope", 3, 9], [333, 1, 5]], [[301, 8, 2, 9, 0, 4], ["worksheetOrNullObject", 8, 2, 9, 0, 4], ["arrayValues", 20, 3, 5, 0, 4]], [[209, 0, 0, 9]], [[234, 12, 0, 10, 0, 4], [334, 12, 0, 10, 9, 4]]],
+            [20, 0, [[278, 3], ["types", 3]]],
+            [21, 0, [[205, 3], [331, 3]], 0, [["getText", 0, 2, 0, 4], [209, 0, 0, 8]], [["getTable", 25, 0, 2, 0, 4], [234, 12, 0, 2, 0, 4]], 0, 0, [["DataChanged", 3, 8, "_CC.office10EventIdBindingDataChangedEvent", 243, 201, 201], [200, 3, 8, "_CC.office10EventIdBindingSelectionChangedEvent", 243, 201, 201]]],
+            [22, 1, [[335, 3]], 0, [[263, 0, 2, 9, 4]], [[268, 21, 1, 18, 0, 4], [327, 21, 1, 2, 0, 4], [269, 21, 3, 8, 8], ["addFromNamedItem", 21, 3, 0, 8], ["addFromSelection", 21, 2, 0, 8], [270, 21, 1, 2, 9, 4]], 0, 21],
+            [23, 5, [[335, 3]], 0, [[263, 0, 2, 9, 4], [211, 0, 0, 5], [212, 0, 0, 5], [264, 0, 0, 2], [265, 0, 0, 2], [266, 0, 0, 2], [267, 0, 0, 2], [222, 0, 0, 6], [223, 0, 0, 6]], [[268, 25, 1, 18, 0, 4], [327, 25, 1, 2, 0, 4], [269, 25, 2, 8], [270, 25, 1, 2, 9, 4]], 0, 25, [[272, 0, 2, "MessageType.tableAddedEvent", 336, 264, 265], [246, 2, 5, 337, 336, 211, 212], [273, 0, 2, "MessageType.tableDeletedEvent", 336, 266, 267], [252, 0, 6, 338, 336, 222, 223]]],
+            [24, 1, 0, 0, [[263, 0, 2, 0, 4]], [[271, 25, 0, 10, 0, 4], [268, 25, 1, 18, 0, 4]], 0, 25],
+            [25, 24, [[205, 3], [182, 1], ["showHeaders", 1], ["showTotals", 1], [295, 1], ["highlightFirstColumn", 1, 8], ["highlightLastColumn", 1, 8], ["showBandedRows", 1, 8], ["showBandedColumns", 1, 8], ["showFilterButton", 1, 8], ["legacyId", 3, 1]], [[339, 26, 19, 0, 0, 4], [326, 28, 19, 0, 0, 4], [302, 87, 3, 7, 0, 4], [301, 8, 2, 7, 0, 4], [208, 89, 3, 2, 0, 4], ["tableStyle", 142, 35, 6, 0, 4]], [[209], [340, 0, 0, 7], ["reapplyFilters", 0, 0, 7], [217, 0, 0, 5], [218, 0, 0, 5], [211, 0, 0, 5], [212, 0, 0, 5], ["clearStyle", 0, 0, 6], [222, 0, 0, 6], [223, 0, 0, 6], [341, 1, 0, 6]], [[234, 12, 0, 10, 0, 4], [342, 12, 0, 10, 0, 4], [343, 12, 0, 10, 0, 4], [344, 12, 0, 10, 0, 4], ["convertToRange", 12, 0, 8, 7]], "workbook.tables", 0, [[246, 2, 5, 337, 243, 211, 212], [252, 0, 6, 338, 243, 222, 223], [200, 2, 5, "MessageType.tableSelectionChangedEvent", 243, 217, 218]]],
+            [26, 1, [[335, 3]], 0, [[263, 0, 2, 9, 4]], [[268, 27, 1, 18, 0, 4], [327, 27, 1, 2, 0, 4], [269, 27, 3, 8], [270, 27, 1, 2, 9, 4]], 0, 27],
+            [27, 0, [[205, 3], [325, 3], [278, 1], [182, 1]], [["filter", 88, 3, 7, 0, 4]], [[209]], [[234, 12, 0, 10, 0, 4], [342, 12, 0, 10, 0, 4], [343, 12, 0, 10, 0, 4], [344, 12, 0, 10, 0, 4]]],
+            [28, 1, [[335, 3]], 0, [[263, 0, 2, 9, 4]], [[327, 29, 1, 2, 0, 4], [269, 29, 2, 8]], 0, 29],
+            [29, 0, [[325, 3], [278, 1]], 0, [[209]], [[234, 12, 0, 10, 0, 4]]],
+            [30, 0, [[331, 3], [345, 1], ["prompt", 1], ["errorAlert", 1], ["ignoreBlanks", 1], ["valid", 3]], 0, [[305]], [["getInvalidCells", 13, 0, 10, 2, 4], ["getInvalidCellsOrNullObject", 13, 0, 10, 2, 4]]],
+            [31, 0, [["removed", 3], ["uniqueRemaining", 3]]],
+            [32, 0, [[346, 1], [347, 1], [348, 1], ["columnWidth", 1, 7], [349, 1, 7], [350, 1, 5], ["useStandardHeight", 1, 5], ["useStandardWidth", 1, 5], [351, 1, 2], [352, 1, 2], [353, 1, 2], [354, 1, 2]], [[355, 34, 35, 0, 0, 4], [356, 37, 35, 0, 0, 4], [357, 36, 51, 0, 0, 4], [192, 33, 35, 7, 0, 4]], [["autofitColumns", 0, 0, 7], ["autofitRows", 0, 0, 7], ["adjustIndent", 1, 0, 15]]],
+            [33, 0, [[358, 1], [359, 1]]],
+            [34, 0, [[360, 1], [361, 1, 2], ["patternTintAndShade", 1, 2], ["pattern", 1, 2], ["patternColor", 1, 2]], 0, [[305]]],
+            [35, 0, [[362, 3], [295, 1], [363, 1], [360, 1], [361, 1, 2]]],
+            [36, 1, [[335, 3], [361, 1, 2]], 0, 0, [[268, 35, 1, 18, 0, 4], [327, 35, 1, 2, 0, 4]], 0, 35],
+            [37, 0, [[182, 1], [364, 1], [360, 1], [365, 1], [366, 1], [367, 1], [368, 1, 2], ["subscript", 1, 2], ["superscript", 1, 2], [361, 1, 2]]],
+            [38, 5, [[335, 3]], 0, [[263, 0, 2, 9, 4], [264, 0, 0, 1], [265, 0, 0, 1], [213, 0, 0, 1], [214, 0, 0, 1], [215, 0, 0, 1], [216, 0, 0, 1], [266, 0, 0, 1], [267, 0, 0, 1]], [[269, 39, 3, 9], [327, 39, 1, 2, 0, 4], [369, 39, 1, 18, 0, 4], [268, 39, 1, 2, 0, 4], [270, 39, 1, 2, 9, 4]], 0, 39, [[241, 0, 1, 370, 371, 213, 214], [272, 0, 1, "MessageType.chartAddedEvent", 371, 264, 265], [250, 0, 1, 372, 371, 215, 216], [273, 0, 1, "MessageType.chartDeletedEvent", 371, 266, 267]]],
+            [39, 0, [[182, 1], [296, 1], [297, 1], [299, 1], [298, 1], [205, 3, 5], ["showAllFieldButtons", 1, 5], [373, 1, 5], ["showDataLabelsOverMaximum", 1, 1], ["categoryLabelLevel", 1, 1], [295, 1, 1], ["displayBlanksAs", 1, 1], ["plotBy", 1, 1], ["plotVisibleOnly", 1, 1], ["seriesNameLevel", 1, 1]], [[374, 65, 35, 0, 0, 4], [375, 53, 35, 0, 0, 4], ["legend", 60, 35, 0, 0, 4], ["series", 42, 19, 0, 0, 4], ["axes", 48, 35, 0, 0, 4], [300, 41, 35, 0, 0, 4], [301, 8, 2, 7, 0, 4], ["plotArea", 79, 35, 1, 0, 4], ["pivotOptions", 40, 35, 2, 0, 4]], [["setData", 2, 1], [209], ["setPosition", 2], [308, 3, 2, 7, 4], [213, 0, 0, 1], [214, 0, 0, 1], [215, 0, 0, 1], [216, 0, 0, 1], [210, 0, 2, 2]], 0, 0, 0, [[241, 0, 1, 370, 243, 213, 214], [250, 0, 1, 372, 243, 215, 216]]],
+            [40, 0, [["showAxisFieldButtons", 1], ["showLegendFieldButtons", 1], ["showReportFilterFieldButtons", 1], ["showValueFieldButtons", 1]]],
+            [41, 0, [["roundedCorners", 1, 2], ["colorScheme", 1, 2]], [[355, 68, 3, 0, 0, 4], [356, 73, 35, 0, 0, 4], [376, 69, 35, 5, 0, 4]]],
+            [42, 1, [[335, 3]], 0, [[263, 0, 2, 9, 4]], [[327, 43, 1, 2, 0, 4], [269, 43, 2, 8, 5]], 0, 43],
+            [43, 0, [[182, 1], [373, 1, 5], ["hasDataLabels", 1, 5], ["filtered", 1, 5], [377, 1, 5], [378, 1, 5], [379, 1, 5], [380, 1, 5], [381, 1, 5], ["smooth", 1, 5], ["plotOrder", 1, 5], ["gapWidth", 1, 5], ["doughnutHoleSize", 1, 5], [382, 1, 1], ["explosion", 1, 1], ["firstSliceAngle", 1, 1], ["invertIfNegative", 1, 1], ["bubbleScale", 1, 2], ["secondPlotSize", 1, 1], ["splitType", 1, 1], ["splitValue", 1, 2], ["varyByCategories", 1, 1], ["showLeaderLines", 1, 2], ["overlap", 1, 1], ["gradientStyle", 1, 2], ["gradientMinimumType", 1, 2], ["gradientMidpointType", 1, 2], ["gradientMaximumType", 1, 2], ["gradientMinimumValue", 1, 2], ["gradientMidpointValue", 1, 2], ["gradientMaximumValue", 1, 2], ["gradientMinimumColor", 1, 2], ["gradientMidpointColor", 1, 2], ["gradientMaximumColor", 1, 2], ["parentLabelStrategy", 1, 2], ["showConnectorLines", 1, 2], ["invertColor", 1, 2]], [["points", 45, 19, 0, 0, 4], [300, 44, 35, 0, 0, 4], ["trendlines", 75, 19, 5, 0, 4], ["xErrorBars", 56, 35, 2, 0, 4], ["yErrorBars", 56, 35, 2, 0, 4], [375, 53, 35, 1, 0, 4], ["binOptions", 70, 35, 2, 0, 4], ["mapOptions", 64, 35, 2, 0, 4], ["boxwhiskerOptions", 71, 35, 2, 0, 4]], [[209, 0, 0, 5], ["setXAxisValues", 1, 0, 5], ["setValues", 1, 0, 5], ["setBubbleSizes", 1, 0, 5], ["getDimensionValues", 1, 0, 6]]],
+            [44, 0, 0, [[355, 68, 3, 0, 0, 4], [383, 72, 35, 0, 0, 4]]],
+            [45, 1, [[335, 3]], 0, [[263, 0, 2, 9, 4]], [[327, 46, 1, 2, 0, 4]], 0, 46],
+            [46, 0, [[329, 3], ["hasDataLabel", 1, 5], [378, 1, 5], [377, 1, 5], [380, 1, 5], [381, 1, 5]], [[300, 47, 35, 0, 0, 4], ["dataLabel", 54, 35, 5, 0, 4]]],
+            [47, 0, 0, [[355, 68, 3, 0, 0, 4], [376, 69, 35, 5, 0, 4]]],
+            [48, 0, 0, [["categoryAxis", 49, 35, 0, 0, 4], ["seriesAxis", 49, 35, 0, 0, 4], ["valueAxis", 49, 35, 0, 0, 4]], 0, [[268, 49, 2, 2, 5, 4]]],
+            [49, 0, [["majorUnit", 1], ["maximum", 1], ["minimum", 1], ["minorUnit", 1], ["displayUnit", 1, 5], ["showDisplayUnitLabel", 1, 5], ["customDisplayUnit", 3, 5], [331, 3, 5], ["minorTimeUnitScale", 1, 5], ["majorTimeUnitScale", 1, 5], ["baseTimeUnit", 1, 5], ["categoryType", 1, 5], [382, 3, 5], ["scaleType", 1, 5], ["logBase", 1, 5], [297, 3, 5], [296, 3, 5], [298, 3, 5], [299, 3, 5], ["reversePlotOrder", 1, 5], ["crosses", 1, 5], ["crossesAt", 3, 5], [332, 1, 5], ["isBetweenCategories", 1, 1], ["majorTickMark", 1, 5], ["minorTickMark", 1, 5], ["tickMarkSpacing", 1, 5], ["tickLabelPosition", 1, 5], ["tickLabelSpacing", 1, 5], ["alignment", 1, 1], ["multiLevel", 1, 1], [276, 1, 1], [384, 1, 2], ["offset", 1, 1], [350, 1, 1], [206, 1, 1], ["positionAt", 3, 1]], [["majorGridlines", 58, 35, 0, 0, 4], ["minorGridlines", 58, 35, 0, 0, 4], [374, 51, 35, 0, 0, 4], [300, 50, 35, 0, 0, 4]], [["setCategoryNames", 1, 0, 5], ["setCustomDisplayUnit", 1, 0, 5], ["setCrossesAt", 1, 0, 5], ["setPositionAt", 1, 0, 1]]],
+            [50, 0, 0, [[356, 73, 35, 0, 0, 4], [383, 72, 35, 0, 0, 4], [355, 68, 3, 1, 0, 4]]],
+            [51, 0, [[279, 1], [332, 1], [350, 1, 6]], [[300, 52, 35, 0, 0, 4]], [[385, 1, 0, 1]]],
+            [52, 0, 0, [[356, 73, 35, 0, 0, 4], [355, 68, 3, 1, 0, 4], [376, 69, 35, 1, 0, 4]]],
+            [53, 0, [[206, 1], [386, 1], [387, 1], [388, 1], [389, 1], [390, 1], [391, 1], [392, 1], [276, 1, 1], [384, 1, 2], [350, 1, 1], [393, 1, 1], [347, 1, 1], [348, 1, 1]], [[300, 55, 35, 0, 0, 4]]],
+            [54, 0, [[206, 1], [386, 1], [387, 1], [388, 1], [389, 1], [390, 1], [391, 1], [392, 1], [296, 1, 1], [297, 1, 1], [299, 3, 1], [298, 3, 1], [333, 1, 1], [350, 1, 1], [347, 1, 1], [348, 1, 1], [279, 1, 1], [393, 1, 1], [276, 1, 1], [384, 1, 2]], [[300, 55, 35, 1, 0, 4]]],
+            [55, 0, 0, [[356, 73, 35, 0, 0, 4], [355, 68, 3, 0, 0, 4], [376, 69, 35, 1, 0, 4]]],
+            [56, 0, [["endStyleCap", 1], ["include", 1], [331, 1], [332, 1]], [[300, 57, 35, 0, 0, 4]]],
+            [57, 0, 0, [[383, 72, 35, 0, 0, 4]]],
+            [58, 0, [[332, 1]], [[300, 59, 35, 0, 0, 4]]],
+            [59, 0, 0, [[383, 72, 35, 0, 0, 4]]],
+            [60, 0, [[332, 1], [206, 1], [394, 1], [297, 1, 5], [296, 1, 5], [299, 1, 5], [298, 1, 5], [379, 1, 5]], [[300, 63, 35, 0, 0, 4], ["legendEntries", 62, 19, 5, 0, 4]]],
+            [61, 0, [[332, 1], [297, 3, 1], [296, 3, 1], [299, 3, 1], [298, 3, 1], [325, 3, 1]]],
+            [62, 1, 0, 0, [[263, 0, 2, 0, 4]], [[327, 61, 1, 2, 0, 4]], 0, 61],
+            [63, 0, 0, [[356, 73, 35, 0, 0, 4], [355, 68, 3, 0, 0, 4], [376, 69, 35, 1, 0, 4]]],
+            [64, 0, [[395, 1], ["labelStrategy", 1], ["projectionType", 1]]],
+            [65, 0, [[332, 1], [279, 1], [394, 1], [347, 1, 5], [296, 1, 5], [297, 1, 5], [299, 3, 5], [298, 3, 5], [348, 1, 5], [350, 1, 5], [206, 1, 5], [379, 1, 5]], [[300, 67, 35, 0, 0, 4]], [[385, 1, 0, 5]], [[396, 66, 2, 2, 5, 4]]],
+            [66, 0, 0, [[356, 73, 35, 0, 0, 4]]],
+            [67, 0, 0, [[356, 73, 35, 0, 0, 4], [355, 68, 3, 0, 0, 4], [376, 69, 35, 5, 0, 4]]],
+            [68, 4, 0, 0, [[397, 1], [305]]],
+            [69, 0, [[360, 1], [398, 1], [363, 1]], 0, [[305, 0, 0, 1]]],
+            [70, 0, [[331, 1], [299, 1], [335, 1], ["allowOverflow", 1], ["allowUnderflow", 1], ["overflowValue", 1], ["underflowValue", 1]]],
+            [71, 0, [["showInnerPoints", 1], ["showOutlierPoints", 1], ["showMeanMarker", 1], ["showMeanLine", 1], ["quartileCalculation", 1]]],
+            [72, 0, [[360, 1], [398, 1, 5], [363, 1, 5]], 0, [[305]]],
+            [73, 0, [[366, 1], [360, 1], [365, 1], [182, 1], [364, 1], [367, 1]]],
+            [74, 0, [[331, 1], ["polynomialOrder", 1], ["movingAveragePeriod", 1], [330, 2], ["showEquation", 1, 1], ["showRSquared", 1, 1], ["forwardPeriod", 1, 1], ["backwardPeriod", 1, 1], [182, 1], ["intercept", 1]], [[300, 76, 35, 0, 0, 4], ["label", 77, 35, 1, 0, 4]], [[209]]],
+            [75, 1, 0, 0, [[263, 0, 2, 0, 4]], [[269, 74, 1, 8], [268, 74, 1, 18, 0, 4]], 0, 74],
+            [76, 0, 0, [[383, 72, 35, 0, 0, 4]]],
+            [77, 0, [[296, 1], [297, 1], [299, 3], [298, 3], [333, 1], [350, 1], [347, 1], [348, 1], [279, 1], [393, 1], [276, 1], [384, 1, 2]], [[300, 78, 35, 0, 0, 4]]],
+            [78, 0, 0, [[355, 68, 3, 0, 0, 4], [376, 69, 35, 0, 0, 4], [356, 73, 35, 0, 0, 4]]],
+            [79, 0, [[297, 1], [296, 1], [299, 1], [298, 1], ["insideLeft", 1], ["insideTop", 1], ["insideWidth", 1], ["insideHeight", 1], [206, 1]], [[300, 80, 35, 0, 0, 4]]],
+            [80, 0, 0, [[376, 69, 35, 0, 0, 4], [355, 68, 3, 0, 0, 4]]],
+            [81, 5, 0, 0, [["getDefinitions", 0, 2, 0, 4], ["getPreview", 4, 2, 0, 4], ["bootstrapAgaveVisual", 0, 0, 0, 2], [263, 0, 2, 0, 4], [217, 0, 2], [218, 0, 2]], [[269, 82, 3, 8, 0, 2], [369, 82, 1, 18, 0, 4], ["getSelectedOrNullObject", 82, 0, 2, 0, 4]], 0, 82, [["AgaveVisualUpdate", 2, 0, "MessageType.agaveVisualUpdateEvent", 201, 399, 399], [200, 0, 0, "MessageType.visualSelectionChangedEvent", 371, 217, 218]]],
+            [82, 0, [[205, 3], ["isSupportedInVisualTaskpane", 3]], [[191, 84, 18, 0, 0, 4]], [[209, 0, 0, 0, 2], ["getProperty", 1, 2, 0, 4], ["setProperty", 2, 0, 0, 2], ["changeDataSource", 2, 0, 0, 2], ["getDataSource", 0, 2, 0, 4], ["setPropertyToDefault", 1, 0, 0, 2], [400, 0, 2], [401, 0, 2], ["serializeProperties", 0, 2, 0, 4], ["deserializeProperties", 1, 0, 0, 2]], [["getChildProperties", 84, 2, 6, 0, 4], ["getDataControllerClient", 85, 0, 2, 0, 4], ["getElementChildProperties", 84, 3, 6, 0, 4]], 0, 0, [["ChangeNotification", 2, 0, "MessageType.visualChangeEvent", 243, 400, 401]]],
+            [83, 0, [[331, 3], [329, 3], [205, 3], ["localizedName", 3], [274, 3], ["localizedOptions", 3], ["hasDefault", 3], ["isDefault", 3], [402, 3], [403, 3], ["stepSize", 3], ["hideMeButShowChildrenUI", 3], ["expandableUI", 3], ["nextPropOnSameLine", 3], ["showResetUI", 3]], 0, [["getBoolMetaProperty", 1, 2, 0, 4]]],
+            [84, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 83, 1, 18, 0, 4], [327, 83, 1, 2, 0, 4]], 0, 83],
+            [85, 0, 0, 0, [["getWells", 0, 2, 0, 4], ["getAssociatedFields", 1, 2, 0, 4], ["getAvailableFields", 1, 2, 0, 4], ["addField", 3, 0, 0, 2], ["removeField", 2, 0, 0, 2], ["moveField", 3, 0, 0, 2]]],
+            [86, 0, 0, 0, [[404, 5]]],
+            [87, 0, [["matchCase", 3], ["method", 3], [405, 3]], 0, [[404, 3], [305], [406]]],
+            [88, 0, [[407, 3]], 0, [[404, 1], [305], ["applyBottomItemsFilter", 1], ["applyBottomPercentFilter", 1], ["applyCellColorFilter", 1], ["applyDynamicFilter", 1], ["applyFontColorFilter", 1], ["applyValuesFilter", 1], ["applyTopItemsFilter", 1], ["applyTopPercentFilter", 1], ["applyIconFilter", 1], ["applyCustomFilter", 3]]],
+            [89, 0, [[186, 3], ["isDataFiltered", 3], [407, 3]], 0, [[404, 3], [406], [408], ["clearCriteria"]], [[234, 12, 0, 10, 0, 4], [334, 12, 0, 10, 0, 4]]],
+            [90, 0, [[182, 3]], [[276, 91, 3, 0, 0, 4], ["datetimeFormat", 92, 3, 6, 0, 4]]],
+            [91, 0, [["numberDecimalSeparator", 3], ["numberGroupSeparator", 3]]],
+            [92, 0, [["dateSeparator", 3], ["longDatePattern", 3], ["shortDatePattern", 3], ["timeSeparator", 3], ["longTimePattern", 3]]],
+            [93, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 95, 1, 18, 0, 4], [270, 95, 1, 2, 0, 4], ["getOnlyItem", 95, 0, 2, 0, 4], ["getOnlyItemOrNullObject", 95, 0, 2, 0, 4]], 0, 95],
+            [94, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 95, 1, 18, 0, 4], [269, 95, 1, 8], ["getByNamespace", 93, 1, 6, 0, 4], [270, 95, 1, 2, 0, 4]], 0, 95],
+            [95, 0, [[205, 3], ["namespaceUri", 3]], 0, [[209], ["getXml", 0, 2, 0, 4], ["setXml", 1]]],
+            [96, 0, 0, 0, [["bindingGetData", 1, 2, 0, 4], ["getSelectedData", 1, 2, 0, 4], ["gotoById", 1, 2, 0, 4], ["bindingAddFromSelection", 1, 2], ["bindingGetById", 1, 2, 0, 4], ["bindingReleaseById", 1, 2], ["bindingGetAll", 0, 2, 0, 4], ["bindingAddFromNamedItem", 1, 2], ["bindingAddFromPrompt", 1, 2], ["bindingDeleteAllDataValues", 1], ["setSelectedData", 1], ["bindingClearFormats", 1], ["bindingSetData", 1], ["bindingSetFormats", 1], ["bindingSetTableOptions", 1], ["bindingAddRows", 1], ["bindingAddColumns", 1], ["getFilePropertiesAsync", 0, 2, 4, 4]]],
+            [97, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 99, 1, 18, 0, 4], [271, 99, 0, 10, 0, 4], [270, 99, 1, 2, 0, 4]], 0, 99],
+            [98, 1, 0, 0, [[409], [263, 0, 2, 9, 4]], [[268, 99, 1, 18, 0, 4], [270, 99, 1, 2, 9, 4], [269, 99, 3, 8, 1]], 0, 99],
+            [99, 0, [[182, 1], [205, 3, 10], ["useCustomSortLists", 1, 2], ["enableDataValueEditing", 1, 2], ["allowMultipleFiltersPerField", 0, 3]], [[301, 8, 2, 0, 0, 4], ["hierarchies", 101, 19, 1, 0, 4], ["rowHierarchies", 103, 19, 1, 0, 4], ["columnHierarchies", 103, 19, 1, 0, 4], ["dataHierarchies", 107, 19, 1, 0, 4], ["filterHierarchies", 105, 19, 1, 0, 4], ["layout", 100, 2, 1, 0, 4]], [["refresh"], [209, 0, 0, 1]]],
+            [100, 0, [["showColumnGrandTotals", 1], ["showRowGrandTotals", 1], ["enableFieldList", 1, 11], ["subtotalLocation", 1], ["layoutType", 1], ["autoFormat", 1, 2], ["preserveFormatting", 1, 2]], [["pivotStyle", 144, 35, 6, 0, 4]], [["getPivotItems", 2, 0, 2], ["setAutoSortOnCell", 2, 0, 2], [341, 1, 0, 6]], [[234, 12], ["getRowLabelRange", 12], ["getColumnLabelRange", 12], ["getFilterAxisRange", 12], [343, 12], [236, 12, 3, 0, 6], ["getDataHierarchy", 108, 1, 0, 2]]],
+            [101, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 102, 1, 18, 0, 4], [270, 102, 1, 2, 0, 4]], 0, 102],
+            [102, 0, [[205, 3], [182, 1]], [[405, 109, 19, 0, 0, 4]]],
+            [103, 1, 0, 0, [[263, 0, 2, 0, 4], [408, 1]], [[268, 104, 1, 18, 0, 4], [270, 104, 1, 2, 0, 4], [269, 104, 1, 8]], 0, 104],
+            [104, 0, [[205, 3], [182, 1], [206, 1]], [[405, 109, 19, 0, 0, 4]], [[410]]],
+            [105, 1, 0, 0, [[263, 0, 2, 0, 4], [408, 1]], [[268, 106, 1, 18, 0, 4], [270, 106, 1, 2, 0, 4], [269, 106, 1, 8]], 0, 106],
+            [106, 0, [[205, 3], [182, 1], [206, 1], ["enableMultipleFilterItems", 1]], [[405, 109, 19, 0, 0, 4]], [[410]]],
+            [107, 1, 0, 0, [[263, 0, 2, 0, 4], [408, 1]], [[268, 108, 1, 18, 0, 4], [270, 108, 1, 2, 0, 4], [269, 108, 1, 8]], 0, 108],
+            [108, 0, [[205, 3], [182, 1], [206, 1], [276, 1], ["summarizeBy", 1], ["showAs", 1]], [["field", 110, 35, 0, 0, 4]], [[410]]],
+            [109, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 110, 1, 18, 0, 4], [270, 110, 1, 2, 0, 4]], 0, 110],
+            [110, 0, [[205, 3], [182, 1], ["subtotals", 1], ["showAllItems", 1]], [["items", 111, 19, 0, 0, 4]], [["sortByLabels", 1, 1], ["sortByValues", 3, 0, 2], ["applyFilter", 1, 0, 3], ["clearAllFilters", 0, 0, 3], ["clearFilter", 1, 0, 3], ["getFilters", 0, 0, 3], ["isFiltered", 1, 0, 3]]],
+            [111, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 112, 1, 18, 0, 4], [270, 112, 1, 2, 0, 4]], 0, 112],
+            [112, 0, [[205, 3], [182, 1], ["isExpanded", 1], [332, 1]]],
+            [113, 0, [[328, 3], [329, 3]]],
+            [114, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 113, 1, 18, 0, 4], [270, 113, 1]], 0, 113],
+            [115, 0, [[374, 1], ["subject", 1], ["author", 1], ["keywords", 1], [193, 1], ["lastAuthor", 3], ["revisionNumber", 1], [411, 11], ["category", 1], ["manager", 1], ["company", 1]], [[412, 117, 19, 0, 0, 4]]],
+            [116, 0, [[328, 3], [329, 1], [331, 3]], 0, [[209]]],
+            [117, 1, 0, 0, [[263, 0, 2, 0, 4], ["deleteAll"]], [[270, 116, 1, 2, 0, 4], [269, 116, 2, 8], [268, 116, 1, 18, 0, 4]], 0, 116],
+            [118, 1, 0, 0, [[263, 0, 2, 0, 4], ["clearAll"]], [[327, 119, 1, 2, 0, 4], [269, 119, 1, 8], [268, 119, 1, 18, 0, 4]], 0, 119],
+            [119, 0, [["stopIfTrue", 1], ["priority", 1], [331, 3], [205, 3]], [["dataBarOrNullObject", 120, 35, 0, 0, 4], ["dataBar", 120, 35, 0, 0, 4], ["customOrNullObject", 123, 35, 0, 0, 4], [412, 123, 35, 0, 0, 4], ["iconSet", 125, 35, 0, 0, 4], ["iconSetOrNullObject", 125, 35, 0, 0, 4], ["colorScale", 126, 35, 0, 0, 4], ["colorScaleOrNullObject", 126, 35, 0, 0, 4], ["topBottom", 127, 35, 0, 0, 4], ["topBottomOrNullObject", 127, 35, 0, 0, 4], ["preset", 128, 35, 0, 0, 4], ["presetOrNullObject", 128, 35, 0, 0, 4], ["textComparison", 129, 35, 0, 0, 4], ["textComparisonOrNullObject", 129, 35, 0, 0, 4], ["cellValue", 130, 35, 0, 0, 4], ["cellValueOrNullObject", 130, 35, 0, 0, 4]], [[209]], [[234, 12, 0, 10, 0, 4], [334, 12, 0, 10, 0, 4], [240, 13, 0, 10, 2, 4]]],
+            [120, 0, [["showDataBarOnly", 1], ["barDirection", 1], ["axisFormat", 1], ["axisColor", 1], ["lowerBoundRule", 1], ["upperBoundRule", 1]], [["positiveFormat", 121, 35, 0, 0, 4], ["negativeFormat", 122, 35, 0, 0, 4]]],
+            [121, 0, [[413, 1], ["gradientFill", 1], [414, 1]]],
+            [122, 0, [[413, 1], ["matchPositiveFillColor", 1], [414, 1], ["matchPositiveBorderColor", 1]]],
+            [123, 0, 0, [[345, 124, 35, 0, 0, 4], [300, 131, 35, 0, 0, 4]]],
+            [124, 0, [[333, 1], ["formulaLocal", 1], ["formulaR1C1", 1]]],
+            [125, 0, [["reverseIconOrder", 1], ["showIconOnly", 1], [295, 1], [407, 1]]],
+            [126, 0, [["threeColorScale", 3], [407, 1]]],
+            [127, 0, [[345, 1]], [[300, 131, 35, 0, 0, 4]]],
+            [128, 0, [[345, 1]], [[300, 131, 35, 0, 0, 4]]],
+            [129, 0, [[345, 1]], [[300, 131, 35, 0, 0, 4]]],
+            [130, 0, [[345, 1]], [[300, 131, 35, 0, 0, 4]]],
+            [131, 0, [[276, 1]], [[355, 133, 35, 0, 0, 4], [356, 132, 35, 0, 0, 4], [357, 135, 51, 0, 0, 4]]],
+            [132, 0, [[360, 1], [365, 1], [366, 1], [367, 1], [368, 1]], 0, [[305]]],
+            [133, 0, [[360, 1]], 0, [[305]]],
+            [134, 0, [[362, 3], [295, 1], [360, 1]]],
+            [135, 1, [[335, 3]], [[296, 134, 35, 0, 0, 4], ["bottom", 134, 35, 0, 0, 4], [297, 134, 35, 0, 0, 4], [415, 134, 35, 0, 0, 4]], 0, [[268, 134, 1, 18, 0, 4], [327, 134, 1, 2, 0, 4]], 0, 134],
+            [136, 0, 0, 0, 0, [["getFormatter", 137, 1]], 0, 0, 0, "Microsoft.ExcelServices.NumberFormattingService", 4],
+            [137, 0, [["isDateTime", 3], ["isPercent", 3], ["isCurrency", 3], ["isNumeric", 3], [416, 3], ["hasYear", 3], ["hasMonth", 3], ["hasDayOfWeek", 3]], 0, [[300, 1]]],
+            [138, 36, [["status", 2]], 0, [["register", 2]], 0, 0, 0, 0, "Microsoft.ExcelServices.CustomFunctionManager", 4],
+            [139, 0, [["builtIn", 3], [359, 1], [347, 1], ["includeAlignment", 1], ["includeBorder", 1], ["includeFont", 1], ["includeNumber", 1], ["includePatterns", 1], ["includeProtection", 1], [353, 1], [358, 1], [182, 3], [276, 1], [277, 1], [351, 1], [352, 1], [348, 1], [346, 1], [350, 5, 1], [354, 1, 1]], [[357, 36, 51, 0, 0, 4], [356, 37, 35, 0, 0, 4], [355, 34, 35, 0, 0, 4]], [[209]]],
+            [140, 1, 0, 0, [[269, 1], [263, 0, 2, 2, 4]], [[268, 139, 1, 18, 0, 4], [327, 139, 1, 2, 2, 4]], 0, 139],
+            [141, 1, 0, 0, [[263, 0, 2, 0, 4], [417, 1]], [[268, 142, 1, 18, 0, 4], [270, 142, 1, 2, 0, 4], [269, 142, 2, 8], [418, 142]], 0, 142],
+            [142, 0, [[182, 1], [187, 3], [330, 2]], 0, [[209]], [[419, 142]]],
+            [143, 1, 0, 0, [[263, 0, 2, 0, 4], [417, 1]], [[268, 144, 1, 18, 0, 4], [270, 144, 1, 2, 0, 4], [269, 144, 2, 8], [418, 144]], 0, 144],
+            [144, 0, [[182, 1], [187, 3], [330, 2]], 0, [[209]], [[419, 144]]],
+            [145, 1, 0, 0, [[263, 0, 2, 0, 4], [417, 1]], [[268, 146, 1, 18, 0, 4], [270, 146, 1, 2, 0, 4], [269, 146, 2, 8], [418, 146]], 0, 146],
+            [146, 0, [[182, 1], [187, 3], [330, 2]], 0, [[209]], [[419, 146]]],
+            [147, 1, 0, 0, [[263, 0, 2, 0, 4], [417, 1]], [[268, 148, 1, 18, 0, 4], [270, 148, 1, 2, 0, 4], [269, 148, 2, 8], [418, 148]], 0, 148],
+            [148, 0, [[182, 1], [187, 3], [330, 2]], 0, [[209]], [[419, 148]]],
+            [149, 0, 0, 0, [["delay", 1], ["triggerMessage", 4, 0, 5], [420, 0, 0, 5], [421, 0, 0, 5], ["triggerTestEvent", 2, 0, 5], ["triggerPostProcess", 0, 0, 5], [422, 0, 0, 5], [423, 0, 0, 5], ["triggerTestEventWithFilter", 3, 0, 5], ["firstPartyMethod", 0, 2, 5, 5], [424, 0, 0, 12], [425, 0, 0, 12], [426, 0, 0, 12], [427, 0, 0, 12], ["unregisterAllCustomFunctionExecutionEvents", 0, 0, 12], ["saveWorkbookToTempFile", 1, 2, 14], ["compareTempFilesAreIdentical", 2, 2, 14], ["updateRangeValueOnCurrentSheet", 2, 0, 14, 2], ["triggerUserUndo", 0, 2, 14], ["triggerUserRedo", 0, 2, 14], ["enterCellEdit", 1, 0, 2], ["installCustomFunctionsFromCache", 0, 0, 2], ["recalc", 2, 0, 2], ["recalcBySolutionId", 1, 0, 2], ["safeForCellEditModeMethod", 1, 0, 2], ["exitCellEdit", 0, 0, 2], ["noPermissionMethod", 1, 0, 2], ["verifyCustomFunctionListExist", 0, 0, 2]], 0, 0, 0, [["CustomFunctionExecutionBeginEvent", 0, 12, "MessageType.customFunctionExecutionBeginEvent", 201, 424, 425], ["CustomFunctionExecutionEndEvent", 0, 12, "MessageType.customFunctionExecutionEndEvent", 201, 426, 427], ["Test1Event", 2, 5, "MessageType.test1Event", 201, 422, 423], ["TestEvent", 2, 5, "MessageType.testEvent", 201, 420, 421]], "Microsoft.ExcelServices.InternalTest", 4],
+            [150, 0, [[428, 1], ["paperSize", 1], ["blackAndWhite", 1], ["printErrors", 1], ["zoom", 1], ["centerHorizontally", 1], ["centerVertically", 1], ["printHeadings", 1], ["printGridlines", 1], [429, 1], [430, 1], [431, 1], [432, 1], ["headerMargin", 1], ["footerMargin", 1], ["printComments", 1], ["draftMode", 1], ["firstPageNumber", 1], ["printOrder", 1]], [["headersFooters", 152, 35, 0, 0, 4]], [["setPrintMargins", 2], ["setPrintArea", 1], ["setPrintTitleRows", 1], ["setPrintTitleColumns", 1]], [["getPrintArea", 13, 0, 10, 0, 4], ["getPrintAreaOrNullObject", 13, 0, 10, 0, 4], ["getPrintTitleRows", 12, 0, 10, 0, 4], ["getPrintTitleRowsOrNullObject", 12, 0, 10, 0, 4], ["getPrintTitleColumns", 12, 0, 10, 0, 4], ["getPrintTitleColumnsOrNullObject", 12, 0, 10, 0, 4]]],
+            [151, 0, [["leftHeader", 1], ["centerHeader", 1], ["rightHeader", 1], ["leftFooter", 1], ["centerFooter", 1], ["rightFooter", 1]]],
+            [152, 0, [["state", 1], ["useSheetMargins", 1], ["useSheetScale", 1]], [["defaultForAllPages", 151, 35, 0, 0, 4], ["firstPage", 151, 35, 0, 0, 4], ["evenPages", 151, 35, 0, 0, 4], ["oddPages", 151, 35, 0, 0, 4]]],
+            [153, 0, [[330, 2], [283, 3], [282, 3]], 0, [[209]], [["getCellAfterBreak", 12, 0, 10, 0, 4]]],
+            [154, 1, 0, 0, [["removePageBreaks"], [263, 0, 2, 0, 4]], [[268, 153, 1, 18, 0, 4], [269, 153, 1, 8]], 0, 153],
+            [155, 0, 0, 0, [[409]], [[269, 1, 4, 8, 6]]],
+            [156, 1, 0, 0, [[263, 0, 2, 0, 4]], [[327, 12, 1, 2, 0, 4]], 0, 12],
+            [157, 1, 0, 0, [[263, 0, 2, 0, 4]], [[268, 158, 1, 18, 0, 4], [327, 158, 1, 2, 0, 4], [269, 158, 3, 8], ["getItemByReplyId", 158, 1, 2, 0, 4], ["getItemByCell", 158, 1, 2, 0, 4]], 0, 158],
+            [158, 0, [[205, 3], [433, 1], [434, 3], [435, 3], [411, 11], [436, 1, 3], [437, 3, 15], [438, 3, 15], [439, 3, 6]], [["replies", 159, 19, 0, 0, 4]], [[209], [440, 1, 0, 15]], [[275, 12, 0, 10, 0, 4]]],
+            [159, 1, 0, 0, [[263, 0, 2, 0, 4]], [[269, 160, 2, 8], [268, 160, 1, 18, 0, 4], [327, 160, 1, 2, 0, 4]], 0, 160],
+            [160, 0, [[205, 3], [433, 1], [434, 3], [435, 3], [411, 11], [436, 3, 3], [437, 3, 15], [438, 3, 15], [439, 3, 6]], 0, [[209], [440, 1, 0, 15]], [[275, 12, 0, 10, 0, 4], ["getParentComment", 158]]],
+            [161, 1, 0, 0, [[263, 0, 2, 0, 4]], [["addImage", 162, 1], [369, 162, 1, 18, 0, 4], ["addGeometricShape", 162, 1], ["addTextBox", 162, 1], ["addSvg", 162, 1, 0, 6], ["addGroup", 162, 1], [327, 162, 1, 2, 0, 4], [268, 162, 1, 2, 0, 4], ["addLine", 162, 5]], 0, 162],
+            [162, 0, [[205, 3], [182, 1], [297, 1], [296, 1], [299, 1], [298, 1], ["rotation", 1], ["zOrderPosition", 3], ["altTextTitle", 1], ["altTextDescription", 1], [331, 3], ["lockAspectRatio", 1], ["placement", 1, 11], ["geometricShapeType", 1], [332, 1], [395, 3], ["connectionSiteCount", 3]], [["geometricShape", 163, 2, 0, 0, 4], ["image", 164, 2, 0, 0, 4], ["textFrame", 170, 2, 0, 0, 4], [355, 168, 35, 0, 0, 4], [314, 165, 2, 0, 0, 4], ["parentGroup", 162, 2, 0, 0, 4], [383, 167, 2, 0, 0, 4], ["lineFormat", 169, 35, 0, 0, 4]], [["setZOrder", 1], ["incrementLeft", 1], ["incrementTop", 1], ["incrementRotation", 1], ["scaleHeight", 3], ["scaleWidth", 3], [209], ["getAsImage", 1], [213], [214], [215], [216]], [["copyTo", 162, 1, 8, 11, 0, 0, 441], [441, 162, 1, 2, 0, 4]], 0, 0, [[241, 0, 0, "MessageType.shapeActivatedEvent", 243, 213, 214], [250, 0, 0, "MessageType.shapeDeactivatedEvent", 243, 215, 216]]],
+            [163, 0, [[205, 3]], [[442, 162, 2, 0, 0, 4]]],
+            [164, 0, [[205, 3], [300, 3, 0, 300]], [[442, 162, 2, 0, 0, 4]]],
+            [165, 0, [[205, 3]], [[207, 166, 19, 0, 0, 4], [442, 162, 2, 0, 0, 4]], [[315]]],
+            [166, 1, 0, 0, [[263, 0, 2, 0, 4]], [[369, 162, 1, 18, 0, 4], [327, 162, 1, 2, 0, 4], [268, 162, 1, 2, 0, 4]], 0, 162],
+            [167, 0, [[205, 3], [443, 1, 0, 443], ["beginArrowheadLength", 1], ["beginArrowheadStyle", 1], ["beginArrowheadWidth", 1], ["endArrowheadLength", 1], ["endArrowheadStyle", 1], ["endArrowheadWidth", 1], ["isBeginConnected", 3], ["beginConnectedSite", 3], ["isEndConnected", 3], ["endConnectedSite", 3]], [[442, 162, 2, 0, 0, 4], ["beginConnectedShape", 162, 2, 0, 0, 4], ["endConnectedShape", 162, 2, 0, 0, 4]], [["connectBeginShape", 2], ["disconnectBeginShape"], ["connectEndShape", 2], ["disconnectEndShape"]]],
+            [168, 0, [["foregroundColor", 1], [331, 3], [444, 1]], 0, [[305], [397, 1]]],
+            [169, 0, [[332, 1], [360, 1], [295, 1], [363, 1], ["dashStyle", 1], [444, 1]]],
+            [170, 0, [[429, 1], [430, 1], [431, 1], [432, 1], [347, 1], ["horizontalOverflow", 1], [348, 1], ["verticalOverflow", 1], [428, 1], [351, 1], ["hasText", 3], ["autoSizeSetting", 1]], [["textRange", 171, 2, 0, 0, 4]], [["deleteText"]]],
+            [171, 0, [[279, 1]], [[356, 172, 35, 0, 0, 4]], 0, [[396, 171, 2]]],
+            [172, 0, [[364, 1], [182, 1], [360, 1], [366, 1], [365, 1], [367, 1]]],
+            [173, 0, [[205, 3], [182, 1], ["caption", 1], [297, 1], [296, 1], [299, 1], [298, 1], ["nameInFormula", 1, 3], ["isFilterCleared", 3], [295, 1], ["sortBy", 1], ["sortUsingCustomLists", 1, 14], [285, 1, 14], ["disableMoveResizeUI", 1, 14], ["displayHeader", 1, 14], [349, 1, 14]], [["slicerItems", 176, 19, 0, 0, 4], [301, 8, 35, 0, 0, 4], ["slicerStyle", 146, 35, 6, 0, 4]], [[209], [340], ["getSelectedItems"], ["selectItems", 1], [210, 0, 2, 14], [341, 1, 0, 6]]],
+            [174, 1, 0, 0, [[263, 0, 2, 0, 4]], [[269, 173, 3, 8], [327, 173, 1, 2, 0, 4], [268, 173, 1, 18, 0, 4], [270, 173, 1, 2, 0, 4]], 0, 173],
+            [175, 0, [[328, 3], [182, 3], ["isSelected", 1], ["hasData", 3]]],
+            [176, 1, 0, 0, [[263, 0, 2, 0, 4]], [[327, 175, 1, 2, 0, 4], [268, 175, 1, 18, 0, 4], [270, 175, 1, 2, 0, 4]], 0, 175],
+            [177, 0, [["activeTab", 1]], 0, [["executeCommand", 2], [313, 3], [445], [446]], 0, 0, 0, [["CommandExecuted", 0, 0, "MessageType.ribbonCommandExecutedEvent", 199, 445, 446]]],
+            [178, 0, [[182]], 0, [[210], [209]], [[419, 178, 1]]],
+            [179, 1, 0, 0, [[263, 0, 2, 0, 4], ["exit"]], [[269, 178, 1, 8], ["enterTemporary", 178], ["getActive", 178], [268, 178, 1, 18, 0, 4], [327, 178, 1, 2, 0, 4]], 0, 178],
+            [180, 0, [["error", 3], [329, 3]]],
+            [181, 0, 0, 0, 0, [[335, 180, 1, 72], ["if", 180, 3, 8], ["isNA", 180, 1, 8], ["isError", 180, 1, 8], ["sum", 180, 1, 72], ["average", 180, 1, 72], [402, 180, 1, 72], [403, 180, 1, 72], ["na", 180, 0, 8], ["npv", 180, 2, 72], ["dollar", 180, 2, 8], ["fixed", 180, 3, 8], ["sin", 180, 1, 8], ["cos", 180, 1, 8], ["tan", 180, 1, 8], ["atan", 180, 1, 8], ["pi", 180, 0, 8], ["sqrt", 180, 1, 8], ["exp", 180, 1, 8], ["ln", 180, 1, 8], ["log10", 180, 1, 8], ["abs", 180, 1, 8], ["int", 180, 1, 8], ["sign", 180, 1, 8], ["round", 180, 2, 8], ["lookup", 180, 3, 8], ["rept", 180, 2, 8], ["mid", 180, 3, 8], ["len", 180, 1, 8], [329, 180, 1, 8], ["true", 180, 0, 8], ["false", 180, 0, 8], ["and", 180, 1, 72], ["or", 180, 1, 72], ["not", 180, 1, 8], ["mod", 180, 2, 8], ["dcount", 180, 3, 8, 0, 0, "DCount"], ["dsum", 180, 3, 8, 0, 0, "DSum"], ["daverage", 180, 3, 8, 0, 0, "DAverage"], ["dmin", 180, 3, 8, 0, 0, "DMin"], ["dmax", 180, 3, 8, 0, 0, "DMax"], ["dstDev", 180, 3, 8, 0, 0, "DStDev"], ["dvar", 180, 3, 8, 0, 0, "DVar"], [279, 180, 2, 8], ["pv", 180, 5, 8], ["fv", 180, 5, 8], ["nper", 180, 5, 8, 0, 0, "NPer"], ["pmt", 180, 5, 8], ["rate", 180, 6, 8], ["mirr", 180, 3, 8, 0, 0, "MIrr"], ["irr", 180, 2, 8], ["rand", 180, 0, 8], ["match", 180, 3, 8], ["date", 180, 3, 8], ["time", 180, 3, 8], ["day", 180, 1, 8], ["month", 180, 1, 8], ["year", 180, 1, 8], ["weekday", 180, 2, 8], ["hour", 180, 1, 8], ["minute", 180, 1, 8], ["second", 180, 1, 8], ["now", 180, 0, 8], [324, 180, 1, 8], [326, 180, 1, 8], [339, 180, 1, 8], [331, 180, 1, 8], ["atan2", 180, 2, 8], ["asin", 180, 1, 8], ["acos", 180, 1, 8], ["choose", 180, 2, 72], ["hlookup", 180, 4, 8, 0, 0, "HLookup"], ["vlookup", 180, 4, 8, 0, 0, "VLookup"], ["isref", 180, 1, 8], ["log", 180, 2, 8], ["char", 180, 1, 8], ["lower", 180, 1, 8], ["upper", 180, 1, 8], ["proper", 180, 1, 8], [297, 180, 2, 8], [415, 180, 2, 8], ["exact", 180, 2, 8], ["trim", 180, 1, 8], ["replace", 180, 4, 8], ["substitute", 180, 4, 8], ["code", 180, 1, 8], [321, 180, 3, 8], ["isErr", 180, 1, 8], [416, 180, 1, 8], ["isNumber", 180, 1, 8], ["t", 180, 1, 8, 0, 0, "T"], ["n", 180, 1, 8, 0, 0, "N"], ["datevalue", 180, 1, 8], ["timevalue", 180, 1, 8], ["sln", 180, 3, 8], ["syd", 180, 4, 8], ["ddb", 180, 5, 8], ["clean", 180, 1, 8], ["ipmt", 180, 6, 8], ["ppmt", 180, 6, 8], ["countA", 180, 1, 72], ["product", 180, 1, 72], ["fact", 180, 1, 8], ["dproduct", 180, 3, 8, 0, 0, "DProduct"], ["isNonText", 180, 1, 8], ["dstDevP", 180, 3, 8, 0, 0, "DStDevP"], ["dvarP", 180, 3, 8, 0, 0, "DVarP"], ["trunc", 180, 2, 8], ["isLogical", 180, 1, 8], ["dcountA", 180, 3, 8, 0, 0, "DCountA"], ["usdollar", 180, 2, 8, 0, 0, "USDollar"], ["findB", 180, 3, 8], ["replaceB", 180, 4, 8], ["leftb", 180, 2, 8], ["rightb", 180, 2, 8], ["midb", 180, 3, 8], ["lenb", 180, 1, 8], ["roundUp", 180, 2, 8], ["roundDown", 180, 2, 8], ["asc", 180, 1, 8], ["dbcs", 180, 1, 8], ["days360", 180, 3, 8], ["today", 180, 0, 8], ["vdb", 180, 7, 8], ["median", 180, 1, 72], ["sinh", 180, 1, 8], ["cosh", 180, 1, 8], ["tanh", 180, 1, 8], ["asinh", 180, 1, 8], ["acosh", 180, 1, 8], ["atanh", 180, 1, 8], ["dget", 180, 3, 8, 0, 0, "DGet"], ["db", 180, 5, 8], ["error_Type", 180, 1, 8], ["aveDev", 180, 1, 72], ["gammaLn", 180, 1, 8], ["combin", 180, 2, 8], ["even", 180, 1, 8], ["fisher", 180, 1, 8], ["fisherInv", 180, 1, 8], ["standardize", 180, 3, 8], ["odd", 180, 1, 8], ["permut", 180, 2, 8], ["devSq", 180, 1, 72], ["geoMean", 180, 1, 72], ["harMean", 180, 1, 72], ["sumSq", 180, 1, 72], ["kurt", 180, 1, 72], ["skew", 180, 1, 72], ["large", 180, 2, 8], ["small", 180, 2, 8], ["trimMean", 180, 2, 8], ["concatenate", 180, 1, 72], ["power", 180, 2, 8], ["radians", 180, 1, 8], ["degrees", 180, 1, 8], ["subtotal", 180, 2, 72], ["sumIf", 180, 3, 8], ["countIf", 180, 2, 8], ["countBlank", 180, 1, 8], ["ispmt", 180, 4, 8], ["roman", 180, 2, 8], [294, 180, 2, 8], ["averageA", 180, 1, 72], ["maxA", 180, 1, 72], ["minA", 180, 1, 72], ["stDevPA", 180, 1, 72], ["varPA", 180, 1, 72], ["stDevA", 180, 1, 72], ["varA", 180, 1, 72], ["bahtText", 180, 1, 8], ["hex2Bin", 180, 2, 8], ["hex2Dec", 180, 1, 8], ["hex2Oct", 180, 2, 8], ["dec2Bin", 180, 2, 8], ["dec2Hex", 180, 2, 8], ["dec2Oct", 180, 2, 8], ["oct2Bin", 180, 2, 8], ["oct2Hex", 180, 2, 8], ["oct2Dec", 180, 1, 8], ["bin2Dec", 180, 1, 8], ["bin2Oct", 180, 2, 8], ["bin2Hex", 180, 2, 8], ["imSub", 180, 2, 8], ["imDiv", 180, 2, 8], ["imPower", 180, 2, 8], ["imAbs", 180, 1, 8], ["imSqrt", 180, 1, 8], ["imLn", 180, 1, 8], ["imLog2", 180, 1, 8], ["imLog10", 180, 1, 8], ["imSin", 180, 1, 8], ["imCos", 180, 1, 8], ["imExp", 180, 1, 8], ["imArgument", 180, 1, 8], ["imConjugate", 180, 1, 8], ["imaginary", 180, 1, 8], ["imReal", 180, 1, 8], ["complex", 180, 3, 8], ["imSum", 180, 1, 72], ["imProduct", 180, 1, 72], ["seriesSum", 180, 4, 8], ["factDouble", 180, 1, 8], ["sqrtPi", 180, 1, 8], ["quotient", 180, 2, 8], ["delta", 180, 2, 8], ["geStep", 180, 2, 8], ["isEven", 180, 1, 8], ["isOdd", 180, 1, 8], ["mround", 180, 2, 8, 0, 0, "MRound"], ["erf", 180, 2, 8], ["erfC", 180, 1, 8], ["besselJ", 180, 2, 8], ["besselK", 180, 2, 8], ["besselY", 180, 2, 8], ["besselI", 180, 2, 8], ["xirr", 180, 3, 8], ["xnpv", 180, 3, 8], ["priceMat", 180, 6, 8], ["yieldMat", 180, 6, 8], ["intRate", 180, 5, 8], ["received", 180, 5, 8], ["disc", 180, 5, 8], ["priceDisc", 180, 5, 8], ["yieldDisc", 180, 5, 8], ["tbillEq", 180, 3, 8, 0, 0, "TBillEq"], ["tbillPrice", 180, 3, 8, 0, 0, "TBillPrice"], ["tbillYield", 180, 3, 8, 0, 0, "TBillYield"], ["price", 180, 7, 8], ["yield", 180, 7, 8], ["dollarDe", 180, 2, 8], ["dollarFr", 180, 2, 8], ["nominal", 180, 2, 8], ["effect", 180, 2, 8], ["cumPrinc", 180, 6, 8], ["cumIPmt", 180, 6, 8], ["edate", 180, 2, 8, 0, 0, "EDate"], ["eoMonth", 180, 2, 8], ["yearFrac", 180, 3, 8], ["coupDayBs", 180, 4, 8], ["coupDays", 180, 4, 8], ["coupDaysNc", 180, 4, 8], ["coupNcd", 180, 4, 8], ["coupNum", 180, 4, 8], ["coupPcd", 180, 4, 8], ["duration", 180, 6, 8], ["mduration", 180, 6, 8, 0, 0, "MDuration"], ["oddLPrice", 180, 8, 8], ["oddLYield", 180, 8, 8], ["oddFPrice", 180, 9, 8], ["oddFYield", 180, 9, 8], ["randBetween", 180, 2, 8], ["weekNum", 180, 2, 8], ["amorDegrc", 180, 7, 8], ["amorLinc", 180, 7, 8], ["convert", 180, 3, 8], ["accrInt", 180, 8, 8], ["accrIntM", 180, 5, 8], ["workDay", 180, 3, 8], ["networkDays", 180, 3, 8], ["gcd", 180, 1, 72], ["multiNomial", 180, 1, 72], ["lcm", 180, 1, 72], ["fvschedule", 180, 2, 8, 0, 0, "FVSchedule"], ["countIfs", 180, 1, 72], ["sumIfs", 180, 2, 72], ["averageIf", 180, 3, 8], ["averageIfs", 180, 2, 72], ["binom_Dist", 180, 4, 8], ["binom_Inv", 180, 3, 8], ["confidence_Norm", 180, 3, 8], ["confidence_T", 180, 3, 8], ["expon_Dist", 180, 3, 8], ["gamma_Dist", 180, 4, 8], ["gamma_Inv", 180, 3, 8], ["norm_Dist", 180, 4, 8], ["norm_Inv", 180, 3, 8], ["percentile_Exc", 180, 2, 8], ["percentile_Inc", 180, 2, 8], ["percentRank_Exc", 180, 3, 8], ["percentRank_Inc", 180, 3, 8], ["poisson_Dist", 180, 3, 8], ["quartile_Exc", 180, 2, 8], ["quartile_Inc", 180, 2, 8], ["rank_Avg", 180, 3, 8], ["rank_Eq", 180, 3, 8], ["stDev_S", 180, 1, 72], ["stDev_P", 180, 1, 72], ["t_Dist", 180, 3, 8], ["t_Dist_2T", 180, 2, 8], ["t_Dist_RT", 180, 2, 8], ["t_Inv", 180, 2, 8], ["t_Inv_2T", 180, 2, 8], ["var_S", 180, 1, 72], ["var_P", 180, 1, 72], ["weibull_Dist", 180, 4, 8], ["networkDays_Intl", 180, 4, 8], ["workDay_Intl", 180, 4, 8], ["ecma_Ceiling", 180, 2, 8, 0, 0, "ECMA_Ceiling"], ["iso_Ceiling", 180, 2, 8, 0, 0, "ISO_Ceiling"], ["beta_Dist", 180, 6, 8], ["beta_Inv", 180, 5, 8], ["chiSq_Dist", 180, 3, 8], ["chiSq_Dist_RT", 180, 2, 8], ["chiSq_Inv", 180, 2, 8], ["chiSq_Inv_RT", 180, 2, 8], ["f_Dist", 180, 4, 8], ["f_Dist_RT", 180, 3, 8], ["f_Inv", 180, 3, 8], ["f_Inv_RT", 180, 3, 8], ["hypGeom_Dist", 180, 5, 8], ["logNorm_Dist", 180, 4, 8], ["logNorm_Inv", 180, 3, 8], ["negBinom_Dist", 180, 4, 8], ["norm_S_Dist", 180, 2, 8], ["norm_S_Inv", 180, 1, 8], ["z_Test", 180, 3, 8], ["erf_Precise", 180, 1, 8], ["erfC_Precise", 180, 1, 8], ["gammaLn_Precise", 180, 1, 8], ["ceiling_Precise", 180, 2, 8], ["floor_Precise", 180, 2, 8], ["acot", 180, 1, 8], ["acoth", 180, 1, 8], ["cot", 180, 1, 8], ["coth", 180, 1, 8], ["csc", 180, 1, 8], ["csch", 180, 1, 8], ["sec", 180, 1, 8], ["sech", 180, 1, 8], ["imTan", 180, 1, 8], ["imCot", 180, 1, 8], ["imCsc", 180, 1, 8], ["imCsch", 180, 1, 8], ["imSec", 180, 1, 8], ["imSech", 180, 1, 8], ["bitand", 180, 2, 8], ["bitor", 180, 2, 8], ["bitxor", 180, 2, 8], ["bitlshift", 180, 2, 8], ["bitrshift", 180, 2, 8], ["permutationa", 180, 2, 8], ["combina", 180, 2, 8], ["xor", 180, 1, 72], ["pduration", 180, 3, 8, 0, 0, "PDuration"], ["base", 180, 3, 8], ["decimal", 180, 2, 8], ["days", 180, 2, 8], ["binom_Dist_Range", 180, 4, 8], ["gamma", 180, 1, 8], ["skew_p", 180, 1, 72], ["gauss", 180, 1, 8], ["phi", 180, 1, 8], ["rri", 180, 3, 8], ["unichar", 180, 1, 8], ["unicode", 180, 1, 8], ["arabic", 180, 1, 8], ["isoWeekNum", 180, 1, 8], ["numberValue", 180, 3, 8], ["sheet", 180, 1, 8], ["sheets", 180, 1, 8], ["isFormula", 180, 1, 8], ["ceiling_Math", 180, 3, 8], ["floor_Math", 180, 3, 8], ["imSinh", 180, 1, 8], ["imCosh", 180, 1, 8]]]] };
     var _builder = new OfficeExtension.LibraryBuilder({ metadata: _libraryMetadataXlapi, targetNamespaceObject: Excel });
 })(Excel || (Excel = {}));
 var _EndExcel = "_EndExcel";
