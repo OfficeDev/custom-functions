@@ -342,6 +342,35 @@
       "options": {
         "stream": true
       }
+    },
+    {
+      "id": "customErrorReturn",
+      "name": "customErrorReturn",
+      "description": "Custom errors as return value",
+      "helpUrl": "http://dev.office.com",
+      "parameters": [
+        {
+          "name": "errorCase",
+          "description": "error case",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "customErrorReturnArray",
+      "name": "customErrorReturnArray",
+      "description": "Custom errors as return array",
+      "helpUrl": "http://dev.office.com",
+      "result": {
+        "dimensionality": "matrix"
+      },
+      "parameters": [
+        {
+          "name": "errorCase",
+          "description": "error case",
+          "type": "number"
+        }
+      ]
     }
   ]
 }
