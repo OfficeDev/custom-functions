@@ -404,7 +404,7 @@ CustomFunctions.associate('STOCK_PRICE_HISTORY', stockPriceHistory);
 CustomFunctions.associate('DISPLAY_WEB_DIALOG', displayWebDialog);
 CustomFunctions.associate('BITCOIN_STREAM', bitcoinStream);
 CustomFunctions.associate('ERROROUT', errorOut);
-CustomFunctions.associate('CUSTOM_ERROR_RETURN customErrorReturn', customErrorReturn);
+CustomFunctions.associate('CUSTOM_ERROR_RETURN', customErrorReturn);
 CustomFunctions.associate('CUSTOM_ERROR_RETURNARRAY', customErrorReturnArray);
 
 

@@ -344,8 +344,8 @@
       }
     },
     {
-      "id": "customErrorReturn",
-      "name": "customErrorReturn",
+      "id": "CUSTOM_ERROR_RETURN",
+      "name": "CUSTOM_ERROR_RETURN",
       "description": "Custom errors as return value",
       "helpUrl": "http://dev.office.com",
       "parameters": [
@@ -357,8 +357,8 @@
       ]
     },
     {
-      "id": "customErrorReturnArray",
-      "name": "customErrorReturnArray",
+      "id": "CUSTOM_ERROR_RETURNARRAY",
+      "name": "CUSTOM_ERROR_RETURNARRAY",
       "description": "Custom errors as return array",
       "helpUrl": "http://dev.office.com",
       "result": {
