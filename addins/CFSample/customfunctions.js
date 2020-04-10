@@ -283,6 +283,107 @@ function errorOut(how) {
 	return undefined;
 }
 
+function customErrorReturn(errorCase) {
+	switch (errorCase) {
+		case 1: {
+			var error = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.notAvailable,	// #N/A
+				"An error *case 1* was detected in customErrorReturn"
+			);
+			return error;
+		}
+		case 2: {
+			var error = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.invalidValue, // #VALUE!
+				"An error *case 2* was detected in customErrorReturn"
+			);
+			return error;
+		}
+		case 3: {
+			var error = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.divisionByZero, // #DIV/0!
+				"This message should not appear in UI"
+			);
+			return error;
+		}
+		case 4: {
+			var error = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.invalidNumber, // #NUM!
+				"This message should not appear in UI"
+			);
+			return error;
+		}
+		case 5: {
+			var error = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.nullReference, // #NULL!
+				"This message should not appear in UI"
+			);
+			return error;
+		}
+		case 6: {
+			var error = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.notAvailable // #N/A!
+			);
+			return error;
+		}
+		case 7: {
+			var error = new CustomFunctions.Error(); // #VALUE!
+			return error;
+		}
+		case 8: {
+			var error = new CustomFunctions.Error(
+				undefined, // #VALUE!
+				"This message should not appear in UI"
+			);
+			return error;
+		}
+		case 9: {
+			var error = new CustomFunctions.Error(
+				"Customized", // #VALUE!
+				"This message should not appear in UI"
+			);
+			return error;
+		}
+		case 10:{
+			var error = new CustomFunctions.Error(new Error()); // #VALUE!
+			return error;
+		}
+		case 11: {
+			return new Error("This message should not appear in UI"); // #VALUE!
+		}
+		default: {
+			var error = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.notAvailable,
+				"An unknown error case was detected in customErrorReturn"
+			);
+			return error;
+		}
+	}
+}
+
+function customErrorReturnArray(errorCase) {
+	switch (errorCase) {
+		case 1: {
+			var error = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.notAvailable,	// #N/A
+				"An error *case 1* was detected in customErrorReturnArray "
+			);
+			return [['Hello'],[error]];
+		}
+		case 2: {
+			var error1 = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.notAvailable,	// #N/A
+				"An error *case 2* was detected in customErrorReturnArray "
+			);
+			var error2 = new CustomFunctions.Error(
+				CustomFunctions.ErrorCode.invalidValue, // #VALUE!
+				"An error *case 2* was detected in customErrorReturnArray "
+			);
+			return [[error1],[error2]];
+		}
+	}
+}
+
 CustomFunctions.associate('ADD42', add42);
 CustomFunctions.associate('GET_DAY', getDay);
 CustomFunctions.associate('IS_PRIME', isPrime);
@@ -303,6 +404,8 @@ CustomFunctions.associate('STOCK_PRICE_HISTORY', stockPriceHistory);
 CustomFunctions.associate('DISPLAY_WEB_DIALOG', displayWebDialog);
 CustomFunctions.associate('BITCOIN_STREAM', bitcoinStream);
 CustomFunctions.associate('ERROROUT', errorOut);
+CustomFunctions.associate('CUSTOM_ERROR_RETURN', customErrorReturn);
+CustomFunctions.associate('CUSTOM_ERROR_RETURNARRAY', customErrorReturnArray);
 
 
 
