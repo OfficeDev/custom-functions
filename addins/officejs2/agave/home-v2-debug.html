@@ -8,11 +8,6 @@
     </script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
     <script type='text/javascript'>
-        $.getScript($.params('office-js-url-base')).then(function() { 
-            Office.onReady().then(function(){ }); 
-        }); 
-    </script>
-    <script type='text/javascript'>
         _perfData.excelJsEnd = performance.now();
         _perfData.excelJsDuration = _perfData.excelJsEnd - _perfData.start;
         Office.onReady(function (hostAndPlatform) {
@@ -32,6 +27,11 @@
     <script src='app.js' type='text/javascript'></script>
     <script type='text/javascript'>
         _perfData.appJsEnd = performance.now();
+    </script>
+    <script type='text/javascript'>
+        $.getScript($.params('office-js-url-base')).then(function() { 
+            Office.onReady().then(function(){ }); 
+        }); 
     </script>
 </head>
 
