@@ -7,9 +7,6 @@
         _perfData.start = performance.now();
     </script>
     <script type='text/javascript'>
-        $.getScript($.params('office-js-url-base')).then(function() { 
-            Office.onReady().then(function(){ }); 
-        }); 
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const excelJsUrl = urlParams.get('office-js-url-base');
