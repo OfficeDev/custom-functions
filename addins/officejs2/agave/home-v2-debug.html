@@ -7,12 +7,31 @@
         _perfData.start = performance.now();
     </script>
     <script type='text/javascript'>
-        const queryString = window.location.search;
-        const urlParams = new URLSearchParams(queryString);
-        const excelJsUrl = urlParams.get('office-js-url-base');
-        var excelJsScript = document.createElement('script');
-        excelJsScript.setAttribute('src',excelJsUrl);
-        document.head.appendChild(excelJsScript);
+		function getUrlVars() {
+			var vars = {};
+			var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+				vars[key] = value;
+			});
+			return vars;
+		}
+		function getUrlParam(parameter, defaultvalue){
+			var urlparameter = defaultvalue;
+			if(window.location.href.indexOf(parameter) > -1){
+				urlparameter = getUrlVars()[parameter];
+				}
+			return urlparameter;
+		}
+		var excelJsUrl = getUrlParam('office-js-url-base', '');
+		var excelJsScript = document.createElement('script');
+		excelJsScript.setAttribute('src',excelJsUrl);
+		document.head.appendChild(excelJsScript);
+    </script>
+    <script type='text/javascript'>
+        _perfData.appJsStart = performance.now();
+    </script>
+    <script src='app.js' type='text/javascript'></script>
+    <script type='text/javascript'>
+        _perfData.appJsEnd = performance.now();
     </script>
 </head>
 
@@ -44,27 +63,6 @@
     </div>
     <div id="DivLog">
     </div>
-    <script type='text/javascript'>
-        _perfData.excelJsEnd = performance.now();
-        _perfData.excelJsDuration = _perfData.excelJsEnd - _perfData.start;
-        Office.onReady(function (hostAndPlatform) {
-            _perfData.officeOnReadyPage = performance.now();
-            _perfData.officeOnReadyPageDuration = _perfData.officeOnReadyPage - _perfData.start;
-        });
-
-        Office.onReady().then(function() {
-            _perfData.officeOnReadyPageThen = performance.now();
-            _perfData.officeOnReadyPageThenDuration = _perfData.officeOnReadyPageThen - _perfData.start;
-        });
-
-    </script>
-    <script type='text/javascript'>
-        _perfData.appJsStart = performance.now();
-    </script>
-    <script src='app.js' type='text/javascript'></script>
-    <script type='text/javascript'>
-        _perfData.appJsEnd = performance.now();
-    </script>
 </body>
 
 </html>
