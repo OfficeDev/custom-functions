@@ -18,8 +18,8 @@
   <DefaultLocale>en-US</DefaultLocale>
 
   <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-  <DisplayName DefaultValue="ShortcutSample" />
-  <Description DefaultValue="ShortcutSample" />
+  <DisplayName DefaultValue="Shortcut Sample" />
+  <Description DefaultValue="Shortcut Sample" />
 
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
   <IconUrl DefaultValue="http://officedev.github.io/custom-functions/addins/ShortcutSample/Images/Button32x32.png" />
