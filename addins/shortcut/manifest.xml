@@ -22,7 +22,7 @@
   <Description DefaultValue="Shortcut Sample" />
 
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
-  <IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/ShortcutSample/Images/Button32x32.png" />
+  <IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/shortcut/Images/Button32x32.png" />
   <!--End Basic Settings. -->
   <!--Begin TaskPane Mode integration. This section is used if there are no VersionOverrides or if the Office client version does not support add-in commands. -->
   <Hosts>
@@ -34,7 +34,7 @@
     </Sets>
   </Requirements>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/ShortcutSample/home.html" />
+    <SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/shortcut/home.html" />
   </DefaultSettings>
   <!-- End TaskPane Mode integration.  -->
 
@@ -118,12 +118,12 @@
     <!-- You can use resources across hosts and form factors. -->
      <Resources>
       <bt:Images>
-        <bt:Image id="OEP.tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/ShortcutSample/images/Button16x16.png" />
-        <bt:Image id="OEP.tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/ShortcutSample/images/Button32x32.png" />
-        <bt:Image id="OEP.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/ShortcutSample/images/Button80x80.png" />
+        <bt:Image id="OEP.tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/shortcut/images/Button16x16.png" />
+        <bt:Image id="OEP.tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/shortcut/images/Button32x32.png" />
+        <bt:Image id="OEP.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/shortcut/images/Button80x80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="OEP.SharedRuntime.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/ShortcutSample/home.html" />
+        <bt:Url id="OEP.SharedRuntime.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/shortcut/home.html" />
         <bt:Url id="OEP.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
       </bt:Urls>
       <!-- ShortStrings max characters==125. -->
@@ -140,6 +140,6 @@
     </Resources>
   </VersionOverrides>
   <!-- End Add-in Commands Mode integration. -->
-   <ExtendedOverridesUrl DefaultValue="https://officedev.github.io/custom-functions/addins/ShortcutSample/extended-manifest.json"></ExtendedOverridesUrl>
+   <ExtendedOverridesUrl DefaultValue="https://officedev.github.io/custom-functions/addins/shortcut/extended-manifest.json"></ExtendedOverridesUrl>
   <!-- End Add-in Commands Mode integration. -->
 </OfficeApp>
