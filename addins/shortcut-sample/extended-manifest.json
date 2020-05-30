@@ -1,0 +1,32 @@
+{
+    "shortcuts": [
+        {
+            "id": "SHOWTASKPANE",
+            "key": "CTRL+SHIFT+UP"
+        },
+        {
+            "id": "HIDETASKPANE",
+            "key": "CTRL+SHIFT+DOWN"
+        },
+        {
+            "id": "SETBOLD",
+            "key": "CTRL+SHIFT+B"
+        },
+        {
+            "id": "SETITALIC",
+            "key": "CTRL+SHIFT+I"
+        },
+        {
+            "id": "SETCOLOR",
+            "key": "CTRL+SHIFT+O"
+        },
+        {
+            "id": "SETUNDERLINE",
+            "key": "CTRL+SHIFT+U"
+        },
+        {
+            "id": "SETDATEFORMAT",
+            "key": "CTRL+SHIFT+D"
+        }
+    ]
+}

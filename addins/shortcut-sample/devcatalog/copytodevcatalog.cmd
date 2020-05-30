@@ -1,0 +1,1 @@
+copy  %~dp0895c2a30-abe1-4d45-b151-9047f7ed707c.xml %SRCROOT%\richapi\Test\RichApiAgaveWeb\devcatalog\895c2a30-abe1-4d45-b151-9047f7ed707c.xml
