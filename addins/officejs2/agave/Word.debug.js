@@ -3869,9 +3869,7 @@ var OSF;
                         return {};
                     },
                     fromWebHost: function (payload) {
-                        return {
-                            data: payload.Data
-                        };
+                        return payload.authContext;
                     }
                 };
                 asyncMethodExecutor.executeAsync(99, dataTransform, callback);
