@@ -29,8 +29,6 @@ Office.onReady(function (hostAndPlatform) {
     log(Office.context.displayLanguage);
     log(hostAndPlatform.host);
     log(hostAndPlatform.platform);
-    // var isSupported = Office.context.requirements.isSetSupported('ExcelApi', '1.7');
-    // log('ExcelApi1.7=' + isSupported);
 });
 
 Office.onReady(function (hostAndPlatform) {

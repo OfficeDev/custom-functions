@@ -4,13 +4,8 @@
     <title>Word Office.js V2</title>
     <script type='text/javascript'>
         var _perfData = {};
-        _perfData.start = performance.now();
     </script>
     <script onload="_perfData.scriptOnloaded = performance.now()" src='https://appsforoffice.microsoft.com/lib/beta/hosted/word.js' type='text/javascript'></script>
-    <script type='text/javascript'>
-        _perfData.wordJsEnd = performance.now();
-        _perfData.wordJsDuration = _perfData.wordJsEnd - _perfData.start;
-    </script>
     <script src='wordApp.js' type='text/javascript'></script>
 </head>
 
@@ -39,10 +34,10 @@
     var resources = performance.getEntriesByType("resource");
     resources.forEach(function (resource) {
         if (OSF.Utility.stringEndsWith(resource.name, "word.js")) {
-            _perfData.resourceResponseStart =resource.responseStart;
-            _perfData.resourceResponseEnd = resource.responseEnd;
-            _perfData.transferSize = resource.transferSize;
             _perfData.startTime = resource.startTime;
+            _perfData.responseStart =resource.responseStart;
+            _perfData.responseEnd = resource.responseEnd;
+            _perfData.transferSize = resource.transferSize;
         }
     });
 </script>
