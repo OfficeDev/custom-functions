@@ -13,10 +13,10 @@ This Addin contains three components:
 2. UI-less button handler: To update the value of shared global variable g_sharedAppData' to '2019'.
 3. Custom Functions: Contain functions like [Set/Get]Value - to set or get the value from the shared global variable g_sharedAppData', Show/Hide - to show or hide the taskpane, [Get/Set]StartupBehavior - to get or set current Runtime startup behavior, [Get/Set]RangeValue set/get value for a Range.
 
-# Preview Office.js
-Please reference the preview version of office.js
+# Office.js
+Please reference the release version of office.js
 ```html
-		<script src="https://unpkg.com/@microsoft/office-js@1.1.37-custom.17/dist/office.debug.js" type="text/javascript"></script>
+		<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
 ```
 
 # Manifest Changes for Shared App
