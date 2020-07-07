@@ -38,11 +38,12 @@
 				g_sharedAppData.value = value;
 			}
 
-            function BtnShow() {
+			function BtnShow() {
 				SetRuntimeVisibleHelper(true);
 			}
 			
-            function BtnHide() {
+
+			function BtnHide() {
 				SetRuntimeVisibleHelper(false);
             }
 			
@@ -76,7 +77,7 @@
 			}
 
 			function UpdateRibbonControlsEnableDisableState(enableState) {
-				let controlIds = document.getElementById('ribbonControlIds').value.split(';');
+				var controlIds = document.getElementById('ribbonControlIds').value.split(';');
 				// prepare controls
 				var commandControls = [];
 				for (var i = 0; i < controlIds.length; i++) {
@@ -89,19 +90,56 @@
 				// prepare tabs
 				var commandtabs = {tabs: [tab]};
 				// update ribbon control state
-				OfficeRuntime.ui.getRibbon()
-					.then(function (ret) {
-						var datarequest = ret;
-						var data = commandtabs;
-						datarequest.requestUpdate(data)
-						.then(function (result) {
-							log('Success:' + JSON.stringify(result));
-						})
-						.catch(function (error) {
-							log('Error:' + JSON.stringify(error));
-					});
+				Office.ribbon.requestUpdate(commandtabs)
+				.then(function(result) {
+					log('Success:' + JSON.stringify(result));
+				})
+				.catch(function (error) {
+					log('Error:' + JSON.stringify(error));
 				});
 			}
+
+			function BtnShowTabClicked() {
+				updateContextualTabsVisibility(true);
+			}
+
+			function BtnHideTabClicked() {
+				updateContextualTabsVisibility(false);
+			}
+
+			function updateContextualTabsVisibility(visible) {
+				var tabIds = document.getElementById('ctxid').value.split(';');
+				var btn = {};
+				var commandtabs = [];
+
+				tabIds.forEach(tabId => {
+					if (tabId != "") {
+						commandtabs.push({id: tabId, visible: Boolean(visible), controls: [btn]});
+					}
+				});
+
+				var data = {tabs: commandtabs};
+				Office.ribbon.requestUpdate(data)
+				.then(function(result) {
+					log('Success:' + JSON.stringify(result));
+				})
+				.catch(function (error) {
+					log('Error:' + JSON.stringify(error));
+				});
+			}
+
+			function BntGenerateContextualTabsClicked() {
+				var ribbonTabDefinition = document.getElementById('ctxblob').value;
+
+				Office.ribbon.requestCreateControls(JSON.parse(ribbonTabDefinition))
+				.then(function(result) {
+					log('Success:' + JSON.stringify(result));
+				})
+				.catch(function (error) {
+					log('Error:' + JSON.stringify(error));
+				});
+			}
+
 
 			function BtnGetStartupBehavior() {
 				return Office.addin.getStartupBehavior()
@@ -112,7 +150,7 @@
 				.catch(function (error) {
 					return error.code;
 				});
-            }
+			}
 
 			function BtnRun() {
 				var code = document.getElementById("TxtCode").value;
@@ -122,7 +160,7 @@
 			// App Commands
 			function appCmdSetStateVisible(event) {
 				SetRuntimeVisibleHelper(true);
-				event.completed();   
+				event.completed();
 			}
 			
 			function appCmdSetStateBackground(event) {
@@ -152,7 +190,120 @@
 				}).catch(function(e){
 					log('Failed to register onVisiblityModeChanged:' + JSON.stringify(e));
 				});
-			});
+
+				var hostsitebase = document.URL.substring(0, document.URL.lastIndexOf("/")) + "/";
+				var homepage = hostsitebase + "sharedapp.html";
+				var button16x16 = hostsitebase + "Images/Button16x16.png";
+				var button32x32 = hostsitebase + "Images/Button32x32.png";
+				var button80x80 = hostsitebase + "Images/Button80x80.png";
+				var contextualTabId = "CtxTab1";
+
+				var contextualtabdata =
+				{
+					"actions":[
+					{
+						"id":"executeWriteData",
+						"type":"ExecuteFunction",
+						"functionFile":homepage,
+						"functionName":"writeData"
+					},
+					{
+						"id":"showTaskpaneResCFSample",
+						"type":"ShowTaskpane",
+						"sourceLocation":homepage,
+						"taskpaneId":"Taskpane1",
+						"title":"TakspaneTitle",
+						"supportPinning":false
+					}
+					],
+					"tabs":[
+					{
+						"id":contextualTabId,
+						"label":"CtxTab1_label",
+						"visible":false,
+						"groups":[
+							{
+								"id":"CustomGroup111",
+								"label":"Group11Title",
+								"icon":[
+								{
+									"size":16,
+									"sourceLocation":button16x16
+								},
+								{
+									"size":32,
+									"sourceLocation":button32x32
+								},
+								{
+									"size":80,
+									"sourceLocation":button80x80
+								}
+								],
+								"controls":[
+								{
+									"type":"Button",
+									"id":"CtxBt111",
+									"enabled":true,
+									"icon":[
+										{
+											"size":16,
+											"sourceLocation":button16x16
+										},
+										{
+											"size":32,
+											"sourceLocation":button32x32
+										},
+										{
+											"size":80,
+											"sourceLocation":button80x80
+										}
+									],
+									"label":"STP_CtxBt111",
+									"toolTip":"Btn111ToolTip",
+									"superTip":{
+										"title":"Btn111SupertTipeTitle",
+										"description":"Btn111SuperTipDesc"
+									},
+									"actionId":"showTaskpaneResCFSample"
+								},
+								{
+									"type":"Button",
+									"id":"CtxBt112",
+									"enabled":false,
+									"icon":[
+									{
+											"size":16,
+											"sourceLocation":button16x16
+										},
+										{
+											"size":32,
+											"sourceLocation":button32x32
+										},
+										{
+											"size":80,
+											"sourceLocation":button80x80
+										}
+									],
+									"label":"ExeFunc_CtxBt112",
+									"toolTip":"Btn112ToolTip",
+									"superTip":{
+										"title":"Btn112SupertTipeTitle",
+										"description":"Btn112SuperTipDesc"
+									},
+									"actionId":"executeWriteData"
+								}
+							]
+						}
+					]
+				}
+			]
+		};
+		
+		document.getElementById('ctxblob').value = JSON.stringify(contextualtabdata);
+		document.getElementById('ctxid').value = contextualTabId;
+				
+
+	});
 		</script>
 	</head>
 	<body>
@@ -194,6 +345,17 @@
 				<label>Ribbon Control IDs:  <input id="ribbonControlIds" type="text" value="OEP.TestVisibleButton;OEP.TestBackgroundButton"/></label><br>
 				<button id="bntEnableControls" onclick="BtnEnableControlsClicked()">EnableRibbonControls</button>
 				<button id="bntDisableControls" onclick="BtnDisableControlsClicked()">DisableRibbonControls</button>
+			</div>
+		</div>
+		<div>
+			Contextual Tab API
+			<div>
+				<label>Contextual Tab Definition:<input id="ctxblob" type="text" value=""/></label><br>
+				<button id="bntGenerateContextualTabs" onclick="BntGenerateContextualTabsClicked()">GenerateContextualTabs</button>
+				<div></div>
+				<label>Contextual Tab Id:<input id="ctxid" type="text" value=""/></label><br>
+				<button id="bntShowTab" onclick="BtnShowTabClicked()">ShowContextualTab</button>
+				<button id="bntHideTab" onclick="BtnHideTabClicked()">HideContextualTab</button>
 			</div>
 		</div>
 		<div>
