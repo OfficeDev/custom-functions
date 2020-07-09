@@ -112,11 +112,12 @@
 				var btn = {};
 				var commandtabs = [];
 
-				tabIds.forEach(tabId => {
+				for (var i = 0; i < tabIds.length; i++) {
+					var tabId = tabIds[i];
 					if (tabId != "") {
 						commandtabs.push({id: tabId, visible: Boolean(visible), controls: [btn]});
 					}
-				});
+				}
 
 				var data = {tabs: commandtabs};
 				Office.ribbon.requestUpdate(data)
@@ -220,7 +221,7 @@
 					{
 						"id":contextualTabId,
 						"label":"CtxTab1_label",
-						"visible":false,
+						"visible":true,
 						"groups":[
 							{
 								"id":"CustomGroup111",
