@@ -169,6 +169,11 @@
 				event.completed();
 			}
 
+			function writeData(event) {
+				Office.context.document.setSelectedDataAsync("Changing control state by ExecuteFunction.");
+				event.completed();
+			}
+
 			function log(value) {
 				var now = new Date();
 				var time = '[' + now.getMinutes() + ':' + now.getSeconds() + '.' + now.getMilliseconds() + '] ';
