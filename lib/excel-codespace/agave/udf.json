@@ -1,0 +1,15 @@
+{
+  "functions": [
+    {
+      "id": "python",
+      "name": "PYTHON",
+      "description": "Run Python Code",
+      "parameters": [
+        {
+          "name": "code",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}
