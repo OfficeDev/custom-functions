@@ -1,0 +1,379 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+		<meta http-equiv="Expires" content="0" />
+		<title>Custom Functions Upgrade Test</title>
+		<script src="https://appsforoffice.edog.officeapps.live.com/lib/1.1/hosted/office.debug.js" type="text/javascript"></script>
+		<script src="custom-functions.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			var g_sharedAppData = {};
+			var g_BgAppVisibilityState = {};
+
+			function setSpanText(elementId, value) {
+				var txt = document.createTextNode(value);
+				var span = document.getElementById(elementId);
+				if (span.hasChildNodes()) {
+					span.removeChild(span.childNodes[0]);
+				}
+				span.appendChild(txt);
+			}
+
+			function appCmdUpdateSharedAppData(event) {
+				g_sharedAppData.value = 2019;
+				event.completed();
+			}
+
+			function BtnReadData() {
+				setSpanText("SpanData", g_sharedAppData.value);
+			}
+
+			function BtnSetData() {
+				var value = document.getElementById("TxtData").value;
+				if (!value) {
+					value = 2019;
+				}
+
+				g_sharedAppData.value = value;
+			}
+
+			function BtnShow() {
+				SetRuntimeVisibleHelper(true);
+			}
+			
+
+			function BtnHide() {
+				SetRuntimeVisibleHelper(false);
+            }
+			
+            function BtnGetRuntimeState() {
+				// _getState() is the internal API and it's only for Microsoft engineer team internal testing purpose. Please do not use it.
+				return Office.addin._getState()
+				.then(function (value) {
+					setSpanText("SpanGetRuntimeState", value);
+					return value;
+				})
+				.catch(function (error) {
+					return error.code;
+				});
+            }
+
+
+			function BtnSetStartupBehaviorLoad() {
+				SetStartupBehaviorHelper(Office.StartupBehavior.load);
+			}
+
+			function BtnSetStartupBehaviorNone() {
+				SetStartupBehaviorHelper(Office.StartupBehavior.none);
+			}
+
+			function BtnEnableControlsClicked() {
+				UpdateRibbonControlsEnableDisableState(true);
+			}
+
+			function BtnDisableControlsClicked() {
+				UpdateRibbonControlsEnableDisableState(false);
+			}
+
+			function UpdateRibbonControlsEnableDisableState(enableState) {
+				var controlIds = document.getElementById('ribbonControlIds').value.split(';');
+				// prepare controls
+				var commandControls = [];
+				for (var i = 0; i < controlIds.length; i++) {
+					var commandButtonID = controlIds[i];
+					if (commandButtonID != "") {
+						commandControls.push({id: commandButtonID, enabled: enableState});
+					}
+				}
+				var tab = {id: "OfficeAppTab1", controls: commandControls};
+				// prepare tabs
+				var commandtabs = {tabs: [tab]};
+				// update ribbon control state
+				Office.ribbon.requestUpdate(commandtabs)
+				.then(function(result) {
+					log('Success:' + JSON.stringify(result));
+				})
+				.catch(function (error) {
+					log('Error:' + JSON.stringify(error));
+				});
+			}
+
+			function BtnShowTabClicked() {
+				updateContextualTabsVisibility(true);
+			}
+
+			function BtnHideTabClicked() {
+				updateContextualTabsVisibility(false);
+			}
+
+			function updateContextualTabsVisibility(visible) {
+				var tabIds = document.getElementById('ctxid').value.split(';');
+				var btn = {};
+				var commandtabs = [];
+
+				for (var i = 0; i < tabIds.length; i++) {
+					var tabId = tabIds[i];
+					if (tabId != "") {
+						commandtabs.push({id: tabId, visible: Boolean(visible), controls: [btn]});
+					}
+				}
+
+				var data = {tabs: commandtabs};
+				Office.ribbon.requestUpdate(data)
+				.then(function(result) {
+					log('Success:' + JSON.stringify(result));
+				})
+				.catch(function (error) {
+					log('Error:' + JSON.stringify(error));
+				});
+			}
+
+			function BntGenerateContextualTabsClicked() {
+				var ribbonTabDefinition = document.getElementById('ctxblob').value;
+
+				Office.ribbon.requestCreateControls(JSON.parse(ribbonTabDefinition))
+				.then(function(result) {
+					log('Success:' + JSON.stringify(result));
+				})
+				.catch(function (error) {
+					log('Error:' + JSON.stringify(error));
+				});
+			}
+
+
+			function BtnGetStartupBehavior() {
+				return Office.addin.getStartupBehavior()
+				.then(function (value) {
+					setSpanText("SpanGetStartupBehavior", value);
+					return value;
+				})
+				.catch(function (error) {
+					return error.code;
+				});
+			}
+
+			function BtnRun() {
+				var code = document.getElementById("TxtCode").value;
+				eval(code);
+			}
+
+			// App Commands
+			function appCmdSetStateVisible(event) {
+				SetRuntimeVisibleHelper(true);
+				event.completed();
+			}
+			
+			function appCmdSetStateBackground(event) {
+				SetRuntimeVisibleHelper(false);
+				event.completed();
+			}
+
+			function writeData(event) {
+				Office.context.document.setSelectedDataAsync("Changing control state by ExecuteFunction.");
+				event.completed();
+			}
+
+			function log(value) {
+				var now = new Date();
+				var time = '[' + now.getMinutes() + ':' + now.getSeconds() + '.' + now.getMilliseconds() + '] ';
+				var txt = document.createTextNode(time + value);
+				var div = document.createElement('div');
+				div.appendChild(txt);
+				document.getElementById('DivLog').appendChild(div);
+			}
+			
+			// Event handler
+			Office.onReady(function(info) {
+				log('onReady info.addin.visibilityMode = ' + (info.addin? info.addin.visibilityMode : 'null'))
+				log('Registering onVisiblityModeChanged');
+				Office.addin.onVisibilityModeChanged(function(args) {
+					g_BgAppVisibilityState.value = args.visibilityMode;
+					setSpanText("SpanVisiblityEventResult", args.visibilityMode);
+					log('onVisiblityModeChanged:' + args.visibilityMode);
+				}).then(function(){
+					log('Regisered onVisiblityModeChanged');
+				}).catch(function(e){
+					log('Failed to register onVisiblityModeChanged:' + JSON.stringify(e));
+				});
+
+				var hostsitebase = document.URL.substring(0, document.URL.lastIndexOf("/")) + "/";
+				var homepage = hostsitebase + "sharedapp.html";
+				var button16x16 = hostsitebase + "Images/Button16x16.png";
+				var button32x32 = hostsitebase + "Images/Button32x32.png";
+				var button80x80 = hostsitebase + "Images/Button80x80.png";
+				var contextualTabId = "CtxTab1";
+
+				var contextualtabdata =
+				{
+					"actions":[
+					{
+						"id":"executeWriteData",
+						"type":"ExecuteFunction",
+						"functionFile":homepage,
+						"functionName":"writeData"
+					},
+					{
+						"id":"showTaskpaneResCFSample",
+						"type":"ShowTaskpane",
+						"sourceLocation":homepage,
+						"taskpaneId":"Taskpane1",
+						"title":"TakspaneTitle",
+						"supportPinning":false
+					}
+					],
+					"tabs":[
+					{
+						"id":contextualTabId,
+						"label":"CtxTab1_label",
+						"visible":true,
+						"groups":[
+							{
+								"id":"CustomGroup111",
+								"label":"Group11Title",
+								"icon":[
+								{
+									"size":16,
+									"sourceLocation":button16x16
+								},
+								{
+									"size":32,
+									"sourceLocation":button32x32
+								},
+								{
+									"size":80,
+									"sourceLocation":button80x80
+								}
+								],
+								"controls":[
+								{
+									"type":"Button",
+									"id":"CtxBt111",
+									"enabled":true,
+									"icon":[
+										{
+											"size":16,
+											"sourceLocation":button16x16
+										},
+										{
+											"size":32,
+											"sourceLocation":button32x32
+										},
+										{
+											"size":80,
+											"sourceLocation":button80x80
+										}
+									],
+									"label":"STP_CtxBt111",
+									"toolTip":"Btn111ToolTip",
+									"superTip":{
+										"title":"Btn111SupertTipeTitle",
+										"description":"Btn111SuperTipDesc"
+									},
+									"actionId":"showTaskpaneResCFSample"
+								},
+								{
+									"type":"Button",
+									"id":"CtxBt112",
+									"enabled":false,
+									"icon":[
+									{
+											"size":16,
+											"sourceLocation":button16x16
+										},
+										{
+											"size":32,
+											"sourceLocation":button32x32
+										},
+										{
+											"size":80,
+											"sourceLocation":button80x80
+										}
+									],
+									"label":"ExeFunc_CtxBt112",
+									"toolTip":"Btn112ToolTip",
+									"superTip":{
+										"title":"Btn112SupertTipeTitle",
+										"description":"Btn112SuperTipDesc"
+									},
+									"actionId":"executeWriteData"
+								}
+							]
+						}
+					]
+				}
+			]
+		};
+		
+		document.getElementById('ctxblob').value = JSON.stringify(contextualtabdata);
+		document.getElementById('ctxid').value = contextualTabId;
+				
+
+	});
+		</script>
+	</head>
+	<body>
+		<div>
+			Data
+			<div>
+				<button id="BtnSetData" onclick="BtnSetData()">SetData</button>: <input id="TxtData" type="text" />
+			</div>
+			<div>
+				<button id="BtnReadData" onclick="BtnReadData()">ReadData</button>: <span id="SpanData"></span>
+			</div>
+		</div>
+		<div>
+			Visibility
+			<div>
+				<button id="BtnSetRuntimeState" onclick="BtnShow()">Show</button>
+				<button id="BtnSetRuntimeState" onclick="BtnHide()">Hide</button>
+			</div>
+			<div>
+				<button id="BtnGetRuntimeState" onclick="BtnGetRuntimeState()">GetRuntimeState</button>: <span id="SpanGetRuntimeState"></span>
+			</div>
+			<div>
+				Visiblity Event Result: <span id="SpanVisiblityEventResult"></span>
+			</div>
+		</div>
+		<div>
+			Startup Behavior
+			<div>
+				<button id="BtnSetStartupBehaviorLoad" onclick="BtnSetStartupBehaviorLoad()">SetStartupBehaviorLoad</button>
+				<button id="BtnSetStartupBehaviorNone" onclick="BtnSetStartupBehaviorNone()">SetStartupBehaviorNone</button>
+			</div>
+			<div>
+				<button id="BtnGetStartupBehavior" onclick="BtnGetStartupBehavior()">GetStartupBehavior</button>: <span id="SpanGetStartupBehavior"></span>
+			</div>
+		</div>
+		<div>
+			Enable/Disable Controls
+			<div>
+				<label>Ribbon Control IDs:  <input id="ribbonControlIds" type="text" value="OEP.TestVisibleButton;OEP.TestBackgroundButton"/></label><br>
+				<button id="bntEnableControls" onclick="BtnEnableControlsClicked()">EnableRibbonControls</button>
+				<button id="bntDisableControls" onclick="BtnDisableControlsClicked()">DisableRibbonControls</button>
+			</div>
+		</div>
+		<div>
+			Contextual Tab API
+			<div>
+				<label>Contextual Tab Definition:<input id="ctxblob" type="text" value=""/></label><br>
+				<button id="bntGenerateContextualTabs" onclick="BntGenerateContextualTabsClicked()">GenerateContextualTabs</button>
+				<div></div>
+				<label>Contextual Tab Id:<input id="ctxid" type="text" value=""/></label><br>
+				<button id="bntShowTab" onclick="BtnShowTabClicked()">ShowContextualTab</button>
+				<button id="bntHideTab" onclick="BtnHideTabClicked()">HideContextualTab</button>
+			</div>
+		</div>
+		<div>
+			<div>
+				<button id="BtnRun" onclick="BtnRun()">Run</button> the following code:
+			</div>
+			<div>
+				<textarea id="TxtCode" cols="40" rows="20" spellcheck="false"></textarea>
+			</div>
+		</div>
+		<div>Logs:</div>
+		<div id="DivLog">
+		</div>
+	</body>
+</html>
