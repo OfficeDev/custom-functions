@@ -63,30 +63,144 @@ The <Enabled> element under <Control> is used to control the default/initial ena
 ```
 
 # Preview API
-## Create Contextual Tabs related API
-```js
-// Show the shared runtime
-await Office.addin.showAsTaskpane();
+## Contextual Tabs related APIs
 
-// Hide the shared runtime
-await Office.addin.hide();
-
-// Add event handler when the taskpane visibility mode is changed.
-var handlerRemove = await Office.addin.onVisibilityModeChanged(function(args) {
-    console.log('Visibility is changed to ' + args.visibilityMode)
-});
-
-// Remove the handler
-await handlerRemove();
+### Contextual Tab Json defination
+```json
+      {
+        "actions":[
+          {
+            "id":"executeWriteData",
+            "type":"ExecuteFunction",
+            "functionName":"writeData"
+          },
+          {
+            "id":"showTaskpaneResCFSample",
+            "type":"ShowTaskpane",
+          }
+          ],
+          "tabs":[
+          {
+            "id":"CtxTab1",
+            "label":"CtxTab1_label",
+            "visible":true,
+            "groups":[
+              {
+                "id":"CustomGroup111",
+                "label":"Group11Title",
+                "icon":[
+                {
+                  "size":16,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                },
+                {
+                  "size":32,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                },
+                {
+                  "size":80,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                }
+                ],
+                "controls":[
+                {
+                  "type":"Button",
+                  "id":"CtxBt111",
+                  "enabled":false,
+                  "icon":[
+                {
+                  "size":16,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                },
+                {
+                  "size":32,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                },
+                {
+                  "size":80,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                }
+                          ],
+                          "label":"STP_CtxBt111",
+                          "toolTip":"Btn111ToolTip",
+                          "superTip":{
+                "title":"Btn111SupertTipeTitle",
+                "description":"Btn111SuperTipDesc"
+                          },
+                          "actionId":"showTaskpaneResCFSample"
+                        },
+                        {
+                          "type":"Button",
+                          "id":"CtxBt112",
+                          "enabled":true,
+                          "icon":[
+                          {
+                  "size":16,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                },
+                {
+                  "size":32,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                },
+                {
+                  "size":80,
+                  "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png"
+                }
+                          ],
+                          "label":"ExeFunc_CtxBt112",
+                          "toolTip":"Btn112ToolTip",
+                          "superTip":{
+                "title":"Btn112SupertTipeTitle",
+                "description":"Btn112SuperTipDesc"
+                          },
+                          "actionId":"executeWriteData"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            };
 ```
 
-// To know the initial visibility mode.
-Office.onReady(function(hostInfo) {
-  if (hostInfo.addin) { // it works on desktop client. It will work on Excel online once the code is deployed.
-    console.log(hostInfo.addin.visibilityMode);
-  }
-})
+### Create Contextual Tabs
+```js
+      // Contextual Tab defination in JSON blob
+      var ribbonTabDefinition = document.getElementById('ctxblob').value;
+      // Request to create the Contextual Tab
+      Office.ribbon.requestCreateControls(JSON.parse(ribbonTabDefinition))
+      .then(function(result) {
+        log('Success:' + JSON.stringify(result));
+      })
+      .catch(function (error) {
+        log('Error:' + JSON.stringify(error));
+      });
+```
+### Update Contextual Tabs visibility
+```js
+      // Target Contextual Tab Id defined in Json blob
+      var tabIds = document.getElementById('ctxid').value.split(';');
+      var btn = {};
+      var commandtabs = [];
 
+      for (var i = 0; i < tabIds.length; i++) {
+        var tabId = tabIds[i];
+        if (tabId != "") {
+          // Update the Visible state accordingly
+          commandtabs.push({id: tabId, visible: Boolean(visible), controls: [btn]});
+        }
+      }
+
+      var data = {tabs: commandtabs};
+      // Send the request to update the Contextual Tab
+      Office.ribbon.requestUpdate(data)
+      .then(function(result) {
+        log('Success:' + JSON.stringify(result));
+      })
+      .catch(function (error) {
+        log('Error:' + JSON.stringify(error));
+      });
+```
 # Dev Machine
 When test the addin on the dev machine, we could copy the manifest to dev catalog and the use `http-server --cors` to start the webside.
 
