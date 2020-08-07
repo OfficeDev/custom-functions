@@ -4,7 +4,7 @@
 		<meta charset="UTF-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 		<meta http-equiv="Expires" content="0" />
-		<title>Custom Functions Upgrade Test</title>
+		<title>Custom Functions With Ribbon API</title>
 		<script src="https://appsforoffice.edog.officeapps.live.com/lib/1.1/hosted/office.debug.js" type="text/javascript"></script>
 		<script src="custom-functions.js" type="text/javascript"></script>
 		<script type="text/javascript">
@@ -210,16 +210,11 @@
 					{
 						"id":"executeWriteData",
 						"type":"ExecuteFunction",
-						"functionFile":homepage,
 						"functionName":"writeData"
 					},
 					{
 						"id":"showTaskpaneResCFSample",
 						"type":"ShowTaskpane",
-						"sourceLocation":homepage,
-						"taskpaneId":"Taskpane1",
-						"title":"TakspaneTitle",
-						"supportPinning":false
 					}
 					],
 					"tabs":[
@@ -249,7 +244,7 @@
 								{
 									"type":"Button",
 									"id":"CtxBt111",
-									"enabled":true,
+									"enabled":false,
 									"icon":[
 										{
 											"size":16,
@@ -275,7 +270,7 @@
 								{
 									"type":"Button",
 									"id":"CtxBt112",
-									"enabled":false,
+									"enabled":true,
 									"icon":[
 									{
 											"size":16,

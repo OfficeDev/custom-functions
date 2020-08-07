@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--Created: c5a33478-ba81-414d-ad52-804f5da8facf -->
+<!--Created: c18a320cd-8c62-4852-8959-df88fb8474eb -->
 <OfficeApp 
           xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" 
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -10,7 +10,7 @@
   <!-- Begin Basic Settings: Add-in metadata, used for all versions of Office unless override provided. -->
 
   <!-- IMPORTANT! Id must be unique for your add-in, if you reuse this manifest ensure that you change this id to a new GUID. -->
-  <Id>c5a33478-ba81-414d-ad52-804f5da8facf</Id>
+  <Id>18a320cd-8c62-4852-8959-df88fb8474eb</Id>
 
   <!--Version. Updates from the store only get triggered if there is a version change. -->
   <Version>1.0.3.0</Version>
@@ -18,11 +18,11 @@
   <DefaultLocale>en-US</DefaultLocale>
 
   <!-- The display name of your add-in. Used on the store and various places of the Office UI such as the add-ins dialog. -->
-  <DisplayName DefaultValue="CFSample2" />
-  <Description DefaultValue="CFSample2"/>
+  <DisplayName DefaultValue="CFSample5" />
+  <Description DefaultValue="CFSample5"/>
 
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
-  <IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png" />
+  <IconUrl DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button32x32.png" />
   <!--End Basic Settings. -->
   <SupportUrl DefaultValue="https://officedev.github.io/custom-functions" />
   <!--Begin TaskPane Mode integration. This section is used if there are no VersionOverrides or if the Office client version does not support add-in commands. -->
@@ -30,7 +30,7 @@
     <Host Name="Workbook" />
   </Hosts>
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/cfsample2/sharedapp.html" />
+    <SourceLocation DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample5/sharedapp.html" />
   </DefaultSettings>
   <!-- End TaskPane Mode integration.  -->
 
@@ -191,14 +191,14 @@
     <!-- You can use resources across hosts and form factors. -->
     <Resources>
       <bt:Images>
-        <bt:Image id="OEP.tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button16x16.png" />
-        <bt:Image id="OEP.tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button32x32.png" />
-        <bt:Image id="OEP.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample/Images/Button80x80.png" />
+        <bt:Image id="OEP.tpicon_16x16" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button16x16.png" />
+        <bt:Image id="OEP.tpicon_32x32" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button32x32.png" />
+        <bt:Image id="OEP.tpicon_80x80" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button80x80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="OEP.CustomFunctions.Script" DefaultValue="https://officedev.github.io/custom-functions/addins/cfsample2/custom-functions.js" />
-        <bt:Url id="OEP.SharedRuntime.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/cfsample2/sharedapp.html" />
-        <bt:Url id="OEP.CustomFunctions.Json" DefaultValue="https://officedev.github.io/custom-functions/addins/cfsample2/custom-functions.json" />
+        <bt:Url id="OEP.CustomFunctions.Script" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample5/custom-functions.js" />
+        <bt:Url id="OEP.SharedRuntime.Url" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample5/sharedapp.html" />
+        <bt:Url id="OEP.CustomFunctions.Json" DefaultValue="https://officedev.github.io/custom-functions/addins/CFSample5/custom-functions.json" />
         <bt:Url id="OEP.GetStarted.LearnMoreUrl" DefaultValue="https://go.microsoft.com/fwlink/?LinkId=276812" />
       </bt:Urls>
       <!-- ShortStrings max characters==125. -->
@@ -207,9 +207,9 @@
         <bt:String id="OEP.TestFuncButton.Label" DefaultValue="Update Value" />
         <bt:String id="OEP.TestVisibleButton.Label" DefaultValue="Set Visible state" />
         <bt:String id="OEP.TestBackgroundButton.Label" DefaultValue="Set Bg State" />
-        <bt:String id="OEP.Group1Label" DefaultValue="CFSample2" />
-        <bt:String id="OEP.GetStarted.Title" DefaultValue="CFSample2" />
-        <bt:String id="OEP.CustomFunctions.NameSpace" DefaultValue="CFSample2" />
+        <bt:String id="OEP.Group1Label" DefaultValue="CFSample5" />
+        <bt:String id="OEP.GetStarted.Title" DefaultValue="CFSample5" />
+        <bt:String id="OEP.CustomFunctions.NameSpace" DefaultValue="CFSample5" />
       </bt:ShortStrings>
       <!-- LongStrings max characters==250. -->
       <bt:LongStrings>

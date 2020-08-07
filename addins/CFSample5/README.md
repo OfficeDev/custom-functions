@@ -30,28 +30,40 @@ It declared one runtime and specify the runtime's url using resid.
 
 Then it declared that the custom function to use the shared runtime by
 ```xml
-            <Page>
-              <SourceLocation resid="OEP.SharedRuntime.Url"/>
-            </Page>
+        <Page>
+          <SourceLocation resid="OEP.SharedRuntime.Url"/>
+        </Page>
 ```
 As it uses the same resid as the one declared in the runtime, the custom function will use the shared runtime.
 
 It also declared that the app command also use the shared runtime by
 ```xml
-          <FunctionFile resid="OEP.SharedRuntime.Url" />
+        <FunctionFile resid="OEP.SharedRuntime.Url" />
 ```
 As it uses the same resid as the the one declared in the runtime, the app command will use the shared runtime.
 
 For taskpane, 
 ```xml
-                  <Action xsi:type="ShowTaskpane">
-                    <SourceLocation resid="OEP.SharedRuntime.Url" />
-                  </Action>
+        <Action xsi:type="ShowTaskpane">
+          <SourceLocation resid="OEP.SharedRuntime.Url" />
+        </Action>
 ```
 As the ShowTaskpane actioin uses the same resid as the one declared in the runtime, the taskpane will use the shared runtime.
 
+# Manifest Changes for Enable/Disable Ribbon API
+The <Enabled> element under <Control> is used to control the default/initial enable or disable state of the ribbon control, by default, the control is enabled.
+```xml
+      <Control>
+        ......
+        <Action>
+          ........
+        </Action>
+        <Enabled>false</Enabled>
+      </Control>
+```
+
 # Preview API
-## Visiblity related API
+## Create Contextual Tabs related API
 ```js
 // Show the shared runtime
 await Office.addin.showAsTaskpane();
@@ -75,21 +87,8 @@ Office.onReady(function(hostInfo) {
   }
 })
 
-## Startup behavior
-```js
-// Set the runtime to be loaded when the document is opened next time
-await Office.addin.setStartupBehavior(Office.StartupBehavior.load);
-
-// Reset the startup behavior
-await Office.addin.setStartupBehavior(Office.StartupBehavior.none);
-
-// Get the startup behavior settings
-var behavior = await Office.addin.getStartupBehavior();
-```
 # Dev Machine
 When test the addin on the dev machine, we could copy the manifest to dev catalog and the use `http-server --cors` to start the webside.
 
 # Maintainers
-[madhavagrawal17](https://github.com/madhavagrawal17)
-[ylu0826](https://github.com/ylu0826)
-[shaofengzhu](https://github.com/shaofengzhu)
+[JackyChen200304](https://github.com/JackyChen200304)
