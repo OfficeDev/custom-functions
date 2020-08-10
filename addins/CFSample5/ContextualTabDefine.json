@@ -1,0 +1,94 @@
+{
+    "actions": [
+        {
+            "id": "executeWriteData",
+            "type": "ExecuteFunction",
+            "functionName": "writeData"
+        },
+        {
+            "id": "showTaskpaneResCFSample",
+            "type": "ShowTaskpane"
+        }
+    ],
+    "tabs": [
+        {
+            "id":"CtxTab1",
+            "label": "CtxTab1_label",
+            "visible": true,
+            "groups": [
+                {
+                    "id": "CustomGroup111",
+                    "label": "Group11Title",
+                    "icon": [
+                        {
+                            "size": 16,
+                            "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button16x16.png"
+                        },
+                        {
+                            "size": 32,
+                            "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button32x32.png"
+                        },
+                        {
+                            "size": 80,
+                            "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button80x80.png"
+                        }
+                    ],
+                    "controls": [
+                        {
+                            "type": "Button",
+                            "id": "CtxBt111",
+                            "enabled": false,
+                            "icon": [
+                                {
+                                    "size": 16,
+                                    "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button16x16.png"
+                                },
+                                {
+                                    "size": 32,
+                                    "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button16x16.png"
+                                },
+                                {
+                                    "size": 80,
+                                    "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button80x80.png"
+                                }
+                            ],
+                            "label": "STP_CtxBt111",
+                            "toolTip": "Btn111ToolTip",
+                            "superTip": {
+                                "title": "Btn111SupertTipeTitle",
+                                "description": "Btn111SuperTipDesc"
+                            },
+                            "actionId": "showTaskpaneResCFSample"
+                        },
+                        {
+                            "type": "Button",
+                            "id": "CtxBt112",
+                            "enabled": true,
+                            "icon": [
+                                {
+                                    "size": 16,
+                                    "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button16x16.png"
+                                },
+                                {
+                                    "size": 32,
+                                    "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button16x16.png"
+                                },
+                                {
+                                    "size": 80,
+                                    "sourceLocation":"https://officedev.github.io/custom-functions/addins/CFSample5/Images/Button80x80.png"
+                                }
+                            ],
+                            "label": "ExeFunc_CtxBt112",
+                            "toolTip": "Btn112ToolTip",
+                            "superTip": {
+                                "title": "Btn112SupertTipeTitle",
+                                "description": "Btn112SuperTipDesc"
+                            },
+                            "actionId": "executeWriteData"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+};
