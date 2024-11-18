@@ -51,6 +51,14 @@ function setRuntimeState(value) {
 	return OfficeRuntime.currentRuntime.setState(value);
 }
 
+function getStartupState() {
+	return OfficeRuntime.currentRuntime.getStartupState();
+}
+
+function setStartupState(value) {
+	return OfficeRuntime.currentRuntime.setStartupState(value);
+}
+
 CustomFunctions.associate('VERSIONSYNC', getVersion);
 CustomFunctions.associate('VERSIONASYNC', getVersion);
 CustomFunctions.associate('VERSIONDELAYED', function(ms) { return delay(getVersion, ms); });
@@ -66,3 +74,6 @@ CustomFunctions.associate('SETSHAREDVALUE', setSharedValue);
 
 CustomFunctions.associate('GETRUNTIMESTATE', getRuntimeState);
 CustomFunctions.associate('SETRUNTIMESTATE', setRuntimeState);
+
+CustomFunctions.associate('GETSTARTUPSTATE', getStartupState);
+CustomFunctions.associate('SETSTARTUPSTATE', setStartupState);
