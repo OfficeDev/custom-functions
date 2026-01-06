@@ -132,7 +132,7 @@ function translate(text, langLocale) {
         var textStr = encodeURIComponent(text);
         var localeStr = encodeURIComponent(langLocale);
 
-        var url = "https://excelcf-demo-api.azurewebsites.net/api/translate?code=F69Va5ojUPvfnat9udiM8OpEcScy/oK3bV8/wBYW8OXlypR3nyV/AA==&name=" +
+        var url = "https://excelcf-demo-api.azurewebsites.net/api/translate?code=<REMOVED>&name=" +
             textStr + "&locale=" + localeStr;
 
         xhr.onreadystatechange = function () {
